@@ -14,9 +14,9 @@ We will leverage Fluent Bit to tail logs (tail input plugin) in /var/log/contain
 
 ![FB](../images/24-fb-pipeline.png)
 
-### 3.0.3. Fluent-Bit log collection and forwarding demystified
+### 3.0.3. Fluent-Bit log collection and forwarding - demystified
 
-Fluent-bit log collection and forwarding as described pictorially above, is achieved by creating a namespace, and deploying fluent-bit as an application on the cluster.  It creates a pod per node.  In the input section of the Fluent-Bit config map, we need to supply the directory to tail (/var/log/containers/\*), parser to use (optional, the author has used docker parser provided by Fluent Bit) and an output plugin - we will use Kafka here.  Deploying the tds agent config launches fluent-bit in the pods and starts collection and forwarding.
+Fluent-bit log collection and forwarding as described pictorially above, is achieved by creating a namespace, and deploying fluent-bit as an application on the cluster.  It creates a pod per node.  In the input plugin section of the Fluent-Bit config map, we need to supply the directory to tail (/var/log/containers/\*), parser plugin to use (optional, the author has used docker parser provided by Fluent Bit) and an output plugin - we will use Kafka here (leverages librdkafka).  Deploying the tds agent config launches fluent-bit in the pods and starts collection and forwarding.
 
 # 4.0. Lab
 
