@@ -32,16 +32,18 @@ https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-create<br>
 Do not create an event hub, just the event hub namespace.
 
 5.  Create a shared access policy for the Azure Event Hub namespace and save the primary connection string for use in the lab
-
+https://docs.microsoft.com/en-us/azure/event-hubs/authenticate-shared-access-signature
 
 6.  Create an Azure Kubernetes cluster, node size Standard_DS2_v2, with 3 nodes, in the subnet created in step 3 
+https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
 
 ### 4.2. CLI tools install
 Install the following command line tools-
 
-4.2.1.  Install az cli
+4.2.1.  Install Azure CLI
+https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 
-4.2.2.  Login to Azure from the command line
+4.2.2.  Login to Azure from your command line utility
 ```
 az login
 ```
