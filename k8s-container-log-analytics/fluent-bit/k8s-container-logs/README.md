@@ -12,7 +12,7 @@ All logs are available on the nodes at /var/log/conatiners*
 #### 3.0.2. Ingestion pipeline
 We will leverage Fluent Bit to tail logs (tail input plugin) in /var/log/containers/* and forward the log to Azure Event Hub (Kafka head) with the Kafka output plugin of Event Hub
 
-24-fb-pipeline.png
+![FB](images/24-fb-pipeline.png)
 
 
 # 4.0. Lab
