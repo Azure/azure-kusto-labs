@@ -40,7 +40,7 @@ https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
 ### 4.2. CLI tools install
 Install the following command line tools-
 
-4.2.1.  Install Azure CLI
+4.2.1.  Install Azure CLI <br>
 https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 
 4.2.2.  Login to Azure from your command line utility
