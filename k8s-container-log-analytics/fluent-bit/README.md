@@ -58,7 +58,7 @@ https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
 
 ![AKS](images/17-aks.png)
 
-Once you deploy apps - this is what ther deployment would look like-
+Once you deploy apps - this is what the deployment would look like-
 
 ![AKS](images/23-aks-ref.png)
 
