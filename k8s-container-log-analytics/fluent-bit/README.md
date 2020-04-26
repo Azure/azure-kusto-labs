@@ -56,6 +56,11 @@ https://docs.microsoft.com/en-us/azure/event-hubs/authenticate-shared-access-sig
 6.  Create an Azure Kubernetes cluster, node size Standard_DS2_v2, with 3 nodes, in the subnet created in step 3 <br>
 https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
 
+![AKS](images/17-aks.png)
+
+Once you deploy apps - this is what ther deployment would look like-
+
+![AKS](23-aks-ref.png)
 
 
 ### 4.2. CLI tools install
