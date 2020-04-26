@@ -14,7 +14,7 @@ This repository features self-contained, hands-on-labs with detailed and step-by
 
 ### 1.  Kubernetes Container Log Analytics
 #### [1.1. Kubernetes Container Log Analytics with Fluent-Bit](k8s-container-log-analytics/fluent-bit/README.md)
-Featuring Fluent-Bit 0.13 for log collection and forwarding, Azure Event Hub as streaming source, and straight through ingestion into Azure Data Explorer with our Azure Event Hub integration.<br>
+Featuring Fluent-Bit v1.3.11 for log collection and forwarding, Azure Event Hub as streaming source, and straight through ingestion into Azure Data Explorer with our Azure Event Hub integration.<br>
 
 
 
