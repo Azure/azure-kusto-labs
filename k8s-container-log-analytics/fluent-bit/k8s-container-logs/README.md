@@ -317,10 +317,24 @@ The following is the traffic in the author's instance.
 
 ![AEH20](../images/20-container-log-ingestion.png)
 
-![AEH22](../images/22-container-log-ingestion.png)
-
 
 ### 5.0.2. Lets review ingestion into Azure Data Explorer
+Switch to Azure Data Explorer Web UI and run the query below to check traffic.<br>
+```
+container_log_stream_stage
+| count
+```
+This is the author's output.  Please allow about 5 minutes from when the setup was complete to start seeing activity.  There will be sparse activity because nothing else is running on AKS.
+
+![AEH28](../images/28-adx.png)
+
+Check for any ingestion failures-
+```
+
+```
+
+
+
 
 ## 6.0. Log Analytics
 
