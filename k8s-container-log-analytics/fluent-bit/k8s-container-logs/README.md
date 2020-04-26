@@ -20,6 +20,36 @@ We will leverage Fluent Bit to tail logs (tail input plugin) in /var/log/contain
 
 Fluent-Bit log collection and forwarding as described pictorially above, is achieved by creating a namespace, and deploying Fluent-Bit as an application on the cluster.  It creates a pod per node.  In the input plugin section of the Fluent-Bit config map, we need to supply the directory to tail (/var/log/containers/\*), parser plugin to use (optional, the author has used docker parser provided by Fluent Bit) and an output plugin - we will use Kafka here (leverages librdkafka).  Deploying the Fluent-Bit daemonset config launches fluent-bit in the pods and starts collection and forwarding.
 
+<br>
+The following is a sample kubernetes container log ingested from event hub-
+```
+{
+	"@timestamp": 1587865531.621533,
+	"log": "I0426 01:45:31.621412       1 healthcheck.go:235] Not saving endpoints for unknown healthcheck \"kube-system/kube-dns\"\n",
+	"stream": "stderr",
+	"time": "2020-04-26T01:45:31.621533009Z",
+	"kubernetes": {
+		"pod_name": "kube-proxy-47r94",
+		"namespace_name": "kube-system",
+		"pod_id": "bbe9915a-0f32-XXX-87ce-cb6695c9c780",
+		"labels": {
+			"component": "kube-proxy",
+			"controller-revision-hash": "8699d8fdd",
+			"pod-template-generation": "1",
+			"tier": "node"
+		},
+		"annotations": {
+			"aks.microsoft.com/release-time": "seconds:1587750333 nanos:367301620 "
+		},
+		"host": "aks-agentpool-11258432-vmss000002",
+		"container_name": "kube-proxy",
+		"docker_id": "783444abfb0c04095e41b628dXXXX22863c66ed20eedaa9c8ff2b",
+		"container_hash": "mcr.microsoft.com/oss/kubernetes/hyperkube@sha256:4903a86f5a64bXXXX976f9320cc2995334c9a294e9df7ab5d16a1"
+	}
+}
+
+```
+
 # 4.0. Lab
 
 ## 4.0.1. Create an Azure Data Explorer table and json mapping
