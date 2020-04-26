@@ -22,7 +22,13 @@ Fluent-bit log collection and forwarding as described pictorially above, is achi
 
 ### 4.0.1. Create an Azure Data Explorer table and json mapping
 
-Navigate to your ADX cluster on the portal and click on your database
+Navigate to your ADX cluster on the portal and launch the Azure Data Explorer web UI as follows:
+
+![FB](../images/25-adx.png)
+
+![FB](../images/26-adx.png)
+
+![FB](../images/27-adx.png)
 
 ```
 // Create table
