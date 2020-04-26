@@ -367,3 +367,81 @@ Check for any ingestion failures-
 
 ## 6.0. Log Analytics
 
+### 6.0.1. Schema of the logs
+Run the command below-
+```
+container_log_stream_stage | getschema 
+```
+
+Notice the columns..
+
+### 6.0.2. Sample the logs
+Run the command below-
+```
+container_log_stream_stage | sample 5
+```
+### 6.0.3. Column "stream" appears interesting, lets check for distinct values
+Run the command below-
+```
+container_log_stream_stage | distinct stream
+```
+
+### 6.0.4. Lets check for distinct pod names
+Run the command below-
+```
+container_log_stream_stage
+| distinct kubernetes_pod_name
+```
+
+### 6.0.5. Lets check for distinct namespaces
+Run the command below-
+```
+container_log_stream_stage
+| distinct kubernetes_namespace_name
+```
+
+### 6.0.6. Lets check for distinct combos by host
+Run the command below-
+```
+container_log_stream_stage
+| distinct kubernetes_host, kubernetes_pod_id, kubernetes_pod_name, kubernetes_docker_id
+| order by kubernetes_host asc
+```
+
+### 6.0.7. Lets check for error counts by host
+Run the command below-
+```
+container_log_stream_stage | where stream == 'stderr' | summarize count() by stream, kubernetes_host | project-away stream
+```
+### 6.0.8. Lets check for error counts by host and render as piechart
+Run the command below-
+```
+container_log_stream_stage | where stream == 'stderr' | summarize count() by stream, kubernetes_host | project-away stream
+| render piechart 
+```
+
+### 6.0.9. Lets do a text search
+Run the command below-
+```
+container_log_stream_stage | where stream == 'stdout' | where log contains 'fail'
+```
+
+### 6.0.10. Lets chart errors by host in bins of 1 hour
+Run the command below-
+```
+container_log_stream_stage | where stream == 'stderr' | summarize count() by kubernetes_host,bin(['time'],1h)
+| render timechart
+```
+
+## 7.0. Log Analytics Dashboard
+This is a **challenge**<br>
+Navigate in your browser to preview.dataexplorer.azure.com and create a dashboard leveraging the queries above.<br>
+
+## 8.0. Next
+This concludes the lab.  <br>
+If you wish to try out the next lab, proceed to the same.<br>
+Otherwise, dont forget to delete the resources you created.
+
+
+
+
