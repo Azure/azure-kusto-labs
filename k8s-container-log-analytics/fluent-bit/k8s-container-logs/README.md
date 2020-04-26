@@ -2,7 +2,7 @@
 This is a scripted lab (all instructions provided) that details how to integrate Kubernetes container logs into Azure Data Explorer as a straight-through process for log analytics.
 
 # 2.0. Setup
-Its important that you have your environment created exactly as detailed in the landing page for this lab.
+Its important that you have your environment created exactly as detailed in the [landing page](../README.md) for this lab.
 
 # 3.0. Where are the Kubernetes container logs available
 The following is what your cluster would look like when you deploy apps as pods with 1..many containers.
