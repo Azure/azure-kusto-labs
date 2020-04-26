@@ -310,14 +310,14 @@ Now lets switch to Azure Event Hub for activity, and see if the logs make it to 
 We built the end to end pipeline in section 4.  Now lets look at the results.
 
 ### 5.0.1. Lets review traffic in Azure Event Hub, in the portal
-Switch to Azure Event Hub, in the portal
+Switch to Azure Event Hub, in the portal, and look at the traffic in the namespace and in the event hub.<br>
+The following is the traffic in the author's instance.
 
+![AEH19](../images/19-container-log-ingestion.png)
 
-[19-container-log-ingestion.png](conf/19-container-log-ingestion.png)
+![AEH20](../images/20-container-log-ingestion.png)
 
-[20-container-log-ingestion.png](conf/20-container-log-ingestion.png)
-
-[22-container-log-ingestion.png](conf/22-container-log-ingestion.png)
+![AEH22](../images/22-container-log-ingestion.png)
 
 
 ### 5.0.2. Lets review ingestion into Azure Data Explorer
