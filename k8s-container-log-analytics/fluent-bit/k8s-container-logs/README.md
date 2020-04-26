@@ -442,6 +442,8 @@ Run the command below-
 container_log_stream_stage | where stream == 'stdout' | where log contains 'fail'
 ```
 
+![ADX48](../images/45-adx.png)
+
 ### 6.0.10. Lets chart errors by host in bins of 1 hour
 Run the command below-
 ```
