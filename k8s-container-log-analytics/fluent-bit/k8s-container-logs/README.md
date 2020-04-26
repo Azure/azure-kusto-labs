@@ -69,6 +69,11 @@ Select the same and set up a connection from the Azure Event hub topic - contain
 ![ADX15](../images/15-container-log-ingestion.png)
 
 
+### 4.0.2. Install fluent-bit logging
+
+1. On your local machine download the file below-
+
+
 
 
 
