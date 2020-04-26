@@ -17,7 +17,7 @@ Two hands on labs are featured that cover log collection, basic parsing, and for
 
 The lab environment consists of 4 Azure services in an Azure resource group, in a single region - similar to below.  A virtual network, an Azure Data Explorer cluster, an Azure Kubernets cluster and an Azure Event Hub namespace.
 
-![Services](k8s-container-logs/images/01-services.png)
+![Services](images/01-services.png)
 
 ### 4.1.  Azure resource provisioning
 Choose an Azure region and provision all of the below in the same region, and into the resource group-
@@ -27,19 +27,40 @@ https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-
 2.  Create an Azure Data Explorer cluster in the resource group - basic SKU<br>
 https://docs.microsoft.com/en-us/azure/data-explorer/create-cluster-database-portal
 
+![ADX](images/11-adx-base.png)
+
 3.  Create an Azure Virtual Network in the resource group, with a subnet called app-snet<br>
 https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal#create-a-virtual-network<br>
-Create only a virtual network, not the VMs
+Create only a virtual network, not the VMs<br>
+
+![Vnet](images/18-vnet.png)
 
 4.  Create an Azure Event Hub namespace in the resource group - standard SKU<br>
 https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-create<br>
-Do not create an event hub, just the event hub namespace.
+Do not create an event hub, just the event hub namespace.<br>
+
+![AEH](images/02-aehns.png)
 
 5.  Create a shared access policy for the Azure Event Hub namespace and save the primary connection string for use in the lab <br>
 https://docs.microsoft.com/en-us/azure/event-hubs/authenticate-shared-access-signature
 
+
+![AEH](images/03-aehns-SAP.png)
+
+
+![AEH](images/04-aehns-SAP.png)
+
+
+![AEH](images/05-aehns-SAP.png)
+
 6.  Create an Azure Kubernetes cluster, node size Standard_DS2_v2, with 3 nodes, in the subnet created in step 3 <br>
 https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
+
+![AKS](images/17-aks.png)
+
+Once you deploy apps - this is what the deployment would look like-
+
+![AKS](images/23-aks-ref.png)
 
 ### 4.2. CLI tools install
 Install the following command line tools-
