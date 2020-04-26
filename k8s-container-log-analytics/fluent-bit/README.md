@@ -31,14 +31,27 @@ https://docs.microsoft.com/en-us/azure/data-explorer/create-cluster-database-por
 
 3.  Create an Azure Virtual Network in the resource group, with a subnet called app-snet<br>
 https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal#create-a-virtual-network<br>
-Create only a virtual network, not the VMs
+Create only a virtual network, not the VMs<br>
+
+![Vnet](images/18-vnet.png)
 
 4.  Create an Azure Event Hub namespace in the resource group - standard SKU<br>
 https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-create<br>
-Do not create an event hub, just the event hub namespace.
+Do not create an event hub, just the event hub namespace.<br>
+
+![AEH](02-aehns.png)
 
 5.  Create a shared access policy for the Azure Event Hub namespace and save the primary connection string for use in the lab <br>
 https://docs.microsoft.com/en-us/azure/event-hubs/authenticate-shared-access-signature
+
+
+![AEH](03-aehns-SAP.png)
+
+
+![AEH](04-aehns-SAP.png)
+
+
+![AEH](05-aehns-SAP.png)
 
 6.  Create an Azure Kubernetes cluster, node size Standard_DS2_v2, with 3 nodes, in the subnet created in step 3 <br>
 https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
