@@ -66,6 +66,8 @@ Select the same and set up a connection from the Azure Event hub topic - contain
 
 ![ADX14](../images/14-container-log-ingestion.png)
 
+![ADX15](../images/15-container-log-ingestion.png)
+
 
 
 
