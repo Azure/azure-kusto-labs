@@ -71,12 +71,117 @@ Select the same and set up a connection from the Azure Event hub topic - contain
 
 ### 4.0.2. Install fluent-bit logging
 
-1. On your local machine download the file below-
+#### 4.0.2.1. Download config files
+1.  Download the config map that you will edit next<br>
+[fluent-bit-configmap.yaml](conf/fluent-bit-configmap.yaml)
+
+2.  Download the daemonset config file<br>
+[fluent-bit-ds.yaml](conf/fluent-bit-ds.yaml)
+
+#### 4.0.2.2. Edit the config map, OUTPUT section, to reflect your event hub details
+Replace with your event hub details and save.  There are rdkafka.* conf that you can tune for performance later, once you get a minimum viable pipeline working.
+
+```
+  output-kafka.conf: |
+    [OUTPUT]
+        Name        kafka
+        Match       *
+        Brokers     YOUR_AZURE_EVENT_HUB_NAMESPACE.servicebus.windows.net:9093
+        Topics      YOUR_AZURE_EVENT_HUB
+        Retry_Limit    2
+        rdkafka.security.protocol SASL_SSL
+        rdkafka.sasl.mechanism PLAIN
+        rdkafka.sasl.username $ConnectionString
+        rdkafka.sasl.password YOUR_AZURE_EVENT_HUB_NAMESPACE_PRIMARY_CONNECTION_STRING
+```
+
+#### 4.0.2.3. A look at ther entire config map
+
+This is just FYI. There are rdkafka.* conf that you can tune for performance later, once you get a minimum viable pipeline working.
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: logging
+  labels:
+    k8s-app: fluent-bit
+data:
+  # Configuration files: server, input, filters and output
+  # ======================================================
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         1
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+        HTTP_Server   On
+        HTTP_Listen   0.0.0.0
+        HTTP_Port     2020
 
 
 
+    @INCLUDE input-kubernetes.conf
+    @INCLUDE filter-kubernetes.conf
+    @INCLUDE output-kafka.conf
 
 
+
+  input-kubernetes.conf: |
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*.log
+        Parser            docker
+        DB                /var/log/flb_kube.db
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+
+
+
+   filter-kubernetes.conf: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     kube.var.log.containers.
+        Merge_Log           On
+        Merge_Log_Key       log_processed
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off
+
+
+
+  output-kafka.conf: |
+    [OUTPUT]
+        Name        kafka
+        Match       *
+        Brokers     YOUR_AZURE_EVENT_HUB_NAMESPACE.servicebus.windows.net:9093
+        Topics      YOUR_AZURE_EVENT_HUB
+        Retry_Limit    2
+        rdkafka.security.protocol SASL_SSL
+        rdkafka.sasl.mechanism PLAIN
+        rdkafka.sasl.username $ConnectionString
+        rdkafka.sasl.password YOUR_AZURE_EVENT_HUB_NAMESPACE_PRIMARY_CONNECTION_STRING
+        rdkafka.ssl.sa.location /usr/lib/ssl/certs/
+.......
+
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+
+
+
+```
+
+The entire file has not been displayed for brevity.
 
 
 
