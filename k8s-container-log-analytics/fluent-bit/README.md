@@ -31,10 +31,10 @@ Create only a virtual network, not the VMs
 https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-create<br>
 Do not create an event hub, just the event hub namespace.
 
-5.  Create a shared access policy for the Azure Event Hub namespace and save the primary connection string for use in the lab
+5.  Create a shared access policy for the Azure Event Hub namespace and save the primary connection string for use in the lab <br>
 https://docs.microsoft.com/en-us/azure/event-hubs/authenticate-shared-access-signature
 
-6.  Create an Azure Kubernetes cluster, node size Standard_DS2_v2, with 3 nodes, in the subnet created in step 3 
+6.  Create an Azure Kubernetes cluster, node size Standard_DS2_v2, with 3 nodes, in the subnet created in step 3 <br>
 https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
 
 ### 4.2. CLI tools install
