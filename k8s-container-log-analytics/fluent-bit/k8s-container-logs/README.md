@@ -22,6 +22,7 @@ Fluent-Bit log collection and forwarding as described pictorially above, is achi
 
 <br>
 The following is a sample kubernetes container log ingested from event hub-
+
 ```
 {
 	"@timestamp": 1587865531.621533,
@@ -49,6 +50,7 @@ The following is a sample kubernetes container log ingested from event hub-
 }
 
 ```
+
 
 # 4.0. Lab
 
