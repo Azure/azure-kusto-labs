@@ -18,7 +18,7 @@ We will leverage Fluent Bit to tail logs (tail input plugin) in /var/log/contain
 
 ### 3.0.3. Fluent-Bit log collection and forwarding - demystified
 
-Fluent-bit log collection and forwarding as described pictorially above, is achieved by creating a namespace, and deploying fluent-bit as an application on the cluster.  It creates a pod per node.  In the input plugin section of the Fluent-Bit config map, we need to supply the directory to tail (/var/log/containers/\*), parser plugin to use (optional, the author has used docker parser provided by Fluent Bit) and an output plugin - we will use Kafka here (leverages librdkafka).  Deploying the tds agent config launches fluent-bit in the pods and starts collection and forwarding.
+Fluent-Bit log collection and forwarding as described pictorially above, is achieved by creating a namespace, and deploying Fluent-Bit as an application on the cluster.  It creates a pod per node.  In the input plugin section of the Fluent-Bit config map, we need to supply the directory to tail (/var/log/containers/\*), parser plugin to use (optional, the author has used docker parser provided by Fluent Bit) and an output plugin - we will use Kafka here (leverages librdkafka).  Deploying the Fluent-Bit daemonset config launches fluent-bit in the pods and starts collection and forwarding.
 
 # 4.0. Lab
 
@@ -69,14 +69,11 @@ Select the same and set up a connection from the Azure Event hub topic - contain
 ![ADX15](../images/15-container-log-ingestion.png)
 
 
-### 4.0.2. Install fluent-bit logging
+### 4.0.2. Download fluent-bit logging configuration templates and update
 
-#### 4.0.2.1. Download config files
-1.  Download the config map that you will edit next<br>
+#### 4.0.2.1. Download config map
+Download the config map that you will edit next<br>
 [fluent-bit-configmap.yaml](conf/fluent-bit-configmap.yaml)
-
-2.  Download the daemonset config file<br>
-[fluent-bit-ds.yaml](conf/fluent-bit-ds.yaml)
 
 #### 4.0.2.2. Edit the config map, OUTPUT section, to reflect your event hub details
 Replace with your event hub details and save.  There are rdkafka.* conf that you can tune for performance later, once you get a minimum viable pipeline working.
@@ -182,6 +179,79 @@ data:
 ```
 
 The entire file has not been displayed for brevity.
+
+### 4.0.3. Configure fluent-bit logging
+
+Switch to you CLI, ensure you are logged in as detailed [here](https://github.com/Azure/azure-kusto-labs/tree/master/k8s-container-log-analytics/fluent-bit#42-cli-tools-install), with AKS CLI utils installed.
+
+#### 4.0.3.1. Create a namespace for the logging
+
+```
+kubectl create namespace logging
+```
+Validate...
+
+```
+kubectl get namespaces
+
+# This is the author's output:
+NAME              STATUS   AGE
+default           Active   2d2h
+kube-node-lease   Active   2d2h
+kube-public       Active   2d2h
+kube-system       Active   2d2h
+logging           Active   23h
+```
+If you see the logging namespace, we are good to with this step
+
+#### 4.0.3.2. Create the service account 
+
+```
+kubectl create -f https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/fluent-bit-service-account.yaml
+```
+
+#### 4.0.3.3. Create the role 
+```
+kubectl create -f https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/fluent-bit-role.yaml
+```
+
+#### 4.0.3.4. Create the role binding 
+```
+kubectl create -f https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/fluent-bit-role-binding.yaml
+```
+
+#### 4.0.3.5. Create the configmap 
+```
+kubectl create -f fluent-bit-configmap.yaml
+```
+
+#### 4.0.3.6. Create the daemonset 
+```
+kubectl create -f fluent-bit-ds.yaml
+```
+
+#### 4.0.3.7. Validate if daemonset is created
+```
+kubectl get ds --all-namespaces
+```
+We should see fluent-bit - this is what we created in 4.0.3.6 - open the file and study it.<br>
+The following is the author's output-
+```
+kubectl get ds --all-namespaces
+NAMESPACE     NAME                       DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                 AGE
+kube-system   azure-cni-networkmonitor   3         3         3       3            3           beta.kubernetes.io/os=linux   2d2h
+kube-system   azure-ip-masq-agent        3         3         3       3            3           beta.kubernetes.io/os=linux   2d2h
+kube-system   kube-proxy                 3         3         3       3            3           beta.kubernetes.io/os=linux   2d2h
+kube-system   omsagent                   3         3         3       3            3           beta.kubernetes.io/os=linux   2d2h
+logging       fluent-bit                 3         3         3       3            3           <none>                        23h
+```
+
+#### 4.0.3.8. Validate if Fluent-Bit logging pods  are created
+```
+kubectl get pods -n logging
+```
+The following is the author's output-
+
 
 
 
