@@ -96,9 +96,10 @@ This should return nothing
 
 ### 5.1.  Kubernetes container logs
 This lab covers forwarding and processing of Kubernetes container logs - enriched with Kubernetes metadata. 
+[Start the lab](https://github.com/Azure/azure-kusto-labs/blob/master/k8s-container-log-analytics/fluent-bit/k8s-container-logs/README.md)
 
 ### 5.2.  Application logs from containers
-This lab covers (synthetic) app logs from within Kubernetes containers - strictly app logs and without Kubernetes metadata.
+This lab covers forwarding and processing of (synthetic) app logs from within Kubernetes containers - strictly app logs and without Kubernetes metadata.
 
 # Feedback
 Please share any feedback you may have and also feel free to contribute. 
