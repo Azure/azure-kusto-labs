@@ -380,11 +380,16 @@ Run the command below-
 ```
 container_log_stream_stage | sample 5
 ```
+
+![ADX40](../images/40-adx.png)
+
 ### 6.0.3. Column "stream" appears interesting, lets check for distinct values
 Run the command below-
 ```
 container_log_stream_stage | distinct stream
 ```
+
+![ADX41](../images/41-adx.png)
 
 ### 6.0.4. Lets check for distinct pod names
 Run the command below-
@@ -393,12 +398,16 @@ container_log_stream_stage
 | distinct kubernetes_pod_name
 ```
 
+![ADX42](../images/42-adx.png)
+
 ### 6.0.5. Lets check for distinct namespaces
 Run the command below-
 ```
 container_log_stream_stage
 | distinct kubernetes_namespace_name
 ```
+
+![ADX42](../images/43-adx.png)
 
 ### 6.0.6. Lets check for distinct combos by host
 Run the command below-
@@ -407,6 +416,8 @@ container_log_stream_stage
 | distinct kubernetes_host, kubernetes_pod_id, kubernetes_pod_name, kubernetes_docker_id
 | order by kubernetes_host asc
 ```
+
+![ADX42](../images/41-adx.png)
 
 ### 6.0.7. Lets check for error counts by host
 Run the command below-
