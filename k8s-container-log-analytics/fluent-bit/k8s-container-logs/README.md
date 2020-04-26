@@ -251,7 +251,12 @@ logging       fluent-bit                 3         3         3       3          
 kubectl get pods -n logging
 ```
 The following is the author's output-
-
-
+```
+kubectl get pods -n logging
+NAME               READY   STATUS    RESTARTS   AGE
+fluent-bit-2sbzv   1/1     Running   0          23h
+fluent-bit-hj2q8   1/1     Running   0          23h
+fluent-bit-zjwbm   1/1     Running   0          23h
+```
 
 
