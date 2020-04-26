@@ -375,6 +375,8 @@ container_log_stream_stage | getschema
 
 Notice the columns..
 
+![ADX29](../images/29-adx.png)
+
 ### 6.0.2. Sample the logs
 Run the command below-
 ```
@@ -407,7 +409,7 @@ container_log_stream_stage
 | distinct kubernetes_namespace_name
 ```
 
-![ADX42](../images/43-adx.png)
+![ADX43](../images/43-adx.png)
 
 ### 6.0.6. Lets check for distinct combos by host
 Run the command below-
@@ -417,13 +419,16 @@ container_log_stream_stage
 | order by kubernetes_host asc
 ```
 
-![ADX42](../images/41-adx.png)
+![ADX44](../images/44-adx.png)
 
 ### 6.0.7. Lets check for error counts by host
 Run the command below-
 ```
 container_log_stream_stage | where stream == 'stderr' | summarize count() by stream, kubernetes_host | project-away stream
 ```
+
+![ADX45](../images/45-adx.png)
+
 ### 6.0.8. Lets check for error counts by host and render as piechart
 Run the command below-
 ```
@@ -431,11 +436,15 @@ container_log_stream_stage | where stream == 'stderr' | summarize count() by str
 | render piechart 
 ```
 
+![ADX46](../images/46-adx.png)
+
 ### 6.0.9. Lets do a text search
 Run the command below-
 ```
 container_log_stream_stage | where stream == 'stdout' | where log contains 'fail'
 ```
+
+![ADX47](../images/47-adx.png)
 
 ### 6.0.10. Lets chart errors by host in bins of 1 hour
 Run the command below-
@@ -443,6 +452,8 @@ Run the command below-
 container_log_stream_stage | where stream == 'stderr' | summarize count() by kubernetes_host,bin(['time'],1h)
 | render timechart
 ```
+
+![ADX48](../images/48-adx.png)
 
 ## 7.0. Log Analytics Dashboard
 This is a **challenge**<br>
