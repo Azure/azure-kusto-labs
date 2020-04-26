@@ -60,7 +60,7 @@ Navigate to your ADX cluster on the portal and click on your database.  In the a
 This opens up a UI that lists "Data Ingestion" on the left navigation bar.<br>
 Select the same and set up a connection from the Azure Event hub topic - container-log-topic to the table from 
 
-![ADX12](../images/12-container-log-ingestion.png)
+![ADX12](../images/12-adx-data-ingestion.png)
 
 ![ADX13](../images/13-container-log-ingestion.png)
 
