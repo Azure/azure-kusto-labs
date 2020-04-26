@@ -330,11 +330,8 @@ This is the author's output.  Please allow about 5 minutes from when the setup w
 
 Check for any ingestion failures-
 ```
-
+.show ingestion failures | where Table == 'container_log_stream_stage'
 ```
-
-
-
 
 ## 6.0. Log Analytics
 
