@@ -22,9 +22,9 @@ Fluent-Bit log collection and forwarding as described pictorially above, is achi
 
 # 4.0. Lab
 
-### 4.0.1. Create an Azure Data Explorer table and json mapping
+## 4.0.1. Create an Azure Data Explorer table and json mapping
 
-#### 4.0.1.1. Launch the ADX Web UI
+### 4.0.1.1. Launch the ADX Web UI
 Navigate to your ADX cluster on the portal and launch the Azure Data Explorer web UI as follows:
 
 ![FB](../images/25-adx.png)
@@ -33,7 +33,7 @@ Navigate to your ADX cluster on the portal and launch the Azure Data Explorer we
 
 ![FB](../images/27-adx.png)
 
-#### 4.0.1.2. Create a table for the container logs
+### 4.0.1.2. Create a table for the container logs
 
 Click on the database on the left navigation and then to the query editor and paste the script below and run it.
 
@@ -46,7 +46,7 @@ Click on the database on the left navigation and then to the query editor and pa
 ![FB](../images/28-adx.png)
 
 
-#### 4.0.1.3. Create a mapping reference
+### 4.0.1.3. Create a mapping reference
 Next create the mapping reference - this helps parse the incoming logs into the ADX table.
 
 ```
@@ -75,7 +75,7 @@ Select the same and set up a connection from the Azure Event hub topic - contain
 Download the config map that you will edit next<br>
 [fluent-bit-configmap.yaml](conf/fluent-bit-configmap.yaml)
 
-#### 4.0.2.2. Edit the config map, OUTPUT section, to reflect your event hub details
+### 4.0.2.2. Edit the config map, OUTPUT section, to reflect your event hub details
 Replace with your event hub details and save.  There are rdkafka.* conf that you can tune for performance later, once you get a minimum viable pipeline working.
 
 ```
@@ -92,7 +92,7 @@ Replace with your event hub details and save.  There are rdkafka.* conf that you
         rdkafka.sasl.password YOUR_AZURE_EVENT_HUB_NAMESPACE_PRIMARY_CONNECTION_STRING
 ```
 
-#### 4.0.2.3. A look at ther entire config map
+### 4.0.2.3. A look at ther entire config map
 
 This is just FYI. There are rdkafka.* conf that you can tune for performance later, once you get a minimum viable pipeline working.
 
@@ -305,3 +305,22 @@ Copyright (C) Treasure Data
 ```
 
 Now lets switch to Azure Event Hub for activity, and see if the logs make it to Azure Data Explorer.
+
+## 5.0. Log Integration
+We built the end to end pipeline in section 4.  Now lets look at the results.
+
+### 5.0.1. Lets review traffic in Azure Event Hub, in the portal
+Switch to Azure Event Hub, in the portal
+
+
+[19-container-log-ingestion.png](conf/19-container-log-ingestion.png)
+
+[20-container-log-ingestion.png](conf/20-container-log-ingestion.png)
+
+[22-container-log-ingestion.png](conf/22-container-log-ingestion.png)
+
+
+### 5.0.2. Lets review ingestion into Azure Data Explorer
+
+## 6.0. Log Analytics
+
