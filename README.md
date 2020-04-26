@@ -1,14 +1,14 @@
 ---
-page_type: sample
+page_type: Labs
 languages:
 - csharp
 products:
 - dotnet
-description: "Add 150 character max description"
-urlFragment: "update-this-to-unique-url-stub"
+description: "Azure Data Explorer labs"
+urlFragment: "azure-adx-labs"
 ---
 
-# Official Microsoft Sample
+# About
 
 <!-- 
 Guidelines on README format: https://review.docs.microsoft.com/help/onboard/admin/samples/concepts/readme-template?branch=master
