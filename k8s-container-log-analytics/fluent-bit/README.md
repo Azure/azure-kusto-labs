@@ -17,7 +17,7 @@ Two hands on labs are featured that cover log collection, basic parsing, and for
 
 The lab environment consists of 4 Azure services in an Azure resource group, in a single region - similar to below.  A virtual network, an Azure Data Explorer cluster, an Azure Kubernets cluster and an Azure Event Hub namespace.
 
-![Services](images/01-services.png)
+![Services](../images/01-services.png)
 
 ### 4.1.  Azure resource provisioning
 Choose an Azure region and provision all of the below in the same region, and into the resource group-
