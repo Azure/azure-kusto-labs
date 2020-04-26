@@ -17,18 +17,18 @@ Two hands on labs are featured that cover log collection, basic parsing, and for
 
 ### 4.1.  Azure resource provisioning
 Choose an Azure region and provision all of the below in the same region, and into the resource group-
-1.  Create an Azure resource group
+1.  Create an Azure resource group<br>
 https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups
 
-2.  Create an Azure Data Explorer cluster in the resource group - basic SKU
+2.  Create an Azure Data Explorer cluster in the resource group - basic SKU<br>
 https://docs.microsoft.com/en-us/azure/data-explorer/create-cluster-database-portal
 
-3.  Create an Azure Virtual Network in the resource group, with a subnet called app-snet
-https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal#create-a-virtual-network
+3.  Create an Azure Virtual Network in the resource group, with a subnet called app-snet<br>
+https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal#create-a-virtual-network<br>
 Create only a virtual network, not the VMs
 
-4.  Create an Azure Event Hub namespace in the resource group - standard SKU
-https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-create
+4.  Create an Azure Event Hub namespace in the resource group - standard SKU<br>
+https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-create<br>
 Do not create an event hub, just the event hub namespace.
 
 5.  Create a shared access policy for the Azure Event Hub namespace and save the primary connection string for use in the lab
