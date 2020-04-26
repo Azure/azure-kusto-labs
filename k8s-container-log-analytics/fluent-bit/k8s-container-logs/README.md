@@ -259,4 +259,49 @@ fluent-bit-hj2q8   1/1     Running   0          23h
 fluent-bit-zjwbm   1/1     Running   0          23h
 ```
 
+#### 4.0.3.9. Check the logging pods' resource footprint
+```
+kubectl top pods -n logging
+```
+The following is the author's output-
+```
+kubectl top pods -n logging
+NAME               CPU(cores)   MEMORY(bytes)   
+fluent-bit-2sbzv   1m           30Mi            
+fluent-bit-hj2q8   1m           30Mi            
+fluent-bit-zjwbm   2m           30Mi  
+```
 
+#### 4.0.3.10. Lets look at a pod's logs
+Grab the name of a pod from the command below-
+```
+kubectl get pods -n logging
+```
+
+Now lets get the pod's logs-
+```
+kubectl logs REPLACE_WITH_YOUR_POD_NAME -n logging
+```
+
+The following is the author's output-
+```
+kubectl logs fluent-bit-2sbzv -n logging
+Fluent Bit v1.3.11
+Copyright (C) Treasure Data
+
+[2020/04/25 21:23:32] [ info] [storage] version=1.0.3, initializing...
+[2020/04/25 21:23:32] [ info] [storage] in-memory
+[2020/04/25 21:23:32] [ info] [storage] normal synchronization mode, checksum disabled, max_chunks_up=128
+[2020/04/25 21:23:32] [ info] [engine] started (pid=1)
+[2020/04/25 21:23:32] [error] [out_kafka] cannot configure 'ssl.sa.location' property
+[2020/04/25 21:23:32] [ info] [out_kafka] brokers='veda-aehns.servicebus.windows.net:9093' topics='container-log-topic'
+[2020/04/25 21:23:32] [ info] [filter_kube] https=1 host=kubernetes.default.svc port=443
+[2020/04/25 21:23:32] [ info] [filter_kube] local POD info OK
+[2020/04/25 21:23:32] [ info] [filter_kube] testing connectivity with API server...
+[2020/04/25 21:23:37] [ info] [filter_kube] API server connectivity OK
+[2020/04/25 21:23:37] [ info] [http_server] listen iface=0.0.0.0 tcp_port=2020
+[2020/04/25 21:23:37] [ info] [sp] stream processor started
+
+```
+
+Now lets switch to Azure Event Hub for activity, and see if the logs make it to Azure Data Explorer.
