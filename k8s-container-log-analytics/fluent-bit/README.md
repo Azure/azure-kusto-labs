@@ -27,6 +27,8 @@ https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-
 2.  Create an Azure Data Explorer cluster in the resource group - basic SKU<br>
 https://docs.microsoft.com/en-us/azure/data-explorer/create-cluster-database-portal
 
+![ADX](images/11-adx-base.png)
+
 3.  Create an Azure Virtual Network in the resource group, with a subnet called app-snet<br>
 https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal#create-a-virtual-network<br>
 Create only a virtual network, not the VMs
