@@ -425,7 +425,7 @@ Run the command below-
 container_log_stream_stage | where stream == 'stderr' | summarize count() by stream, kubernetes_host | project-away stream
 ```
 
-![ADX45](../images/45-adx.png)
+![ADX45](../images/46-adx.png)
 
 ### 6.0.8. Lets check for error counts by host and render as piechart
 Run the command below-
@@ -434,15 +434,13 @@ container_log_stream_stage | where stream == 'stderr' | summarize count() by str
 | render piechart 
 ```
 
-![ADX46](../images/46-adx.png)
+![ADX46](../images/47-adx.png)
 
 ### 6.0.9. Lets do a text search
 Run the command below-
 ```
 container_log_stream_stage | where stream == 'stdout' | where log contains 'fail'
 ```
-
-![ADX47](../images/47-adx.png)
 
 ### 6.0.10. Lets chart errors by host in bins of 1 hour
 Run the command below-
