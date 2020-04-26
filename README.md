@@ -1,13 +1,3 @@
----
-page_type: Labs
-languages:
-- csharp
-products:
-- dotnet
-description: "Azure Data Explorer labs"
-urlFragment: "azure-adx-labs"
----
-
 # About
 
 <!-- 
@@ -18,30 +8,15 @@ Guidance on onboarding samples to docs.microsoft.com/samples: https://review.doc
 Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
 -->
 
-Self-contained, hands-on-labs with detailed and step-by-step instructions, associated collateral (data, code etc) on trying out various features and integration points of Azure Data Explorer (Kusto)
+This repository features self-contained, hands-on-labs with detailed and step-by-step instructions, associated collateral (data, code etc) on trying out various features and integration points of Azure Data Explorer (Kusto)
 
-## Contents
+## Labs
 
-Outline the file contents of the repository. It helps users navigate the codebase, build configuration and any related assets.
+### 1.  [Kubernetes Container Log Analytics](k8s-container-log-analytics/fluent-bit/README.md)
+1.  Featuring Fluent-Bit 0.13 for log collection and forwarding, Azure Event Hub as streaming source, and straight through ingestion into Azure Data Explorer with our Azure Event Hub integration.
 
+![k8s-containers](k8s-container-log-analytics/fluent-bit/images/24-fb-pipeline.png)
 
-
-
-## Prerequisites
-
-Outline the required components and tools that a user might need to have on their machine in order to run the sample. This can be anything from frameworks, SDKs, OS versions or IDE releases.
-
-## Setup
-
-Explain how to prepare the sample once the user clones or downloads the repository. The section should outline every step necessary to install dependencies and set up any settings (for example, API keys and output folders).
-
-## Running the sample
-
-Outline step-by-step instructions to execute the sample and see its output. Include steps for executing the sample from the IDE, starting specific services in the Azure portal or anything related to the overall launch of the code.
-
-## Key concepts
-
-Provide users with more context on the tools and services used in the sample. Explain some of the code that is being used and how services interact with each other.
 
 ## Contributing
 
