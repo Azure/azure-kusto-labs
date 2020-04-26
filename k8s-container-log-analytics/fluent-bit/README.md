@@ -60,8 +60,7 @@ https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
 
 Once you deploy apps - this is what ther deployment would look like-
 
-![AKS](23-aks-ref.png)
-
+![AKS](images/23-aks-ref.png)
 
 ### 4.2. CLI tools install
 Install the following command line tools-
