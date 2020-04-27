@@ -49,6 +49,13 @@ The following is a sample kubernetes container log ingested from event hub-
 
 ```
 
+### 3.0.4. Fluent-Bit docs
+
+General:
+https://docs.fluentbit.io/manual/installation/kubernetes
+
+For Kafka:
+https://github.com/fluent/fluent-bit-kubernetes-logging
 
 # 4.0. Lab
 
