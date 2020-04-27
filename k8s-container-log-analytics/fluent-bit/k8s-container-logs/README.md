@@ -372,6 +372,8 @@ Check for any ingestion failures-
 
 ## 6.0. Log Analytics
 
+There is a lot that can be done in terms of log analytics.  The KQL samples below are basic and merely a primer.
+
 ### 6.0.1. Schema of the logs
 Run the command below-
 ```
