@@ -8,7 +8,9 @@ For more information, visit https://fluentbit.io/
 # 2. Hands-on-labs
 Two hands on labs are featured that cover log collection, basic parsing, and forwarding with Fluent Bit from Kubernetes pods to Azure Data Explorer, ingestion into a structured format and some log analytics with Kusto Query Language.  
 
-- Lab 1 covers Kubernetes logs
+**Note:** Its important to set up the lab environment as detailed in section 4.
+
+- [Lab 1 covers Kubernetes logs](k8s-container-logs/README.md)
 - Lab 2 covers application logs
 
 We will be leveraging Fluent-Bit v1.3.11 in this lab. 
