@@ -7,7 +7,7 @@ Its important that you have your environment created exactly as detailed in the 
 # 3.0. Architecture and details
 
 ### 3.0.1. Kubernetes container logs location
-All logs are available on the nodes at /var/log/containers/\*.log
+/var/log/containers/\*.log
 
 ### 3.0.2. Ingestion pipeline
 We will leverage Fluent Bit to tail logs (tail input plugin) in /var/log/containers/\*.log and forward the logs to Azure Event Hub (Kafka head) with the Kafka output plugin of Fluent-Bit.
