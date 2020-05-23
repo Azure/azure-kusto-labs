@@ -3,7 +3,7 @@
 
 # About
 
-This set of HoLs features Kafka integration of ADX - with **HDInsight Kafka** and **Confluent Kafka** separately.  <br>
+This set of HoLs features Kafka integration with ADX.  The environments cover both the popluar ones we see on Azure - **HDInsight Kafka** and **Confluent Kafka**.  <br>
 
 **HDInsight Kafka** is Azure's managed Kafka as a service with disaggregated compute and storage model and unlike other offerings of HDInsight, actually leverages managed disks with an option for you to choose a SKU with SSD/premium disks and also configure number of disks per node.<br><br>
 
