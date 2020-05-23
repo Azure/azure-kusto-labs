@@ -1,5 +1,7 @@
 
 
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
+
 # About
 
 This module covers provisioning an Azure Databricks cluster<br>
@@ -39,4 +41,5 @@ Navigate to portal.azure.com on your browser, to the resource group and follow t
 
 
 This concludes the module.<br>
-[Return to the menu](README.md)
+
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
