@@ -26,7 +26,7 @@ The labs are:
 
 # Standalone KafkaConnect with HDInsight Kafka 3.6
 
-| # | Focus |Environment | Level |Time to complete |
+| # | Focus | Level |Time to complete |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | [Standalone KafkaConnect with HDInsight Kafka](hdinisght-kafka/standalone-edgenode/README.md) | 300 | 4-8 hours|
 
