@@ -88,6 +88,5 @@ https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2
 [Module 18.  Run some analytics in ADX](Module-18.md) <br>
 [Module 19.  Visualize with ADX dashboard](Module-19.md) <br>
 
-### Got feedback?
-If you have ideas on how we can improve this lab, and what else we can add to the lab series, connect with me (Anagha Khanolkar, Microsoft) on LinkedIn and message me.
+
 
