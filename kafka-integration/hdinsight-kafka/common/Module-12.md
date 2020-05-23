@@ -72,4 +72,4 @@ kafka-adx-hol.dbc
 
 
 This concludes the module.<br>
-[Return to the menu](https://github.com/anagha-microsoft/adx-kafkaConnect-hol/tree/master/hdi-standalone-nonesp#lets-get-started)
+[Return to the menu](../hdi-standalone-nonesp#lets-get-started)
