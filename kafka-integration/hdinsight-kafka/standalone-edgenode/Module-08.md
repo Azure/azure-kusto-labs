@@ -1,3 +1,6 @@
+
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
+
 # About
 
 This module covers creating a Kafka topic that we will publish events to.  
@@ -105,4 +108,5 @@ Here "connect-KustoSinkConnector" is the consumer group created by the Kafka con
 
 <br>
 This concludes the module.<br>
-[Return to the menu](README.md)
+
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
