@@ -1,4 +1,5 @@
 
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
 
 # About
 
@@ -26,4 +27,5 @@ Be sure to update the broker list with your brokers' IP addresses
 
 
 This concludes the module.<br>
-[Return to the menu](README.md)
+
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
