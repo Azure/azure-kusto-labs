@@ -1,4 +1,6 @@
 
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md)
+
 # About
 
 This module covers provisioning of an Azure resource group.  <br>
