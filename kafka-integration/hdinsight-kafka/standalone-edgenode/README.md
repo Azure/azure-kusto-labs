@@ -89,4 +89,6 @@ https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2
 [Module 19.  Visualize with ADX dashboard](Module-19.md) <br>
 
 
+## Dont forget to..
+Delete your Azure resource group.  The other hands-on-labs are not dependent.
 
