@@ -1,4 +1,5 @@
 
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
 
 # About
 
@@ -136,4 +137,5 @@ Enter the command below, replacing my AAD SPN with yours..
 
 
 This concludes the module.<br>
-[Return to the menu](README.md)
+
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
