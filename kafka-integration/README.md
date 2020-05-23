@@ -11,9 +11,6 @@ Is Azure's managed Kafka as a service with disaggregated compute and storage mod
 ## Confluent Kafka
 Featured in the labs is a licensed (free for 30 days) version of Kafka from Confluent, runs on Azure Kubernetes Service (AKS), and leverages the Confluent operator for provisioning on AKS.<br><br>  
 
-## KafkaConnect modes
-<br><br>  
-
 ## About the labs
 The labs are:
 - **end to end** 
@@ -27,7 +24,7 @@ The labs are:
 - the labs that feature distributed modes of KafkaConnect also feature secure environments (**VNet injected** Kafka, Azure Databricks and Azure Data Explorer)
 - Dedicate at least 4-8 hours for each of the labs that features KafkaConnect in distrbuted mode
 
-# Labs on HDInsight Kafka 3.6
+# Standalone KafkaConnect with HDInsight Kafka 3.6
 
 | # | Focus |Environment | Details | Level |Time to complete |
 | :--- | :--- | :--- | :--- | :--- | :--- |
