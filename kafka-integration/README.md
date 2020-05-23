@@ -34,7 +34,7 @@ This lab environment can be deleted.  The distributed KafkaConnect labs do not u
 
 # Distributed KafkaConnect 
 
-This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect workers running on Azure Kubernetes service and Confluent Kafka and associated KafkaConnect workers running on the same Azure Kubernetes service cluster.  Azure Databricks is leveraged to download public dataset, curate it and publish to Kafka for the lab.  All services are Vnet injected as mentioned earlier.  The documentation for this lab is shared across both Kafka offerings so you can complete them back to back in the order you choose.  Its a level 400 lab in terms of overall complexity (due to provisioning and configuration).  Allocate about 8 hours for the first lab and about 6-7 hours for the second as it builds on the same environment.
+This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect workers running on Azure Kubernetes service and Confluent Kafka and associated KafkaConnect workers running on the same Azure Kubernetes service cluster.  Azure Databricks is leveraged to download public dataset, curate it and publish to Kafka for the lab.  All services are Vnet injected as mentioned earlier.  The documentation for this lab is shared across both Kafka offerings so you can complete them back to back in the order you choose.  Its a level 400 lab in terms of overall complexity (due to provisioning and configuration).  Allocate about 8 hours for the first lab and about 6-7 hours for the second as it builds on the same environment.<br>
 
 | # | Focus | Level |Time to complete |
 | :--- | :--- | :--- | :--- | 
