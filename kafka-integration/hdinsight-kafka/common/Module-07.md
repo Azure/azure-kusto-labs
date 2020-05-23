@@ -86,4 +86,4 @@ Navigate to ythe URL https://docs.microsoft.com/en-us/azure/hdinsight/hdinsight-
 <br>
 
 This concludes the module.<br>
-[Return to the menu](https://github.com/anagha-microsoft/adx-kafkaConnect-hol/tree/master/hdi-standalone-nonesp#lets-get-started)
+[Return to the menu](README.md)
