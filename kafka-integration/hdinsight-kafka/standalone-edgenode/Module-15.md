@@ -1,4 +1,5 @@
 
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
 
 # About
 
@@ -48,4 +49,5 @@ This module covers publishing curated Chicago crimes to Kafka<br>
 <br>
 
 This concludes the module.<br>
-[Return to the menu](README.md)
+
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
