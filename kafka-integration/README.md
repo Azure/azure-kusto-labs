@@ -7,9 +7,11 @@ This set of HoLs features Kafka integration with ADX.  The environments cover bo
 
 **HDInsight Kafka** is Azure's managed Kafka as a service with disaggregated compute and storage model and unlike other offerings of HDInsight, actually leverages managed disks with an option for you to choose a SKU with SSD/premium disks and also configure number of disks per node.<br><br>
 
-**Confluent Kafka** featured  in #2 below, runs on Azure Kubernetes Service, and leverages the Confluent operator.<br><br>  
+**Confluent Kafka** featured  in #2 below, runs on Azure Kubernetes Service (AKS), and leverages the Confluent operator for provisioning on AKS.<br><br>  
 
-The labs are self contained, they include provisioning the environment, downloading and generating data for the lab, publishing to Kafka, integrating into ADX - are end to end, with detailed instructions, and include all commands for the lab.  
+Both **standalone** and **distributed** modes are covered, with distributed mode featuring Kusto connectors running on containers hosted on Azure Kubernetes Service.<br><br>  
+
+The labs are end to end, scripted (no need to bing/google - not a hack) and self contained; They include provisioning the environment, starting services, downloading and generating data for the lab, publishing to Kafka, integrating into ADX; They come with detailed instructions, and include all commands for the lab.  
 
 # Labs on HDInsight Kafka 3.6
 
