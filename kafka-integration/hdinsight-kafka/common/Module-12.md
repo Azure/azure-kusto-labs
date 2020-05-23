@@ -72,4 +72,4 @@ kafka-adx-hol.dbc
 
 
 This concludes the module.<br>
-[Return to the menu](../README.md)
+[Return to the menu](README.md)
