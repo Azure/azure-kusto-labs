@@ -9,4 +9,4 @@ This set of HoLs features Kafka integration of ADX - with **HDInsight Kafka**.  
 
 | # | Focus |Environment | Details | Level |Time to complete |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | Standalone KafkaConnect | KafkaConnect on HDInsight edge node | Self-contained, end to end, scripted lab to demonstrate by example how to integrate from HDI Kafka to ADX, with the KafkaConnect Kusto sink service.  Spark on Azure Databricks is leveraged to download the Chicago crimes dataset and publish to Kafka. | 300 | 4-8 hours|
+| 1 | [Standalone KafkaConnect](standalone-edgenode/README.md) | KafkaConnect on HDInsight edge node | Self-contained, end to end, scripted lab to demonstrate by example how to integrate from HDI Kafka to ADX, with the KafkaConnect Kusto sink service.  Spark on Azure Databricks is leveraged to download the Chicago crimes dataset and publish to Kafka. | 300 | 4-8 hours|
