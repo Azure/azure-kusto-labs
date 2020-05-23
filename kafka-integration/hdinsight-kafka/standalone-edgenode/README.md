@@ -7,7 +7,7 @@ The focus of this hands-on-lab is to demonstrate how to configure KafkaConnect s
 We will download the Chicago crimes public dataset for this exercise<br>
 https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2
 
-**Out of scope:** This lab does not cover the more advanced topic of performance tuning.
+**Out of scope:** This lab does not cover the more advanced topics of performance tuning, ADX in a VNet and distributed KafkaConnect.
 
 ## 2. Pre-requisites
 - An Azure subscription with about $200 in funds
