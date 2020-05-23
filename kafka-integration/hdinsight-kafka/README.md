@@ -4,6 +4,6 @@ This set of HoLs features Kafka integration of ADX - with HDInsight Kafka.  HDIn
 
 # Labs
 
-| # | Focus | Details | Level |
-| :--- | :--- | :--- | :--- |
-| 1 | Standalone KafkaConnect | Scripted lab to demonstrate by example how to integrate from HDI Kafka, with the KafkaConnect Kusto sink service running on a single edge node | 300 | 
+| # | Focus |Environment | Details | Level |
+| :--- | :--- | :--- | :--- | :--- 
+| 1 | Standalone KafkaConnect | HDInsight Kafka<br>KafkaConnect on HDInsight edge node | Scripted lab to demonstrate by example how to integrate from HDI Kafka, with the KafkaConnect Kusto sink service running on a single edge node | 300 | 
