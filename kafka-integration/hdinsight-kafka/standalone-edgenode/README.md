@@ -1,4 +1,6 @@
-# Azure Data Explorer - Kafka Integration Hands On Lab
+# KAFKA INTEGRATION LABS
+<br>
+
 ## With HDInsight 3.6 Kafka, and standalone KafkaConnect on an edge node
 
 ## 1. About
