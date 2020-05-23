@@ -36,4 +36,4 @@ Go to portal.azure.com, login and follow the steps below to create a resource gr
 <br>
 
 This concludes the module.<br>
-[Return to the menu](README.md)
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md)
