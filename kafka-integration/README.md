@@ -38,4 +38,4 @@ This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect worke
 
 | # | Focus | Level |Time to complete |
 | :--- | :--- | :--- | :--- | 
-| 1 | [HDInsight Kafka based distributed KafkaConnect Kusto integration](../hdinisght-kafka/standalone-edgenode/README.md) | 300 | 4-8 hours|
+| 1 | [HDInsight Kafka based distributed KafkaConnect Kusto integration](../hdinisght-kafka/README.md) | 300 | 4-8 hours|
