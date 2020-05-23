@@ -1,7 +1,7 @@
 # KAFKA INTEGRATION LABS
 <br>
 
-[HDInsight Kafka based labs]() | [Kafka Integration Main Menu](../../README.md)
+[HDI Kafka Standalone KafkaConnect lab menu]() | [Kafka Integration Main Menu](../../README.md)
 
 ## With HDInsight 3.6 Kafka, and standalone KafkaConnect on an edge node
 
