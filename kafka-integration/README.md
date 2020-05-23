@@ -29,3 +29,13 @@ The labs are:
 | # | Focus |Environment | Details | Level |Time to complete |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | [Standalone KafkaConnect](../hdinisght-kafka/standalone-edgenode/README.md) | KafkaConnect on HDInsight edge node | Self-contained, end to end, scripted lab to demonstrate by example how to integrate from HDI Kafka to ADX, with the KafkaConnect Kusto sink service.  Spark on Azure Databricks is leveraged to download the Chicago crimes dataset and publish to Kafka. | 300 | 4-8 hours|
+
+This lab environment can be deleted.  The distributed KafkaConnect labs do not use this environment.
+
+# Distributed KafkaConnect 
+
+This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect workers running on Azure Kubernetes service and Confluent Kafka and associated KafkaConnect workers running on the same Azure Kubernetes service cluster.  Azure Databricks is leveraged to download public dataset, curate it and publish to Kafka for the lab.  All services are Vnet injected as mentioned earlier.  The documentation for this lab is shared across both Kafka offerings so you can complete them back to back in the order you choose.
+
+| # | Focus | Level |Time to complete |
+| :--- | :--- | :--- | :--- | 
+| 1 | [HDInsight Kafka based distributed KafkaConnect Kusto integration](../hdinisght-kafka/standalone-edgenode/README.md) | 300 | 4-8 hours|
