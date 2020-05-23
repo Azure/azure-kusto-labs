@@ -1,4 +1,5 @@
 
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
 
 # About
 
@@ -86,4 +87,5 @@ Navigate to ythe URL https://docs.microsoft.com/en-us/azure/hdinsight/hdinsight-
 <br>
 
 This concludes the module.<br>
-[Return to the menu](README.md)
+
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
