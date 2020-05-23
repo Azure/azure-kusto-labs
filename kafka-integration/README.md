@@ -12,10 +12,20 @@ Is Azure's managed Kafka as a service with disaggregated compute and storage mod
 Featured in the labs is a licensed (free for 30 days) version of Kafka from Confluent, runs on Azure Kubernetes Service (AKS), and leverages the Confluent operator for provisioning on AKS.<br><br>  
 
 ## KafkaConnect modes
-Both **standalone** and **distributed** modes are covered, with distributed mode featuring Kusto connectors running on containers hosted on Azure Kubernetes Service.<br><br>  
+<br><br>  
 
 ## About the labs
-The labs are end to end, scripted (no need to bing/google - not a hack) and self contained; They include provisioning the environment, starting services, downloading and generating data for the lab, publishing to Kafka, integrating into ADX; They come with detailed instructions, and include all commands for the lab.  
+The labs are:
+- **end to end** 
+- **scripted** (no need to bing/google - not a hack) and **self contained**
+- they include **provisioning** the Kafka and KafkaConnect environments (and ADX, and Azure Databricks Spark to serve as producer) and starting services
+- **downloading and curating data** for the lab (Spark)
+- **producing/publishing** to Kafka (Spark)
+- **integrating** into ADX (KafkaConnect)
+- both **standalone** and **distributed** modes are covered, with distributed mode featuring Kusto connectors running on containers hosted on Azure Kubernetes Service.
+- they come with detailed instructions, and include all commands for the lab
+- the labs that feature distributed modes of KafkaConnect also feature secure environments (**VNet injected** Kafka, Azure Databricks and Azure Data Explorer)
+- Dedicate at least 4-8 hours for each of the labs that features KafkaConnect in distrbuted mode
 
 # Labs on HDInsight Kafka 3.6
 
