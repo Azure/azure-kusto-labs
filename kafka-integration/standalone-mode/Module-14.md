@@ -1,5 +1,5 @@
 
-[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../README.md) <hr>
 
 # About
 
@@ -162,4 +162,4 @@ Screenshots of code have been deliberately included for the benefit of those who
 
 This concludes the module.<br>
 
-[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../../README.md) <hr>
+[Return to the HDI Kafka with standalone KafkaConnect menu](README.md) | [Kafka Integration Main Menu](../README.md) <hr>
