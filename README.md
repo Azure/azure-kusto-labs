@@ -12,8 +12,12 @@ This repository features self-contained, hands-on-labs with detailed and step-by
 
 ## Labs
 
-### 1.  Kubernetes Container Log Analytics
-#### [1.1. Kubernetes Container Log Analytics with Fluent-Bit](k8s-container-log-analytics/fluent-bit/README.md)
+### 1.  Kafka Ingestion series
+#### 1.1.  HDInsight Kafka - standalone mode with connector on edge node
+End to end lab that covers producing to Kafka from Spark, connector download, and configuration and leveraging the same to integrate into Azure Data Explorer.
+
+### 2.  Kubernetes Container Log Analytics
+#### [2.1. Kubernetes Container Log Analytics with Fluent-Bit](k8s-container-log-analytics/fluent-bit/README.md)
 Featuring Fluent-Bit v1.3.11 for log collection and forwarding, Azure Event Hub as streaming source, and straight through ingestion into Azure Data Explorer with our Azure Event Hub integration.<br>
 
 
