@@ -17,9 +17,12 @@ The resources used in the lab are-
 - Vnet injected HDInsight Kafka (VMs)
 - Kusto Kafka connectors on AKS for HDInsight Kafka
 
+![HDI](../images/HDI-E2E.png)
+
 ### 4) Confluent Kafka
 - Vnet injected Confluent Kafka (AKS)
 - Kusto Kafka connectors on the same Confluent Kafka cluster on dedicated nodes
+
 
 # Provision foundational resources for the labs
 
