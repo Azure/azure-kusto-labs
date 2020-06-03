@@ -23,6 +23,9 @@ The resources used in the lab are-
 - Vnet injected Confluent Kafka (AKS)
 - Kusto Kafka connectors on the same Confluent Kafka cluster on dedicated nodes
 
+![HDI](images/CONFLUENT-E2E.png)
+
+
 
 # Provision foundational resources for the labs
 
