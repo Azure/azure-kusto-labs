@@ -18,3 +18,12 @@ The resources used in the lab are-
 ### 4) Confluent Kafka
 - Vnet injected Confluent Kafka (AKS)
 - Kusto Kafka connectors on the same Confluent Kafka cluster on dedicated nodes
+
+# Provision foundational resources for the labs
+
+Details are here
+
+# Start the labs
+
+1.  Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service
+2.  Distributed KafkaConnect with HDInsight Kafka 4.0, and connectors on Azure Kubernetes Service
