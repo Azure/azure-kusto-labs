@@ -1,6 +1,8 @@
 # About
 
-This set of labs details using the Kafka connector thorough example, in a distributed mode (on k8s containers), with two flavors of Kafka - HDInsight 4.0 (Kafka 2.1 at the time of authoring) and Confluent Platform 5.5.0 with operator for k8s (Kafka 2.5 at the time of authoring).
+This set of labs details using the Kafka connector thorough example, in a distributed mode (on k8s containers), with two flavors of Kafka - <br>
+HDInsight 4.0 (Kafka 2.1 at the time of authoring) and<br>
+Confluent Platform 5.5.0 with operator for k8s (Kafka 2.5 at the time of authoring)
 
 # Lab resources
 
