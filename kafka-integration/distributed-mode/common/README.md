@@ -13,7 +13,7 @@ https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal
 
 # 4.0. Create subnets
 Create subnets for the rest of the lab.<br>
-![Subnets](images/Subnets-Provision.png)
+![Subnets](../images/Subnets-Provision.png)
 <br><hr>
 
 # 5.0. Create an Azure Databricks Spark cluster
