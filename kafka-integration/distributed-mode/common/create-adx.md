@@ -24,9 +24,9 @@ https://docs.microsoft.com/en-us/azure/virtual-network/manage-network-security-g
 ![ADX-NSG-2](../images/02-ADX.png)
 <br><hr>
 
-# 4. Provision a Public IP for the engine and Public IP for the ata management service
+# 4. Provision a Public IP for the engine and Public IP for the data management service
 
-Follow steps here...
+Follow steps here...<br>
 https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#create-public-ip-addresses
 
 ![ADX-NSG-4](../images/04-ADX.png)
