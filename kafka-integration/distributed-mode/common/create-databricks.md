@@ -13,7 +13,7 @@
 
 ## Code
 
-A DBC that covers basic Kafka producer code, is [here](https://github.com/microsoft/kusto-kafka-feature/blob/master/dbc/spark-kafka-kusto.dbc).  It also covers Spark integration for Kusto.
+A DBC that covers basic Kafka producer code, is [here]().  
 
 
 ## Import the DBC into your user home
