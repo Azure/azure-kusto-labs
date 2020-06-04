@@ -9,50 +9,50 @@ This module covers provisioning an Azure Active Directory (AAD) Service Principa
 Navigate to portal.azure.com on your browser and follow the steps below:<br>
 
 ### 1. Click on Azure Active Directory
-![SPN-01](images/01-spn-01.png)
+![SPN-01](../images/01-spn-01.png)
 <br>
 <hr>
 <br>
 
 ### 2. Click on App Registrations
-![v02](images/01-spn-02.png)
+![v02](../images/01-spn-02.png)
 <br>
 <hr>
 <br>
 
 ### 3. Click on New Registration
-![SPN-03](images/01-spn-03.png)
+![SPN-03](../images/01-spn-03.png)
 <br>
 <hr>
 <br>
 
 
 ### 4. Enter details as described
-![SPN-04v](images/01-spn-04.png)
+![SPN-04v](../images/01-spn-04.png)
 <br>
 <hr>
 <br>
 
 ### 5. A service principal name/SPN gets created.  Make a note of the application/client ID and tenant ID; We will need this in the KafkaConnect module
-![SPN-05](images/01-spn-05.png)
+![SPN-05](../images/01-spn-05.png)
 <br>
 <hr>
 <br>
 
 ### 6. Click on certificates and secrets; We will create a secret for the SPN
-![SPN-06](images/01-spn-06.png)
+![SPN-06](../images/01-spn-06.png)
 <br>
 <hr>
 <br>
 
 ### 7. Click on new secret
-![SPN-07](images/01-spn-07.png)
+![SPN-07](../images/01-spn-07.png)
 <br>
 <hr>
 <br>
 
 ### 8. Enter details and "add"
-![SPN-08](images/01-spn-08.png)
+![SPN-08](../images/01-spn-08.png)
 <br>
 <hr>
 <br>
@@ -62,7 +62,6 @@ Navigate to portal.azure.com on your browser and follow the steps below:<br>
 <br>
 <hr>
 <br>
-
 
 This concludes the module.<br>
 
