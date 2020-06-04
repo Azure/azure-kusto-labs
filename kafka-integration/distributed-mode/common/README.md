@@ -8,8 +8,13 @@ https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-
 
 
 # 3.0. Create virtual network
+Create a virtual network in the resource group, ensure you pick the same region as in #2.0.<br>
+https://docs.microsoft.com/en-us/azure/virtual-network/quick-create-portal
 
 # 4.0. Create subnets
+Create subnets for the rest of the lab.<br>
+![Subnets](images/Subnets-Provision.png)
+<br><hr>
 
 # 5.0. Create an Azure Databricks Spark cluster
 
