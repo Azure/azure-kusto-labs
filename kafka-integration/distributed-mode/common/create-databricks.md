@@ -31,7 +31,9 @@ Go with defaults, create 3 worker nodes with the default SKU, the default runitm
 
 # 3. Code
 
-A DBC that covers basic Kafka producer code, is [here](dbc).  Capture the URL on to you clickboard.  You will need it in the next step.
+A DBC that covers basic Kafka producer code, is [here](dbc).  Capture the URL, below, on to your clipboard.  You will need it in the next step.<br>
+
+https://github.com/Azure/azure-kusto-labs/blob/master/kafka-integration/distributed-mode/common/dbc/distributed-kafka-connect.dbc
 
 
 # 4. Import the DBC into your user home
@@ -54,19 +56,23 @@ Follow the steps below to import it into your user home directory, in the Databr
 <br>
 <hr>
 
+# 5. Mount blob storage
+
 ![ADB-07](../images/databricks-07.png)
 <br>
 <hr>
+
+# 5. Download the Chicago crimes public dataset and curate it for use in the lab
 
 ![ADB-08](../images/databricks-08.png)
 <br>
 <hr>
 
+# 6. You should see data persisted in your storage account as follows. 
+
 ![ADB-09](../images/databricks-09.png)
 <br>
 <hr>
-
-
 
 This concludes this provisioning and set up module.
 
