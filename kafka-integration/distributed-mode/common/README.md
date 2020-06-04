@@ -16,8 +16,12 @@ Create subnets for the rest of the lab.<br>
 ![Subnets](../images/Subnets-Provision.png)
 <br><hr>
 
-# 5.0. Create an Azure Data Explorer (ADX) cluster
+# 5.0. Create an Azure Active Directory Service Prinicpal and Secret
+Details are [here](create-spn.md)
 
+
+# 5.0. Create an Azure Data Explorer (ADX) cluster
+Details are [here](create-adx.md)
 
 
 # 5.0. Create an Azure Databricks Spark cluster
