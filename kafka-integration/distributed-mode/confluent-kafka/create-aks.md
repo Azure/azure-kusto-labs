@@ -1,4 +1,4 @@
-### KAFKA INTEGRATION LABS
+##### KAFKA INTEGRATION LABS
 
 [Distributed Kafka ingestion with Confluent Platform](../README.md)
 <hr>
