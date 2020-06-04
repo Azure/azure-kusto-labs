@@ -20,14 +20,17 @@ Create subnets for the rest of the lab.<br>
 Details are [here](create-spn.md)
 
 
-# 5.0. Create an Azure Data Explorer (ADX) cluster
+# 6.0. Create an Azure Data Explorer (ADX) cluster
 Details are [here](create-adx.md)
 
 
-# 5.0. Create an Azure Databricks Spark cluster
+# 7.0. Create an Azure Databricks Spark cluster
 
-# 6.0. Import Spark code into the cluster
+# 8.0. Import Spark code into the cluster
 
+This concludes this module.<br>
+
+[Distributed Kusto KafkaConnect with HDI Kafka]() | [Distributed Kusto KafkaConnect with Confluent Kafka]() 
 
 
 
