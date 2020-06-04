@@ -1,5 +1,13 @@
-# 1. About
+# KAFKA INTEGRATION LABS
 
+[Distributed Kafka ingestion with Confluent Platform](../README.md)
+<hr>
+
+# 1. About
+This module covers creation of an Azure Kubernetes Service cluster that will serve as the infrastructure for Kafka and the KafkaConnect cluster running the ADX Kafka connector plugin.
+
+# 2. Pre-requisites
+You should have created all the foundational resources detailed in the docs [here.](../common/README.md)
 
 # 2. Provision AKS
 
