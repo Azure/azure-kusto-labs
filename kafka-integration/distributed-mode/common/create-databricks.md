@@ -4,7 +4,7 @@
 [Common resources menu for distributed KafkaConnect mode for ingestion into ADX](README.md)
 <hr>
 
-# 1. About
+# 1. CREATE AN AZURE DATABRICKS CLUSTER
 This module covers-
 1.  Provisioning Azure Databricks
 2.  Importing the lab code into the Datarbicks workspace
