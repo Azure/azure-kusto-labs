@@ -73,4 +73,7 @@ https://zeusadx.westeurope.kusto.windows.net
 
 We will cover this separately under the individual lab modules for HDInsight and Confluent separately.
 
+![ADX-NSG-11](../images/11-ADX.png)
+<br><hr>
+
 [Common resources menu for distributed KafkaConnect](README.md)
