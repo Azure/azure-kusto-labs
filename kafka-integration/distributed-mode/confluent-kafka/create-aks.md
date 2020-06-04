@@ -7,7 +7,7 @@
 This module covers creation of an Azure Kubernetes Service cluster that will serve as the infrastructure for Kafka and the KafkaConnect cluster running the ADX Kafka connector plugin.
 
 # 2. Pre-requisites
-You should have created all the foundational resources detailed in the docs [here.](../common/README.md)
+You should have created all the foundational resources detailed in the docs [here.](../common/README.md)  This includes the subnet for Confluent.
 
 # 2. Provision AKS
 
