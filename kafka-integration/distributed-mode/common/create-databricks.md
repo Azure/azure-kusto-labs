@@ -57,7 +57,7 @@ Follow the steps below to import it into your user home directory, in the Databr
 <hr>
 
 # 5. Mount blob storage
-
+Update the cell that holds storage account information with yours captured in this [step](create-storage.md#3-capture-storage-account-name-and-key-for-subsequent-use-in-spark).
 ![ADB-07](../images/databricks-07.png)
 <br>
 <hr>
