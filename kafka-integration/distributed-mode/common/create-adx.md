@@ -1,4 +1,6 @@
-[Common resources menu](README.md)
+# KAFKA INTEGRATION LAB
+
+[Common resources menu for distributed KafkaConnect mode](README.md)
 <hr>
 
 # About
