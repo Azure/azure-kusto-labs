@@ -62,13 +62,15 @@ https://zeusadx.westeurope.kusto.windows.net
 
 # 8. Launch the web UI and connect to the cluster
 
-
-
 ![ADX-NSG-9](../images/09-ADX.png)
+<br><hr>
+
+
+![ADX-NSG-10](../images/10-ADX.png)
 <br><hr>
 
 # 9. Create tables and permissions in the Web UI as shown below
 
-
+We will cover this separately under the individual lab modules for HDInsight and Confluent separately.
 
 [Common resources menu for distributed KafkaConnect](README.md)
