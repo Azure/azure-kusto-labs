@@ -18,6 +18,7 @@ This is a lengthy lab, dedicate 8-16 hours for this hands on lab if you are ne t
 This lab required the foundational resources provisioned, as detailed [here.](../common/README.md)
 
 # 3. Provision an Azure Kubernetes Service cluster
+The Azure Kubernetes Cluster (AKS) will serve as the underlying infrastructure for Kafka.  Details for provisioning are [here.](create-aks.md)
 
 # 4. Install Confluent Kafka on the AKS from #3
 
