@@ -1,3 +1,6 @@
+# KAFKA INTEGRATION LABS
+<br>
+
 # 1.0. About
 
 This module covers creation of common resources across the two labs.
