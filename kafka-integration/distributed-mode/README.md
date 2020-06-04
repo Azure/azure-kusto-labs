@@ -36,6 +36,8 @@ This includes-
 6.  Storage Account v2
 7.  Azure Databricks + import code for downloading public dataset and publishing to Kafka
 
+Details are [here.](common/README.md)
+
 # Start the labs
 
 1.  Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service
