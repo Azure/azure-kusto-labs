@@ -1,6 +1,6 @@
 ##### KAFKA INTEGRATION LABS
 
-[Distributed Kafka ingestion with Confluent Platform](../README.md)
+[Distributed Kafka ingestion with Confluent Platform](README.md)
 <hr>
 
 # 1. FOCUS: AKS CLUSTER FOR KAFKA, KAFKACONNECT
@@ -102,7 +102,7 @@ If you search your resource groups, you will find that AKS created a new resourc
 
 This concludes this provisioning module.
 
-[Distributed Kafka ingestion with Confluent Platform](../README.md)
+[Distributed Kafka ingestion with Confluent Platform](README.md)
 <hr>
 
 
