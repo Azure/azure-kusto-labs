@@ -15,15 +15,11 @@ https://docs.microsoft.com/en-us/azure/virtual-network/manage-network-security-g
 ![ADX-NSG](../images/adx-nsg.png)
 <br><hr>
 
-# 2. Create two public IP addresses for ADX's load balancers for the Data Management Service and Engine
-
-https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#create-public-ip-addresses
-
-# 3. Associate the NSG with the ADX subnet
+# 2. Associate the NSG with the ADX subnet
 ![ADX-NSG-2](../images/02-ADX.png)
 <br><hr>
 
-# 4. Provision Engine Public IP and DMS Public IP
+# 3. Provision Engine Public IP and DMS Public IP
 
 Follow steps here...
 https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#create-public-ip-addresses
