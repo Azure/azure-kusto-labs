@@ -38,6 +38,7 @@ This concludes the common setup for the two labs - you can now proceed to work o
 
 <br>
 <hr>
+
 [Distributed Kusto KafkaConnect with HDI Kafka]() | [Distributed Kusto KafkaConnect with Confluent Kafka]() 
 
 
