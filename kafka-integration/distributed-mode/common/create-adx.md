@@ -3,8 +3,8 @@
 [Common resources menu for distributed KafkaConnect mode for ingestion into ADX](README.md)
 <hr>
 
-# 1. CREATE AN AZURE DATA EXPLORER CLUSTER
-This module details creation of a Vnet injected cluster.
+# 1. FOCUS: AZURE DATA EXPLORER CLUSTER
+This module details creation of a Vnet injected ADX cluster.
 
 # 2. Create an NSG for ADX
 Navigate to the resource group you created on the portal.
