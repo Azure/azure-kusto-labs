@@ -38,11 +38,9 @@ We will use Azure Databricks to publish to Kafka.<br>
 Details for provisioning and importing are [here.](create-databricks.md)
 
 <hr>
+
+# 9.0. Proceed to Kafka flavor specific labs
 This concludes the common setup for the two labs - you can now proceed to work on the the distributed ingestion with either HDInsight Kafka or Confluent platform.<br>
-
-
-<br>
-<hr>
 
 [Distributed Kusto KafkaConnect with HDI Kafka]() | [Distributed Kusto KafkaConnect with Confluent Kafka]() 
 
