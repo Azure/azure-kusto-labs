@@ -6,3 +6,6 @@
 
 # 1. FOCUS: INSTALL CONFLUENT PLATFORM ON AKS
 This module covers installation of Confluent platform on AKS.  This includes all underlying components of Kafka and also, the KafkaConnect cluster.  We will use the Confluent operator for this provisioning.
+
+# 2. Download Confluent operator, install utilities and make changes to YAML
+
