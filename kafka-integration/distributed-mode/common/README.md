@@ -26,12 +26,12 @@ Details are [here](create-spn.md)
 # 6.0. Create an Azure Data Explorer (ADX) cluster
 Details are [here](create-adx.md)
 
+# 7.0. Create an Azure Storage Account v2
+We will use this to download a public dataset and curate it.  This public dataset - Chicago crimes data will be used in the hands on lab.
 
-# 7.0. Create an Azure Databricks Spark cluster
+# 8.0. Create an Azure Databricks Spark cluster
 
-# 8.0. Import Spark code into the cluster
-
-This concludes this module.<br>
+This concludes the common setup for the two labs - you can now proceed to work on the the distributed ingestion with either HDInsight Kafka or Confluent platform.<br>
 
 [Distributed Kusto KafkaConnect with HDI Kafka]() | [Distributed Kusto KafkaConnect with Confluent Kafka]() 
 
