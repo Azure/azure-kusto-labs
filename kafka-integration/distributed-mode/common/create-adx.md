@@ -76,4 +76,6 @@ We will actually cover this separately under the individual lab modules for HDIn
 ![ADX-NSG-11](../images/11-ADX.png)
 <br><hr>
 
+This concludes this provisioning and setup module.
+
 [Common resources menu for distributed KafkaConnect](README.md)
