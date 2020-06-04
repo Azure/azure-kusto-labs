@@ -1,3 +1,7 @@
+#### KAFKA INTEGRATION LAB SERIES
+
+<hr>
+
 # About
 
 This set of labs details using the Kafka connector thorough example, in a distributed mode (on k8s containers), with two flavors of Kafka - <br>
