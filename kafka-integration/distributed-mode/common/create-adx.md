@@ -19,7 +19,7 @@ https://docs.microsoft.com/en-us/azure/virtual-network/manage-network-security-g
 ![ADX-NSG-2](../images/02-ADX.png)
 <br><hr>
 
-# 3. Provision Engine Public IP and DMS Public IP
+# 3. Provision a Public IP for the engine and Public IP for the ata management service
 
 Follow steps here...
 https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#create-public-ip-addresses
@@ -30,12 +30,14 @@ https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#
 ![ADX-NSG-5](../images/05-ADX.png)
 <br><hr>
 
-# 5. Provision Vnet injected cluster
+# 5. Provision a Vnet injected ADX cluster
 Follow the instructions here.
 https://docs.microsoft.com/en-us/azure/data-explorer/vnet-deployment
 
 # 6. ADX cluster - URLs and database
 
+![ADX-NSG-6](../images/06-ADX.png)
+<br><hr>
 
 The two URLS are important-
 
@@ -47,7 +49,16 @@ https://zeusadx.westeurope.kusto.windows.net
 
 # 7. Create an ADX database in the cluster you created above
 
+![ADX-NSG-7](../images/07-ADX.png)
+<br><hr>
 
 # 8. Launch the web UI and connect to the cluster
 
+![ADX-NSG-8](../images/08-ADX.png)
+<br><hr>
+
 # 9. Create tables and permissions in the Web UI as shown below
+
+![ADX-NSG-9](../images/09-ADX.png)
+<br><hr>
+
