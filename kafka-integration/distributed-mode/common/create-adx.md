@@ -3,10 +3,10 @@
 [Common resources menu for distributed KafkaConnect mode](README.md)
 <hr>
 
-# About
+# 1. About
 This module details creation of a Vnet injected cluster.
 
-# 1. Create an NSG for ADX
+# 2. Create an NSG for ADX
 Navigate to the resource group you created on the portal.
 
 Refer to the doc link below to determine what is the monitoring IP address for the Azure region you have chosen.<br>
@@ -20,11 +20,11 @@ https://docs.microsoft.com/en-us/azure/virtual-network/manage-network-security-g
 ![ADX-NSG](../images/adx-nsg.png)
 <br><hr>
 
-# 2. Associate the NSG with the ADX subnet
+# 3. Associate the NSG with the ADX subnet
 ![ADX-NSG-2](../images/02-ADX.png)
 <br><hr>
 
-# 3. Provision a Public IP for the engine and Public IP for the ata management service
+# 4. Provision a Public IP for the engine and Public IP for the ata management service
 
 Follow steps here...
 https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#create-public-ip-addresses
@@ -67,4 +67,4 @@ https://zeusadx.westeurope.kusto.windows.net
 ![ADX-NSG-9](../images/09-ADX.png)
 <br><hr>
 
-[Common resources menu](README.md)
+[Common resources menu for distributed KafkaConnect](README.md)
