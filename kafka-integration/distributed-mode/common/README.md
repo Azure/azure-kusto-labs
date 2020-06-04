@@ -21,7 +21,6 @@ Create subnets for the rest of the lab.<br>
 
 # 5.0. Create an Azure Active Directory Service Prinicpal and Secret
 We need consume to sink to ADX from the connector as a security principal.  We therefore need to create a service principal.  
-<br>
 Details for provisioning are [here](create-spn.md)
 
 
@@ -29,9 +28,7 @@ Details for provisioning are [here](create-spn.md)
 Details for provisioning are [here](create-adx.md)
 
 # 7.0. Create an Azure Storage Account v2
-We will use this to download a public dataset and curate it.  This public dataset - Chicago crimes data will be used in the hands on lab.<br>
-
-Details for provisioning are [here](create-storage.md)
+We will use this to download a public dataset and curate it.  This public dataset - Chicago crimes data will be used in the hands on lab.  Details for provisioning are [here](create-storage.md)
 
 # 8.0. Create an Azure Databricks Spark cluster, and import source code for publishing to Kafka
 We will use Azure Databricks to publish to Kafka.<br>
