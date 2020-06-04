@@ -25,11 +25,16 @@ The resources used in the lab are-
 
 ![HDI](images/CONFLUENT-E2E.png)
 
+# Provision foundational resources for the labs 
 
-
-# Provision foundational resources for the labs
-
-Details are here
+This includes-
+1.  Resource group
+2.  Virtual network
+3.  Subnets
+4.  Service Principal
+5.  Azure Data Explorer
+6.  Storage Account v2
+7.  Azure Databricks + import code for downloading public dataset and publishing to Kafka
 
 # Start the labs
 
