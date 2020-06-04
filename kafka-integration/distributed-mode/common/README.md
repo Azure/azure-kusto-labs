@@ -1,5 +1,6 @@
-# KAFKA INTEGRATION LABS
-<br>
+#### KAFKA INTEGRATION LAB SERIES
+
+<hr>
 
 # 1.0. About
 
