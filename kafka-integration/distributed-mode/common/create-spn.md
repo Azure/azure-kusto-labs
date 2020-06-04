@@ -3,7 +3,7 @@
 [Common resources menu for distributed KafkaConnect mode for ingestion into ADX](README.md)
 <hr>
 
-# 1. About
+# 1. CREATE AN AAD SERVICE PRINCIPAL
 This module covers provisioning an Azure Active Directory (AAD) Service Principal (SPN).  We will leverage this SPN to sink to ADX from Kafka.<br>  
 
 Navigate to portal.azure.com on your browser and follow the steps below:<br>
