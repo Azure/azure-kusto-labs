@@ -69,9 +69,9 @@ https://zeusadx.westeurope.kusto.windows.net
 ![ADX-NSG-10](../images/10-ADX.png)
 <br><hr>
 
-# 9. Create tables and permissions in the Web UI as shown below
+# 9. Create tables and permissions in the Web UI 
 
-We will cover this separately under the individual lab modules for HDInsight and Confluent separately.
+We will actually cover this separately under the individual lab modules for HDInsight and Confluent separately.
 
 ![ADX-NSG-11](../images/11-ADX.png)
 <br><hr>
