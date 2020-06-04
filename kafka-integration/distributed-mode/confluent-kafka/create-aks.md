@@ -3,7 +3,7 @@
 [Distributed Kafka ingestion with Confluent Platform](../README.md)
 <hr>
 
-# 1. About
+# 1. FOCUS: AKS CLUSTER FOR KAFKA, KAFKACONNECT
 This module covers creation of an Azure Kubernetes Service cluster that will serve as the infrastructure for Kafka and the KafkaConnect cluster running the ADX Kafka connector plugin.
 
 # 2. Pre-requisites
