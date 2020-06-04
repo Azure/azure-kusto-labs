@@ -70,6 +70,8 @@ In this step, you will need the service principal App ID and Secret that you cre
 
 # 3. Associate the AKS auto-provisioned NSG with the Confluent subnet
 
+If you search your resource groups, you will find that AKS created a new resource group and persisted some resources there.  One of these is an NSG.  We will associate this with the Confluent subnet.  This NSG gets automatically updated by Confluent operator, so this step is crucial for networking to work correctly.
+
 ![AKS-13](../images/confluent-13.png)
 <br>
 <hr>
@@ -98,8 +100,9 @@ In this step, you will need the service principal App ID and Secret that you cre
 <br>
 <hr>
 
+This concludes this provisioning module.
+
+[Distributed Kafka ingestion with Confluent Platform](../README.md)
+<hr>
 
 
-
-### 2.3. Persistent storage
-AKS can auto provision disks, no need to do so upfront
