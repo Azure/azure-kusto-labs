@@ -63,6 +63,12 @@ Navigate to portal.azure.com on your browser and follow the steps below:<br>
 <hr>
 <br>
 
+### 10.  You will need these three AAD related details in subsequent modules.  Make a note.
+
+1.  AAD tenant ID
+2.  AAD Service Principal application ID
+3.  AAD Service Principal secret
+
 This concludes the module.<br>
 
 [Common resources menu for distributed KafkaConnect](README.md)
