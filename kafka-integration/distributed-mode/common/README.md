@@ -29,6 +29,8 @@ Details are [here](create-adx.md)
 # 7.0. Create an Azure Storage Account v2
 We will use this to download a public dataset and curate it.  This public dataset - Chicago crimes data will be used in the hands on lab.
 
+Details are [here](create-storage.md)
+
 # 8.0. Create an Azure Databricks Spark cluster
 
 This concludes the common setup for the two labs - you can now proceed to work on the the distributed ingestion with either HDInsight Kafka or Confluent platform.<br>
