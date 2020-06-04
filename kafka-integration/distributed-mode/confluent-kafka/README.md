@@ -1,4 +1,4 @@
-# KAFKA INTEGRATION LABS
+#### KAFKA INTEGRATION LAB SERIES
 
 [Menu for distributed Kafka ingestion](../README.md)
 <hr>
