@@ -1,0 +1,38 @@
+
+# About
+
+## Provisioning
+- Details for provisioning a Vnet injected Databricks Spark cluster is available in Azure Databricks docs [here](https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-inject).
+- The author injected the cluster into zeus-vnet and specified two subnets - spark-priv-snet and spark-pub-snet that Databricks created.
+- Databricks automatically created NSG for the service
+
+## Code
+
+A DBC that covers basic Kafka producer code, authored by Anagha is [here](https://github.com/microsoft/kusto-kafka-feature/blob/master/dbc/spark-kafka-kusto.dbc).  It also covers Spark integration for Kusto.
+
+
+## Import the DBC into your user home
+
+As a best practice, import the DBC into your own user home, so you dont touch the original author's.
+
+![Spark-1](../images/Spark-01.png)
+<br>
+<hr>
+
+![Spark-2](../images/Spark-02.png)
+<br>
+<hr>
+
+![Spark-3](../images/Spark-03.png)
+<br>
+<hr>
+
+![Spark-4](../images/Spark-04.png)
+<br>
+<hr>
+
+
+
+
+
+
