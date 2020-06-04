@@ -9,7 +9,7 @@
 ## Provisioning
 - Details for provisioning a Vnet injected Databricks Spark cluster is available in Azure Databricks docs [here](https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-inject).
 - The author injected the cluster into zeus-vnet and specified two subnets - spark-priv-snet and spark-pub-snet that Databricks created.
-- Databricks automatically created NSG for the service
+- Databricks automatically created a network security group for the service, and associated it with the subnet.
 
 ## Code
 
