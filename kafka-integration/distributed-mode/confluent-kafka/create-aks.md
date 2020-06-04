@@ -27,6 +27,7 @@ We will run 3 brokes, 1 or a node; 3 zookeepers, one on each node; 6 connectors,
 <br>
 <hr>
 
+In this step, you will need the service principal App ID and Secret that you created in [this step.](../common/create-spn.md) 
 ![AKS-04](../images/confluent-04.png)
 <br>
 <hr>
