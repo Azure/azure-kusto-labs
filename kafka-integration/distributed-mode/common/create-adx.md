@@ -1,5 +1,4 @@
-# KAFKA INTEGRATION LAB
-
+#### KAFKA INTEGRATION LAB SERIES
 [Common resources menu for distributed KafkaConnect mode for ingestion into ADX](README.md)
 <hr>
 
