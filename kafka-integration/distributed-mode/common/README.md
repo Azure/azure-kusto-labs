@@ -35,7 +35,7 @@ Details for provisioning are [here](create-storage.md)
 
 # 8.0. Create an Azure Databricks Spark cluster, and import source code for publishing to Kafka
 We will use Azure Databricks to publish to Kafka.<br>
-Details for provisioning and importing are [here].(create-databricks.md)
+Details for provisioning and importing are [here.](create-databricks.md)
 
 <hr>
 This concludes the common setup for the two labs - you can now proceed to work on the the distributed ingestion with either HDInsight Kafka or Confluent platform.<br>
