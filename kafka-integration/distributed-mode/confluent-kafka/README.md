@@ -3,7 +3,6 @@
 [Menu for distributed Kafka ingestion](../README.md)
 <hr>
 
-
 # 1. About
 
 This is the home page of the ADX Kafka ingestion lab in distributed mode with Confluent Platform for Kafka.
@@ -17,6 +16,12 @@ This is a lengthy lab, dedicate 8-16 hours for this hands on lab.
 # 2. Pre-requisites
 
 This lab required the foundational resources provisioned, as detailed [here.](../common/README.md)
+
+# 3. Provision an Azure Kubernetes Service cluster
+
+# 4. Install Confluent Kafka on the AKS from #3
+
+# 5. Integrate from Kafka to ADX
 
 
 
