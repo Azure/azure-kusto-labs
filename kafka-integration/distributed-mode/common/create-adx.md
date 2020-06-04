@@ -57,14 +57,18 @@ https://zeusadx.westeurope.kusto.windows.net
 ![ADX-NSG-7](../images/07-ADX.png)
 <br><hr>
 
+![ADX-NSG-8](../images/08-ADX.png)
+<br><hr>
+
 # 8. Launch the web UI and connect to the cluster
 
-![ADX-NSG-8](../images/08-ADX.png)
+
+
+![ADX-NSG-9](../images/09-ADX.png)
 <br><hr>
 
 # 9. Create tables and permissions in the Web UI as shown below
 
-![ADX-NSG-9](../images/09-ADX.png)
-<br><hr>
+
 
 [Common resources menu for distributed KafkaConnect](README.md)
