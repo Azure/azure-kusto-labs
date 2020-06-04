@@ -9,7 +9,7 @@ This module covers creation of an Azure Kubernetes Service cluster that will ser
 # 2. Pre-requisites
 You should have created all the foundational resources detailed in the docs [here.](../common/README.md)  This includes the subnet for Confluent.
 
-# 2. Provision AKS
+# 3. Provision AKS
 
 Create an AKS cluster in a Vnet with 9 nodes<br>
 Standard D4s v3 (4 vcpus, 16 GiB memory)<br>
