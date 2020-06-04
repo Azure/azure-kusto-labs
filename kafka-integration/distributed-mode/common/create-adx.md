@@ -1,3 +1,6 @@
+[Common resources menu](README.md)
+<hr>
+
 # About
 This module details creation of a Vnet injected cluster.
 
@@ -62,3 +65,4 @@ https://zeusadx.westeurope.kusto.windows.net
 ![ADX-NSG-9](../images/09-ADX.png)
 <br><hr>
 
+[Common resources menu](README.md)
