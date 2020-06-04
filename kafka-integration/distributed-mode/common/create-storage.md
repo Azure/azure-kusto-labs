@@ -3,7 +3,7 @@
 [Common resources menu for distributed KafkaConnect mode for ingestion into ADX](README.md)
 <hr>
 
-# 1. About
+# 1. FOCUS: AZURE STORAGE ACCOUNT V2
 This module covers provisioning an Azure Storage Account v2, hot, blob, LRS account.  We will leverage this account to download a public dataset, curate it for use for the lab in Databricks.<br>  
 
 ### 1. Create storage account
