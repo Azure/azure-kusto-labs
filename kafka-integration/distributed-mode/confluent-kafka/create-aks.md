@@ -64,6 +64,12 @@ In this step, you will need the service principal App ID and Secret that you cre
 <br>
 <hr>
 
+![AKS-20](../images/confluent-20.png)
+<br>
+<hr>
+
+# 3. Associate the AKS auto-provisioned NSG with the Confluent subnet
+
 ![AKS-13](../images/confluent-13.png)
 <br>
 <hr>
@@ -92,9 +98,7 @@ In this step, you will need the service principal App ID and Secret that you cre
 <br>
 <hr>
 
-![AKS-20](../images/confluent-20.png)
-<br>
-<hr>
+
 
 
 ### 2.3. Persistent storage
