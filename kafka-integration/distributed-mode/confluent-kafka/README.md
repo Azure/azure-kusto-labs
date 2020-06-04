@@ -21,6 +21,7 @@ This lab required the foundational resources provisioned, as detailed [here.](..
 The Azure Kubernetes Cluster (AKS) will serve as the underlying infrastructure for Kafka.  Details for provisioning are [here.](create-aks.md)
 
 # 4. Install Confluent Kafka on the AKS from #3
+We will download Confluent operator locally; Install Azure CLI, AKS CLI, then install Confluent Platform.  Details are [here.](create-confluent-kafka.md)
 
 # 5. Integrate from Kafka to ADX
 
