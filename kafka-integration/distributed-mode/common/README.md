@@ -31,6 +31,46 @@ https://docs.microsoft.com/en-us/azure/virtual-network/manage-network-security-g
 ![ADX-NSG](../images/adx-nsg.png)
 <br><hr>
 
+### 5.0.2. Create two public IP addresses for ADX's load balancers for the Data Management Service and Engine
+
+https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#create-public-ip-addresses
+
+### 5.0.3. Associate the NSG with the ADX subnet
+![ADX-NSG-2](../images/02-ADX.png)
+<br><hr>
+
+### 5.0.4. Provision Engine Public IP and DMS Public IP
+
+Follow steps here...
+https://docs.microsoft.com/en-us/azure/data-explorer/vnet-create-cluster-portal#create-public-ip-addresses
+
+![ADX-NSG-4](../images/04-ADX.png)
+<br><hr>
+
+![ADX-NSG-5](../images/05-ADX.png)
+<br><hr>
+
+### 5.0.5. Provision Vnet injected cluster
+Follow the instructions here.
+https://docs.microsoft.com/en-us/azure/data-explorer/vnet-deployment
+
+### 5.0.6. ADX cluster - URLs and database
+
+
+The two URLS are important-
+
+Ingest URL:
+https://ingest-zeusadx.westeurope.kusto.windows.net
+
+Web UI:
+https://zeusadx.westeurope.kusto.windows.net
+
+### 5.0.7. Create an ADX database in the cluster you created above
+
+
+### 5.0.8. Launch the web UI and connect to the cluster
+
+### 5.0.9. Create tables and permissions in the Web UI as shown below
 
 # 5.0. Create an Azure Databricks Spark cluster
 
