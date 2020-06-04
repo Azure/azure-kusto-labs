@@ -1,4 +1,9 @@
 
+# KAFKA INTEGRATION LAB
+
+[Common resources menu for distributed KafkaConnect mode for ingestion into ADX](README.md)
+<hr>
+
 # About
 
 ## Provisioning
@@ -32,7 +37,9 @@ As a best practice, import the DBC into your own user home, so you dont touch th
 <hr>
 
 
+This concludes this provisioning and set up module.
 
+[Common resources menu for distributed KafkaConnect](README.md)
 
 
 
