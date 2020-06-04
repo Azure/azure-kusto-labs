@@ -1,4 +1,4 @@
- KAFKA INTEGRATION LAB
+ # KAFKA INTEGRATION LAB
 
 [Common resources menu for distributed KafkaConnect mode for ingestion into ADX](README.md)
 <hr>
@@ -22,3 +22,7 @@ https://docs.microsoft.com/en-us/azure/storage/common/storage-account-create?tab
 <br>
 <hr>
 <br>
+
+This concludes this provisioning module.
+
+[Common resources menu for distributed KafkaConnect](README.md)
