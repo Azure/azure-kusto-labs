@@ -784,8 +784,8 @@ Output...
 kafka.zeus-confluent.com
 ```
 
-### 2.23. Create kafka.properties locally
-We will be downloading the Confluent CLI.  Lets create a directory for it, and also create our kafka.properties.  We will need this in the subsequent steps.
+### 2.23. Create kafka.properties locally on your developer machine
+
 
 ```
 mkdir -p ~/opt/kafka/confluent-platform/cluster-conf
@@ -935,6 +935,10 @@ seq 10000 | kafka-console-producer --topic dummy-topic --broker-list kafka:9071 
 ```
 
 ### 4.3. Consume the messages to the topic
+```
+kafka-console-consumer --from-beginning --topic dummy-topic --broker-list kafka:9071 --consumer.config kafka.properties
+```
+
 ```
 9982
 9983
