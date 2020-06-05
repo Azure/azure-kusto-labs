@@ -961,7 +961,7 @@ kafka-console-consumer --from-beginning --topic dummy-topic --broker-list kafka:
 10000
 ```
 
-This concludes the smoke testand this module.
+This concludes the smoke test and this module.
 
 
 <hr>
