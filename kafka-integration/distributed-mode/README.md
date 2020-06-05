@@ -42,6 +42,17 @@ This includes-
 
 Details are [here.](common/README.md)
 
+# Set up your machine for the lab
+You will need the following:
+1. Postman
+2. Optionally - Windows subsystem for Linux; All commands in the lab assume you are using Linux
+3. Azure CLI
+4. Azure AKS CLI
+5. Helm
+6. Docker
+
+Details are [here.](common/conf-dev-machine.md)
+
 # Start the labs
 
 1.  Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service
