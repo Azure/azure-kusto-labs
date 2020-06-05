@@ -36,7 +36,8 @@ The following are the steps-
 1.  Install [Confluent operator](install-operator.md)
 2.  Install [Zookeeper service](install-zookeeper.md)
 3.  Install [Broker service](install-broker.md)
-4.  
+4.  Install [Confluent Control Center](install-control-center.md)
+5.  Create a [Kafka topic](create-kafka-topic.md)
 
 # 7. Integrate from Kafka to ADX
 
