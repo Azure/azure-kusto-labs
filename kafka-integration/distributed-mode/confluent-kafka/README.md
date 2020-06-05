@@ -30,7 +30,11 @@ Details are [here.](download-operator.md)
 
 Details are [here.](bake-connector-image.md)
 
-# 5. Integrate from Kafka to ADX
+
+# 6. Install Confluent platform on AKS
+
+
+# 7. Integrate from Kafka to ADX
 
 
 
