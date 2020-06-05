@@ -209,7 +209,7 @@ Enable the load balancer and the domain..
 
 # 3. Sample YAML
 
-Is [here](../../conf/confluent-operator/zeus-azure.yaml)..
+Is [here](../conf/confluent-operator/zeus-azure.yaml)..
 <br>
 
 <hr>
