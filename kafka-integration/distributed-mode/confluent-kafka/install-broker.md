@@ -5,7 +5,7 @@
 
 # 1. FOCUS: INSTALL BROKER
 This document details broker setup.<br>
-[Confluent Menu](README.md) | [Main menu](../../README.md)<br><br>
+
 [Kafka brokers installation](04-broker-install.md#2-kafka-brokers-installation)<br>
 [Azure DNS private zone creation](04-broker-install.md#3-azure-dns-private-zone-creation)<br>
 [Smoke test](04-broker-install.md#4-broker-smoke-test)<br>
