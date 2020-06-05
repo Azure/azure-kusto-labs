@@ -16,6 +16,17 @@ This document details broker conf update in the Databricks Spark notebook, and p
 <br>
 <hr>
 
+![ADB-15](../images/ADB-15.png)
+<br>
+<hr>
+
+![ADB-16](../images/ADB-16.png)
+<br>
+<hr>
+
+
+This concludes our producer smoke testing.  In the next step, we will consume from Kafka and sink to ADX.
+
 
 <br>
 This concludes this module.
