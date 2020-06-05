@@ -277,5 +277,7 @@ If you see "RUNNING", you are good to go...
 This concludes this module.
 
 
-[Distributed Kafka ingestion with Confluent Platform](README.md)
 <hr>
+
+
+[Distributed Kafka ingestion with Confluent Platform](README.md)
