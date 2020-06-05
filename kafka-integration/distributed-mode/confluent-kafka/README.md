@@ -38,6 +38,7 @@ The following are the steps-
 3.  Install [Broker service](install-broker.md)
 4.  Install [Confluent Control Center](install-control-center.md)
 5.  Create a [Kafka topic](create-kafka-topic.md)
+6.  Produce to the Kafka topic from [Spark](produce-to-kafka.md)
 
 # 7. Integrate from Kafka to ADX
 
