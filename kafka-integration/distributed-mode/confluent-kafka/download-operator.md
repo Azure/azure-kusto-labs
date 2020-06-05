@@ -149,7 +149,7 @@ global:
 
 ### 2.13. Storage configuation
 
-In the same zeus-azure.yaml, insert the global storage class name to provision SSD as we will be doing performance testing in this environment
+In the same zeus-azure.yaml, insert the global storage class name to provision SSD instead of HDD
 
 ```
   storageClassName: "managed-premium"
