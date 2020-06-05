@@ -8,7 +8,7 @@ This document details broker setup.<br>
 
 [Kafka brokers installation](install-broker.md#2-kafka-brokers-installation)<br>
 [Azure DNS private zone creation](install-broker.md#3-azure-dns-private-zone-creation)<br>
-[Smoke test](install-broker.md#4-broker-smoke-test)<br>
+[Smoke test](install-broker.md#4-smoke-test)<br>
 
 # 2. Kafka brokers installation
 
