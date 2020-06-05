@@ -37,12 +37,22 @@ The following are the steps-
 2.  Install [Zookeeper service](install-zookeeper.md)
 3.  Install [Broker service](install-broker.md)
 4.  Install [Confluent Control Center](install-control-center.md)
-5.  Create a [Kafka topic](create-kafka-topic.md)
-6.  Produce to the Kafka topic from [Spark](produce-to-kafka.md)
-7.  Create table in [ADX](create-adx-table.md)
+5.  Install [KafkaConnect connectors](install-connect.md)
+6.  Create a [Kafka topic](create-kafka-topic.md)
 
-# 7. Integrate from Kafka to ADX
+# 7.  Create table in ADX
+Details are [here](create-adx-table.md)
 
+# 8. Update ADX NSG for the AKS Public IP
+
+
+
+# 9. Produce to the Kafka topic from Spark
+Details are [here](produce-to-kafka.md)
+
+
+
+# 10. Verify data delivery to ADX
 
 
 
