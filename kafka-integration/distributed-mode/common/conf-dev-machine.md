@@ -1,4 +1,4 @@
-### KAFKA INTEGRATION LABS
+#### KAFKA INTEGRATION LAB SERIES
 [Return to main menu](../README.md)
 <hr>
 
