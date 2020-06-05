@@ -90,6 +90,9 @@ customresourcedefinition.apiextensions.k8s.io/zookeeperclusters.cluster.confluen
 During installation, Confluent Operator and Confluent Platform components are created based on parameters stored in multiple Helm Chart values.yaml files (one for Operator and one for each Confluent Platform component) and the global configuration file.<br>
 
 Do not modify parameters in the individual component values.yaml files. If you need to adjust capacity, add a parameter, or change a parameter for a component, you modify the component section in the global configuration file. You can also adjust configuration parameters after installation using helm upgrade.<br>
+
+The author's resource group is called zeus-rg and all resources have the name "zeus"; Feel free to use anything else.<br>
+
 ```
 cd opt/kafka/confluent-operator/helm/providers
 cp azure.yaml zeus-azure.yaml 
@@ -207,6 +210,10 @@ Enable the load balancer and the domain..
 # 3. Sample YAML
 
 Is [here](../../conf/confluent-operator/zeus-azure.yaml)..
-
 <br>
+
+<hr>
+This concludes this module.
+
+[Distributed Kafka ingestion with Confluent Platform](README.md)
 
