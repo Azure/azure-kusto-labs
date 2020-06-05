@@ -4,7 +4,7 @@
 <hr>
 
 # 1. FOCUS: CREATE ADX TABLE & GRANTS
-This document details creation of an ADX table and grants to write to the name, to the serice principal we created earlier.<br>
+This document details creation of an ADX table and grants to write to the name, to the service principal we created earlier.<br>
 
 ```
 // Drop table if exists
