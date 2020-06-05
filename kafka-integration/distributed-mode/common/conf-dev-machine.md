@@ -15,4 +15,9 @@ This module covers configuring your developer machine for the lab.
 Download Postman from here-
 https://www.postman.com/downloads/
 
+# Azure CLI
+Install for your OS-
+https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
+
+
 
