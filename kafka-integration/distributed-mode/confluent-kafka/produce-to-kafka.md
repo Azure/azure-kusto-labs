@@ -12,9 +12,12 @@ This document details broker conf update in the Databricks Spark notebook, and p
 2.  Open the notebok called "2-kafka-confluent-producer-batch" and update the broker conf from this step, to reflect your loadbalancer private IP and click on "Run all"
 
 
-![ADB-10](../images/ADB-10.png)
+![ADB-10](../images/ADB-12.png)
 <br>
 <hr>
+
+# 3. Go to Confluent Control Center web UI and check if the messages published made  it
+
 
 ![ADB-15](../images/ADB-15.png)
 <br>
