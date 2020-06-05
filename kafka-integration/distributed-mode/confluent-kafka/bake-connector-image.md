@@ -133,3 +133,14 @@ connect:
       url: http://schemaregistry:8081
 ```
 
+# 4. Sample YAML
+
+Is [here](../conf/confluent-operator/zeus-azure.yaml)..
+<br>
+
+The connector setup is included in this YAML and is explained in the next module.
+
+<hr>
+This concludes this module.
+
+[Distributed Kafka ingestion with Confluent Platform](README.md)
