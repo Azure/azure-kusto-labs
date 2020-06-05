@@ -1,7 +1,10 @@
-# 1. About
-This document details, set by step, installation of the Confluent operator.  
+##### KAFKA INTEGRATION LABS
 
-[Confluent Menu](README.md) | [Main menu](../../README.md)<br>
+[Distributed Kafka ingestion with Confluent Platform](README.md)
+<hr>
+
+# 1. FOCUS: INSTALL CONFLUENT OPERATOR
+This module covers installing Confluent operator on AKS.
 
 # 2. Confluent operator install
 
@@ -59,4 +62,8 @@ physicalstatefulclusters.operator.confluent.cloud   2020-05-14T19:07:43Z
 zookeeperclusters.cluster.confluent.com             2020-05-14T19:07:44Z
 ```
 
-[Confluent Menu](README.md) | [Main menu](../../README.md)<br>
+This concludes this module.
+
+
+[Distributed Kafka ingestion with Confluent Platform](README.md)
+<hr>
