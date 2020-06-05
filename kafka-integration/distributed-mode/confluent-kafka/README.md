@@ -35,7 +35,7 @@ Details are [here.](bake-connector-image.md)
 The following are the steps-
 1.  Install [Confluent operator](install-operator.md)
 2.  Install [Zookeeper service](install-zookeeper.md)
-3.  Install [Broker service]((install-broker.md))
+3.  Install [Broker service](install-broker.md)
 4.  
 
 # 7. Integrate from Kafka to ADX
