@@ -9,7 +9,7 @@ This document details setup of control center web UI.<br>
 
 # 2. Install
 ```
-cd /Users/akhanolk/opt/kafka/confluent-operator/helm
+cd opt/kafka/confluent-operator/helm
 ```
 The command...
 ```
