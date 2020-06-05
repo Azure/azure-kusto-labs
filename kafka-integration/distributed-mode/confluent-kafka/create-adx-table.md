@@ -34,3 +34,8 @@ This document details creation of an ADX table and grants to write to the name, 
 ```
 
 This concludes this module.<br>
+
+<hr>
+
+[Distributed Kafka ingestion with Confluent Platform](README.md)
+
