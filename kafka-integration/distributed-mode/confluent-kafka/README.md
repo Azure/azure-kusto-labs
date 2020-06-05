@@ -39,6 +39,7 @@ The following are the steps-
 4.  Install [Confluent Control Center](install-control-center.md)
 5.  Create a [Kafka topic](create-kafka-topic.md)
 6.  Produce to the Kafka topic from [Spark](produce-to-kafka.md)
+7.  Create table in [ADX](create-adx-table.md)
 
 # 7. Integrate from Kafka to ADX
 
