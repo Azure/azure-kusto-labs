@@ -25,7 +25,7 @@ We will download Confluent operator locally on your developer machine and edit c
 Details are [here.](download-operator.md)
 
 # 5. Create a Docker image of Confluent operator with the ADX KafkaConnect jar and publish to Docker hub
-1. We will create a Docker image that includes the Confluent operator and the ADX KafkaConnect connector jar, and publish to Docker hub.
+1. We will create a Docker image that includes the Confluent operator for Connect, and the ADX KafkaConnect connector jar, and publish to Docker hub.
 2.  We will edit our Azure specific YAML from #4 to leverage this new Docker image
 
 Details are [here.](bake-connector-image.md)
