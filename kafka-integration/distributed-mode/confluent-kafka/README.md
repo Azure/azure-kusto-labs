@@ -20,9 +20,15 @@ This lab required the foundational resources provisioned, as detailed [here.](..
 # 3. Provision an Azure Kubernetes Service cluster
 The Azure Kubernetes Cluster (AKS) will serve as the underlying infrastructure for Kafka.  Details for provisioning are [here.](create-aks.md)
 
-# 4. Download Confluent operator and prepare configuration files 
+# 4. Download Confluent operator and edit configuration files 
 We will download Confluent operator locally on your developer machine and edit confirguation files as needed for the lab.  <br>
 Details are [here.](download-operator.md)
+
+# 5. Create a Docker image of Confluent operator with the ADX KafkaConnect jar and publish to Docker hub
+1. We will create a Docker image that includes the Confluent operator and the ADX KafkaConnect connector jar, and publish to Docker hub.
+2.  We will edit our Azure specific YAML from #4 to leverage this new Docker image
+
+Details are [here.](bake-connector-image.md)
 
 # 5. Integrate from Kafka to ADX
 
