@@ -99,7 +99,7 @@ zookeeper-1-internal         ClusterIP      10.0.207.55    <none>         3888/T
 zookeeper-2-internal         ClusterIP      10.0.88.250    <none>         3888/TCP,2888/TCP,2181/TCP,7203/TCP,7777/TCP   2d3h
 ```
 
-# 3. Check if the Kusto connector is available on the connector pod
+# 3. Check if the Kusto connector is available on a connector pod
 Get the list of pods to determine which one to connect to..
 ```
 kubectl get pods -n operator
