@@ -99,7 +99,7 @@ zookeeper-1-internal         ClusterIP      10.0.207.55    <none>         3888/T
 zookeeper-2-internal         ClusterIP      10.0.88.250    <none>         3888/TCP,2888/TCP,2181/TCP,7203/TCP,7777/TCP   2d3h
 ```
 
-# 4. Check if the Kusto connector is available on the connector pod
+# 3. Check if the Kusto connector is available on the connector pod
 Get the list of pods to determine which one to connect to..
 ```
 kubectl get pods -n operator
@@ -151,7 +151,7 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:25 schema-registry
 We are good to go as the jar we need to see exists...<br>
 kafka-sink-azure-kusto-0.3.4-jar-with-dependencies.jar
 
-# 5. Properties for the connector
+# 4. Properties for the connector
 
 This...but we dont need a file.
 We will use Postman instead.
@@ -172,9 +172,9 @@ value.converter=org.apache.kafka.connect.storage.StringConverter
 key.converter=org.apache.kafka.connect.storage.StringConverter
 ```
 
-# 6.  Configure Postman collection JSON for the KafkaConnect REST calls
+# 5.  Configure Postman collection JSON for the KafkaConnect REST calls
 
-## 6.1. Launch Postman and import the collecton JSON
+## 5.1. Launch Postman and import the collecton JSON
 1.  The collection JSON for the KafkaConnect REST APIs with the Kusto Connector conf is [here](../../conf/confluent/KafkaConnect/manage/REST/Confluent-KafkaConnect.postman_collection.json).<br>
 2.  Download it to your machine and import it.
 
@@ -183,7 +183,7 @@ key.converter=org.apache.kafka.connect.storage.StringConverter
 <hr>
 
 
-# 7. Port forward so you can manage connectors via Postman through REST calls
+# 6. Port forward so you can manage connectors via Postman through REST calls
 Find the entry for the connectors service with -
 ```
 kubectl get svc -n operator
@@ -193,57 +193,57 @@ Then port-forward..this port is listed in the KafkaConnect YAML of the confluent
 sudo kubectl port-forward svc/connectors -n operator 803:8083
 ```
 
-# 8. Manage the connectors
+# 7. Manage the connectors
 
-## 8.1. List available connectors for running
+## 7.1. List available connectors for running
 Confluent has a bunch of connectors available out of the box, and we have added to it, our Kusto connector.
 
 ![CONCON-08](../images/con-con-8.png)
 <br>
 <hr>
 
-## 8.2. Check if any "Kusto" connectors are running
+## 7.2. Check if any "Kusto" connectors are running
 
 ![CONCON-02](../images/con-con-02.png)
 <br>
 <hr>
 
-## 8.3. Update your Kusto connector conf, in Postman, and send
+## 7.3. Update your Kusto connector conf, in Postman, and send
 Modify the conf under - 02-Provision-Kusto-Connector-Service.
 
 ![CONCON-03](../images/con-con-3.png)
 <br>
 <hr>
 
-## 8.4. View the configuration of your Kusto connectors
+## 7.4. View the configuration of your Kusto connectors
 Execute the REST call under - "03-Show-Kusto-Connector-Conf"
 
 ![CONCON-04](../images/con-con-4.png)
 <br>
 <hr>
 
-## 8.5. Check connector status
+## 7.5. Check connector status
 Execute the REST call under - "04-Show-Kusto-Connector-Status"
 
 ![CONCON-05](../images/con-con-5.png)
 <br>
 <hr>
 
-## 8.6. Should you need to restart Kusto connectors
+## 7.6. Should you need to restart Kusto connectors
 Execute the REST call under - "0-Restart-Kusto-Connector"
 
 ![CONCON-06](../images/con-con-6.png)
 <br>
 <hr>
 
-## 8.7. Should you need to delete Kusto connectors
+## 7.7. Should you need to delete Kusto connectors
 Execute the REST call under - "06-Delete-Kusto-Connector"
 
 ![CONCON-07](../images/con-con-7.png)
 <br>
 <hr>
 
-# 9. Should you need to look at connector logs
+# 8. Should you need to look at connector logs
 On CLI, execute the below...
 
 ```
@@ -279,12 +279,15 @@ Sample output...
 [INFO] 2020-06-03 17:46:54,731 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionResources - Refreshing Ingestion Resources
 ```
 
-# 10. Should you need to uninstall KafkaConnect service from the Confluent cluster..
+# 9. Should you need to uninstall KafkaConnect service from the Confluent cluster..
 1) Stop the connectors as shown above<br>
 
 2) Use helm to uninstall th service<br>
 ```
 helm uninstall connectors --namespace operator
 ```
-
+<hr>
 This concludes the module.  The next one covers testing the integration.
+
+ [Distributed Kafka ingestion with Confluent Platform](README.md)
+
