@@ -39,7 +39,7 @@ Details for provisioning and importing are [here.](create-databricks.md)
 # 9.0. Proceed to Kafka flavor specific labs
 This concludes the common setup for the two labs - you can now proceed to work on the the distributed ingestion with either HDInsight Kafka or Confluent platform.<br>
 
-[Distributed Kusto KafkaConnect with HDI Kafka]() | [Distributed Kusto KafkaConnect with Confluent Kafka]() 
+[Distributed Kusto KafkaConnect with HDI Kafka](../hdinsight-kafka/README.md) | [Distributed Kusto KafkaConnect with Confluent Kafka](../confluent-kafka/README.md) 
 
 
 
