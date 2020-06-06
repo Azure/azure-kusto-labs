@@ -75,7 +75,7 @@ Should you ever need to analyze...
 /usr/hdp/current/kafka-broker/bin/kafka-topics.sh --delete --topic crimes-topic-hdi --zookeeper $ZOOKEEPERS
 ```
 
-## 4. Analyze consumers and such
+## 4. Analyze consumers and such (AFTER creating connector cluster and starting connector tasks)
 Describe..
 ```
 /usr/hdp/current/kafka-broker/bin/kafka-topics.sh --zookeeper $ZOOKEEPERS --describe --topic crimes-topic-hdi
