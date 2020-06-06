@@ -93,16 +93,13 @@ Output...
 connect-KustoSinkConnectorCrimes
 ```
 
-Look specifically at KafkaConnect Kusto consumers
+Look specifically at KafkaConnect Kusto consumers - this will be listed only after the connector tasks are started.  It is posted in this page for comprehensiveness related to topic management.
 ```
 /usr/hdp/current/kafka-broker/bin/kafka-consumer-groups.sh --describe --group connect-KustoSinkConnectorCrimes --bootstrap-server $BROKERS
 ```
 
 Output...
 ```
-[2020-05-15 17:58:42,417] WARN Removing server 172.16.4.5.98:9092 from bootstrap.servers as DNS resolution failed for 172.16.4.5.98 (org.apache.kafka.clients.ClientUtils)
-[2020-05-15 17:58:42,580] WARN Removing server 172.16.4.5.98:9092 from bootstrap.servers as DNS resolution failed for 172.16.4.5.98 (org.apache.kafka.clients.ClientUtils)
-
 TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                        HOST            CLIENT-ID
 crimes-topic    2          8766581         28837488        20070907        connector-consumer-KustoSinkConnectorCrimes-2-6ebbf0e7-9347-4305-846c-efb70a318303 /172.16.8.8     connector-consumer-KustoSinkConnectorCrimes-2
 crimes-topic    4          10152314        28840010        18687696        connector-consumer-KustoSinkConnectorCrimes-4-7b2ca530-31ab-4438-ab80-9d0fd5978db5 /172.16.8.44    connector-consumer-KustoSinkConnectorCrimes-4
