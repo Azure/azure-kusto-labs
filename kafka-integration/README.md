@@ -39,5 +39,5 @@ This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect worke
 | # | Focus | Level |Time to complete |
 | :--- | :--- | :--- | :--- | 
 | 1 | Common environment provisioning | 300 | < 1 hour |
-| 2 | [Distributed KafkaConnect Kusto integration with Confluent Kafka](distributed/confluent-kafka/README.md) | 300 | 8-26 hours|
+| 2 | [Distributed KafkaConnect Kusto integration with Confluent Kafka](distributed-mode/confluent-kafka/README.md) | 300 | 8-26 hours|
 | 3 | [HDInsight Kafka based distributed KafkaConnect Kusto integration](distributed/hdinisght-kafka/README.md) | 300 | 8 hours|
