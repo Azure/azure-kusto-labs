@@ -229,17 +229,39 @@ Execute the REST call under - "04-Show-Kusto-Connector-Status"
 <br>
 <hr>
 
-## 7.6. Should you need to restart Kusto connectors
-Execute the REST call under - "0-Restart-Kusto-Connector"
+## 7.6. Should you need to pause Kusto connectors
+Execute the REST call under - "06-Pause-Kusto-Connectors"
 
 ![CONCON-06](../images/con-con-6.png)
 <br>
 <hr>
 
-## 7.7. Should you need to delete Kusto connectors
-Execute the REST call under - "06-Delete-Kusto-Connector"
+## 7.7. Should you need to resume Kusto connectors
+Execute the REST call under - "07-Resume-Kusto-Connectors"
 
 ![CONCON-07](../images/con-con-7.png)
+<br>
+<hr>
+
+
+## 7.8. Should you need to list Kusto connector tasks
+Execute the REST call under - "08-List-Kusto-Connectors-Tasks"
+
+![CONCON-08](../images/con-con-8.png)
+<br>
+<hr>
+
+## 7.9. Should you need to restart Kusto connector tasks
+Execute the REST call under - "09-Restart-Kusto-Connectors"
+
+![CONCON-09](../images/con-con-9.png)
+<br>
+<hr>
+
+## 7.10. Should you need to delete Kusto connector tasks
+Execute the REST call under - "10-Delete-Kusto-Connectors"
+
+![CONCON-10](../images/con-con-10.png)
 <br>
 <hr>
 
