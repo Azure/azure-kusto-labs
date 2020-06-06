@@ -32,7 +32,8 @@ Include your IP address so you can connect to HDI.
 ![HDI-04](../images/HDI-04.png)
 <br><hr>
 
-## 2.4. Provision HDInsight Kafka 3.6
+## 2.4. Provision HDInsight Kafka 4.0 (Kafka 2.1)
+The diagram shows HDInsight 3.6, but provision HDInsight 4.0 instead.
 
 ![HDI-05](../images/HDI-05.png)
 <br><hr>
