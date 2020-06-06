@@ -3,7 +3,7 @@
 [Distributed Kafka ingestion with Confluent Platform](README.md)
 <hr>
 
-# 1. FOCUS: UPDATE BROKER DETAILS IN SPARK NOTEBOOK
+# 1. FOCUS: UPDATE BROKER DETAILS IN SPARK NOTEBOOK and produce events to Kafka
 This document details broker conf update in the Databricks Spark notebook, and producing to Kafka from Spark.<br>
 
 # 2. Update the broker load balancer private IP in your Spark notebook and run the notebook
