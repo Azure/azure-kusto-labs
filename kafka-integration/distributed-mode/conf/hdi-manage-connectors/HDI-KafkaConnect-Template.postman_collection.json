@@ -1,0 +1,332 @@
+{
+	"info": {
+		"_postman_id": "0d7fb225-a7e7-466f-83cd-2bde50b2740c",
+		"name": "HDI-KafkaConnect-Template",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01-Show-Available-Connector-Plugins",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": " application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:803/connector-plugins",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connector-plugins"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "02-Kusto-Connectors-Provisioned?",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": " application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:803/connectors/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						""
+					]
+				},
+				"description": "Get All Existing connectors"
+			},
+			"response": []
+		},
+		{
+			"name": "03-Provision-Kusto-Connectors",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"KustoSinkConnectorCrimes\",\r\n    \"config\": {\r\n        \"connector.class\": \"com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector\",\r\n        \"kusto.sink.flush_interval_ms\": \"10000\",\r\n        \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\r\n        \"value.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\r\n        \"tasks.max\": \"9\",\r\n        \"topics\": \"crimes-topic-hdi\",\r\n        \"kusto.tables.topics_mapping\": \"[{'topic': 'crimes-topic-hdi','db': 'crimes_db', 'table': 'crimes_curated_kafka_hdi','format': 'json', 'mapping':'crimes_curated_kafka_hdi_mapping'}]\",\r\n        \"kusto.auth.authority\": \"<yourAADTenant>\",\r\n        \"kusto.url\":\"<yourADXClusterIngestURL>\",\r\n        \"kusto.auth.appid\":\"<yourSPNAppID>\",\r\n        \"kusto.auth.appkey\":\"yourSPNSecret>\",\r\n        \"kusto.sink.tempdir\":\"/var/tmp/\",\r\n        \"kusto.sink.flush_size\":\"10000000\"\r\n    }\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:803/connectors/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						""
+					]
+				},
+				"description": "Post a new connector "
+			},
+			"response": []
+		},
+		{
+			"name": "04-Show-Kusto-Connector-Conf",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " "
+				},
+				"url": {
+					"raw": "http://localhost:803/connectors/KustoSinkConnectorCrimes/config",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						"KustoSinkConnectorCrimes",
+						"config"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "05-Show-Kusto-Connectors-Status",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " "
+				},
+				"url": {
+					"raw": "http://localhost:803/connectors/KustoSinkConnectorCrimes/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						"KustoSinkConnectorCrimes",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "06-Pause-Kusto-Connectors",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " "
+				},
+				"url": {
+					"raw": "http://localhost:803/connectors/KustoSinkConnectorCrimes/pause",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						"KustoSinkConnectorCrimes",
+						"pause"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "07-Resume-Kusto-Connectors",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:803/connectors/KustoSinkConnectorCrimes/resume",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						"KustoSinkConnectorCrimes",
+						"resume"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "08-List-Kusto-Connectors-Tasks",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:803/connectors/KustoSinkConnectorCrimes/tasks",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						"KustoSinkConnectorCrimes",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "09-Restart-Kusto-Connectors",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": " application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:803/connectors/KustoSinkConnectorCrimes/restart",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						"KustoSinkConnectorCrimes",
+						"restart"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10-Delete-Kusto-Connectors",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " "
+				},
+				"url": {
+					"raw": "http://localhost:803/connectors/KustoSinkConnectorCrimes/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "803",
+					"path": [
+						"connectors",
+						"KustoSinkConnectorCrimes",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
