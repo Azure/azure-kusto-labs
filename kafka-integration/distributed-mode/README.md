@@ -17,15 +17,13 @@ The resources used in the lab are-
 ### 2) Azure Databricks cluster
 - Vnet injected Spark cluster for Spark connector testing, and to generate load for Kafka
 
-### 3) HDInsight Kafka
-- Vnet injected HDInsight Kafka (VMs)
-- Kusto Kafka connectors on AKS for HDInsight Kafka
-
-![HDI](images/HDI-E2E.png)
-
-### 4) Confluent Kafka
+### 3) Confluent Kafka
 - Vnet injected Confluent Kafka (AKS)
 - Kusto Kafka connectors on the same Confluent Kafka cluster on dedicated nodes
+
+### 4) HDInsight Kafka
+- Vnet injected HDInsight Kafka (VMs)
+- Kusto Kafka connectors on AKS for HDInsight Kafka
 
 # Provision foundational resources for the labs 
 
@@ -53,5 +51,5 @@ Details are [here.](common/conf-dev-machine.md)
 
 # Start the labs
 
-1.  [Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service](https://github.com/Azure/azure-kusto-labs/blob/master/kafka-integration/distributed-mode/confluent-kafka/README.md)
-2.  Distributed KafkaConnect with HDInsight Kafka 4.0, and connectors on Azure Kubernetes Service
+1.  [Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service](confluent-kafka/README.md)
+2.  [Distributed KafkaConnect with HDInsight Kafka 4.0, and connectors on Azure Kubernetes Service](hdi-kafka/README.md)
