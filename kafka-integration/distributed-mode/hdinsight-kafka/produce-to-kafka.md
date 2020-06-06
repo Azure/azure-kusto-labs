@@ -12,10 +12,13 @@ This document details broker conf update in the Databricks Spark notebook, and p
 2.  Open the notebok called "1-kafka-hdi-producer-batch" and update the broker conf to the CSV you created [here](create-hdi.md#29-capture-kafka-broker-ips-and-kafka-zookeeper-ips-from-ambari---hosts-page).
 
 
-![ADB-10](../images/HDI-50.png)
+![hdi50](../images/HDI-50.png)
 <br>
 <hr>
 
+![hdi51](../images/HDI-51.png)
+<br>
+<hr>
 
 <br>
 This concludes this module.
