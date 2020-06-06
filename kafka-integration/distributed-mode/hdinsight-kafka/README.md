@@ -30,7 +30,7 @@ Details are [here](smoke-test-kafka.md)
 
 # 3. Provision an Azure Kubernetes Service cluster
 The Azure Kubernetes Cluster (AKS) will serve as the underlying infrastructure for KafkaConnect.<br>  
-Details for provisioning are [here.](create-aks.md)
+Details for provisioning are [here.](create-connect-cluster.md)
 
 
 
