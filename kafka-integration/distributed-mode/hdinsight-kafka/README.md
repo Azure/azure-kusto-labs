@@ -28,11 +28,15 @@ Details are [here](create-topic.md)
 # 5. Consume from Kafka (test)
 Details are [here](smoke-test-kafka.md)
 
-# 3. Provision an Azure Kubernetes Service cluster
-The Azure Kubernetes Cluster (AKS) will serve as the underlying infrastructure for KafkaConnect.<br>  
+# 6. Provision an Azure Kubernetes Service cluster
+The Azure Kubernetes Cluster (AKS) will serve as the underlying infrastructure for KafkaConnect.
 Details for provisioning are [here.](create-connect-cluster.md)
 
+# 7. Download helm chart, edit it
+Details are [here.](download-helm-edit.md)
 
+# 8. Build and publsih docker image
+Details are [here](build-image.md)
 
 # 7.  Create table in ADX
 Details are [here](create-adx-table.md)
