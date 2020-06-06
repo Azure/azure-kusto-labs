@@ -150,7 +150,7 @@ Here, the cp* is the output of the "kubectl get svc" command.
 Install Postman, import JSON
 
 
-![PM-01](../images/Postman-01.png)
+![PM-01](../images/con-con-0.png)
 <br>
 <hr>
 
