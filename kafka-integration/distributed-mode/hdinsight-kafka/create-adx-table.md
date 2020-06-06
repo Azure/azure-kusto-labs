@@ -8,7 +8,7 @@ This document details creation of an ADX table and grants to write to the name, 
 
 ```
 // Drop table if exists
-.drop table crimes_curated_kafka_hdi ifexists 
+.drop table crimes_curated_kafka_hdi if exists 
 
 ```
 
