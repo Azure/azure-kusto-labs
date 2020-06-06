@@ -55,5 +55,5 @@ Details are [here.](common/conf-dev-machine.md)
 
 # Start the labs
 
-1.  Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service
+1.  [Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service](https://github.com/Azure/azure-kusto-labs/blob/master/kafka-integration/distributed-mode/confluent-kafka/README.md)
 2.  Distributed KafkaConnect with HDInsight Kafka 4.0, and connectors on Azure Kubernetes Service
