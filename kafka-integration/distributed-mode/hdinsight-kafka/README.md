@@ -17,7 +17,8 @@ This is a lengthy lab, dedicate 8 hours for this hands on lab if you are ne to A
 
 # 2. Pre-requisites
 
-This lab required the foundational resources provisioned, as detailed [here.](../common/README.md)
+- This lab requires the foundational resources provisioned, as detailed [here.](../common/README.md)
+- It also needs some utilities installed as detailed [here.](../common/conf-dev-machine.md)
 
 # 3. Provision HDInsight Kafka
 Details are [here](create-hdi.md)
