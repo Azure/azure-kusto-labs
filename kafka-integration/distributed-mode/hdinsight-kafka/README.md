@@ -35,54 +35,21 @@ Details for provisioning are [here.](create-connect-cluster.md)
 # 7. Download helm chart, edit it
 Details are [here.](download-helm-edit.md)
 
-# 8. Build and publsih docker image
+# 8. Build and publish docker image
 Details are [here](build-image.md)
 
 # 7.  Create table in ADX
 Details are [here](create-adx-table.md)
 
 # 8. Update ADX NSG for the AKS Public IP
-Details are [here](update-adx-nsg.md)
+Details are [here](update-adx-hdi-nsg.md)
 
 # 9. Produce to the Kafka topic from Spark
 Details are [here](produce-to-kafka.md)
 
 # 10. Verify connectors are running
 
-On CLI, execute the below...
 
-```
-kubectl get pods -n operator | grep connectors*
-```
-
-You should see this...
-```
-connectors-0                   1/1     Running   0          15d
-connectors-1                   1/1     Running   0          15d
-connectors-2                   1/1     Running   0          15d
-connectors-3                   1/1     Running   0          15d
-connectors-4                   1/1     Running   0          15d
-connectors-5                   1/1     Running   0          15d
-```
-
-Lets look at logs on connectors-3...
-```
-kubectl logs connectors-3 -n operator
-```
-
-Sample output indicating Kusto connector is running...
-```
-[INFO] 2020-06-03 13:46:44,729 [pool-20-thread-1] com.microsoft.aad.adal4j.AuthenticationAuthority doInstanceDiscovery - [Correlation ID: 316880bf-8f01-4002-8697-ed4a2e01e9dc] Instance discovery was successful
-[INFO] 2020-06-03 13:46:54,731 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionResources - Refreshing Ingestion Resources
-[INFO] 2020-06-03 14:46:44,728 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionAuthToken - Refreshing Ingestion Auth Token
-[INFO] 2020-06-03 14:46:54,731 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionResources - Refreshing Ingestion Resources
-[INFO] 2020-06-03 15:46:44,728 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionAuthToken - Refreshing Ingestion Auth Token
-[INFO] 2020-06-03 15:46:54,731 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionResources - Refreshing Ingestion Resources
-[INFO] 2020-06-03 16:46:44,728 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionAuthToken - Refreshing Ingestion Auth Token
-[INFO] 2020-06-03 16:46:54,731 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionResources - Refreshing Ingestion Resources
-[INFO] 2020-06-03 17:46:44,728 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionAuthToken - Refreshing Ingestion Auth Token
-[INFO] 2020-06-03 17:46:54,731 [Timer-0] com.microsoft.azure.kusto.ingest.ResourceManager refreshIngestionResources - Refreshing Ingestion Resources
-```
 
 # 11. Verify data delivery to ADX
 
