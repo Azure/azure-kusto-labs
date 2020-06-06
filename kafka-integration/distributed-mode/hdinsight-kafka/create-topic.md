@@ -69,7 +69,7 @@ export BROKERS=172.16.4.7:9092,172.16.4.5.98:9092,172.16.4.6:9092,172.16.4.4:909
 /usr/hdp/current/kafka-broker/bin/kafka-consumer-groups.sh --describe --group connect-KustoSinkConnectorCrimes --zookeeper $ZOOKEEPERS 
 ```
 
-## 3. Delete the topic
+## 3. SHOULD YOU NEED TO delete the topic (BUT DONT! :))
 Should you ever need to analyze...
 ```
 /usr/hdp/current/kafka-broker/bin/kafka-topics.sh --delete --topic crimes-topic-hdi --zookeeper $ZOOKEEPERS
