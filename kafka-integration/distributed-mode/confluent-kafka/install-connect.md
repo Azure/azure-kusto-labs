@@ -198,7 +198,7 @@ sudo kubectl port-forward svc/connectors -n operator 803:8083
 ## 7.1. List available connectors for running
 Confluent has a bunch of connectors available out of the box, and we have added to it, our Kusto connector.
 
-![CONCON-08](../images/con-con-8.png)
+![CONCON-01](../images/con-con-1.png)
 <br>
 <hr>
 
