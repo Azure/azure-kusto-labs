@@ -11,7 +11,7 @@ It covers:
 2.  Publishing events to Kafka from Spark on Azure Databricks
 3.  Consuming from Kafka and sinking to ADX with KafkaConnect ADX connector plugin
 
-![HDI](images/CONFLUENT-E2E.png)
+![CONFLUENT](../images/CONFLUENT-E2E.png)
 
 This is a lengthy lab, dedicate 8-16 hours for this hands on lab if you are ne to Azure and all the distributed systems featured in this lab.
 
