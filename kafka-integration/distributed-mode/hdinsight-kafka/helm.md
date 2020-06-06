@@ -4,11 +4,11 @@
 <hr>
 
 
-# 1. FOCUS: DOWNLOAD HELM CHART, BUILD AND PUBLISH DOCKER IMAGE
+# 1. FOCUS: HELM CHART for connect cluster
 
 This module details download and updates to the Confluent Helm Chart for the KafkaConnect Kusto sink connector deployment.
 
-# Helm Chart for KafkaConnect on AKS
+# 2. Helm Chart for KafkaConnect on AKS
 
 ## 1. Create a directory for cloning from git
 ```
@@ -216,6 +216,8 @@ livenessProbe:
   # periodSeconds: 5
   # failureThreshold: 10
 ```
+
+This concludes this module.
 
 <hr>
 
