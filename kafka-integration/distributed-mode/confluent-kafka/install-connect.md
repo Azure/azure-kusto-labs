@@ -204,7 +204,7 @@ Confluent has a bunch of connectors available out of the box, and we have added 
 
 ## 7.2. Check if any "Kusto" connectors are running
 
-![CONCON-02](../images/con-con-02.png)
+![CONCON-02](../images/con-con-2.png)
 <br>
 <hr>
 
