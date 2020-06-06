@@ -89,8 +89,11 @@ Sample output indicating Kusto connector is running...
 
 # 11. Verify data delivery to ADX
 
-Go to the Data Explorer web UI and run a query and you should see the record count steadily incrwasong.
+Go to the Data Explorer web UI and run a query and you should see the record count steadily increasing.
 
+![ADX](../images/flow.png)
+<br>
+<hr>
 <hr>
 This concludes the lab.
 
