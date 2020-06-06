@@ -142,7 +142,7 @@ Here, the cp* is the output of the "kubectl get svc" command.
 
 # 4. Study this json file - it includes REST calls to manage Kusto connectors
 
-[REST calls to manage connectors - postman_collection.json](../../conf/hdi/KafkaConnect/manage/REST/HDI-KafkaConnect.postman_collection.json)
+[REST calls to manage connectors - postman_collection.json](../conf/hdi-manage-connectors/HDI-KafkaConnect-Template.postman_collection.json)
 
 
 # 5. Install Postman and import the JSON
