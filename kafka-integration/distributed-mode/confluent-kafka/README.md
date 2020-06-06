@@ -44,12 +44,10 @@ The following are the steps-
 Details are [here](create-adx-table.md)
 
 # 8. Update ADX NSG for the AKS Public IP
-
-
+Details are [here](update-adx-nsg.md)
 
 # 9. Produce to the Kafka topic from Spark
 Details are [here](produce-to-kafka.md)
-
 
 
 # 10. Verify data delivery to ADX
