@@ -154,69 +154,79 @@ Install Postman, import JSON
 <br>
 <hr>
 
-# 6. List available connectors for running 
+# 6. Manage the connectors
 
+## 6.1. List available connectors for running
 Confluent has a bunch of connectors available out of the box, and we have added to it, our Kusto connector.
 
-![PM-09](../images/Postman-09.png)
+![CONCON-01](../images/con-con-hdi-1.png)
 <br>
 <hr>
 
-# 7. Check if any "Kusto" connectors are running
+## 6.2. Check if any "Kusto" connectors are running
 
-There should be none
-
-![PM-02](../images/Postman-02.png)
+![CONCON-02](../images/con-con-hdi-2.png)
 <br>
 <hr>
 
-# 8. Update your Kusto connector conf, in Postman, and send
+## 6.3. Update your Kusto connector conf, in Postman, and send
+Modify the conf under - 03-Provision-Kusto-Connector-Service.
 
-Modify the conf under - 02-Provision-Kusto-Connector-Service.
-
-
-![PM-03](../images/Postman-03.png)
+![CONCON-03](../images/con-con-hdi-3.png)
 <br>
 <hr>
 
-# 9. View the configuration of your Kusto connectors 
+## 6.4. View the configuration of your Kusto connectors
+Execute the REST call under - "04-Show-Kusto-Connector-Conf"
 
-Execute the REST call under - "03-Show-Kusto-Connector-Conf"
-
-
-![PM-04](../images/Postman-04.png)
+![CONCON-04](../images/con-con-hdi-4.png)
 <br>
 <hr>
 
-# 10. Check connector status
+## 6.5. Check connector status
+Execute the REST call under - "05-Show-Kusto-Connector-Status"
 
-Execute the REST call under - "04-Show-Kusto-Connector-Status"
-
-
-![PM-05](../images/Postman-05.png)
+![CONCON-05](../images/con-con-hdi-5.png)
 <br>
 <hr>
 
-# 11. Should you need to restart Kusto connectors
+## 6.6. Should you need to pause Kusto connectors
+Execute the REST call under - "06-Pause-Kusto-Connectors"
 
-Execute the REST call under - "05-Restart-Kusto-Connector"
+![CONCON-06](../images/con-con-hdi-6.png)
+<br>
+<hr>
 
+## 6.7. Should you need to resume Kusto connectors
+Execute the REST call under - "07-Resume-Kusto-Connectors"
 
-![PM-07](../images/Postman-07.png)
+![CONCON-07](../images/con-con-hdi-7.png)
 <br>
 <hr>
 
 
+## 6.8. Should you need to list Kusto connector tasks
+Execute the REST call under - "08-List-Kusto-Connectors-Tasks"
 
-# 12. Should you need to delete Kusto connectors
-
-Execute the REST call under - "06-Delete-Kusto-Connector"
-
-![PM-08](../images/Postman-08.png)
+![CONCON-08](../images/con-con-hdi-8.png)
 <br>
 <hr>
 
-# 13. If you need to uninstall KafkaConnect pods from the Kubernetes nodes 
+## 6.9. Should you need to restart Kusto connector tasks
+Execute the REST call under - "09-Restart-Kusto-Connectors"
+
+![CONCON-09](../images/con-con-hdi-9.png)
+<br>
+<hr>
+
+## 6.10. Should you need to delete Kusto connector tasks
+Execute the REST call under - "10-Delete-Kusto-Connectors"
+
+![CONCON-10](../images/con-con-hdi-10.png)
+<br>
+<hr>
+
+# 7. If you need to uninstall KafkaConnect pods from the Kubernetes nodes 
 Should ou ever need to...
 ```
 kubectl get svc
