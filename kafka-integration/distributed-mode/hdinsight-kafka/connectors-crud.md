@@ -226,7 +226,7 @@ Execute the REST call under - "10-Delete-Kusto-Connectors"
 <br>
 <hr>
 
-# 7. If you need to uninstall KafkaConnect pods from the Kubernetes nodes 
+# 7. FYI ONLY....should you need to uninstall KafkaConnect pods from the Kubernetes nodes 
 Should ou ever need to...
 ```
 kubectl get svc
