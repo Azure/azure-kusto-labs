@@ -60,7 +60,7 @@ tree
 
 ## 4. Update the values.yaml
 
-The YAML is [here](../../conf/hdi/KafkaConnect/deploy/helm-chart/values.yaml).<br>
+The YAML is [here](../conf/hdi-aks-helm-chart/values.yaml).<br>
 The below is for your understanding and if you want to scale/alter.
 
 1) Replica count update
