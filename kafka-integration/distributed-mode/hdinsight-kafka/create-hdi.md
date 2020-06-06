@@ -76,8 +76,6 @@ The diagram shows HDInsight 3.6, but provision HDInsight 4.0 instead.
 ![HDI-17](../images/HDI-17.png)
 <br><hr>
 
-Password is in the cheatsheet.
-
 
 ![HDI-18](../images/HDI-18.png)
 <br><hr>
