@@ -10,7 +10,7 @@ This module demonstrates how to produce to the Kafka topic from Azure Databricks
 
 # 2. Publish to the topic from Azure Databricks
 
-Go to the portal and launch Databricks and navigate to the notebook where we will publish to Kafka as shows below.<br>
+Go to the portal and launch Databricks and navigate to the notebook where we will publish to Kafka as shown below.<br>
 
 Update broker list & run the notebook
 
