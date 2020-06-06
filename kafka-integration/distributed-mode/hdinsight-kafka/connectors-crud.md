@@ -4,7 +4,7 @@
 <hr>
 
 
-# 1. FOCUS: Provision connetcor pods and launch ADX sink tasks
+# 1. FOCUS: Provision connector cluster & start sink tasks
 
 This module details (1) provisioning of KafkaConnect pods on AKS, and then (2) starting/managing the Kusto connectors on the pods.
 
@@ -24,6 +24,7 @@ az login
 3) Set subscription
 ```
 az account set --subscription <yourSubscriptionGUID>
+```
 
 4) Get cluster admin credentials
 ```
@@ -251,3 +252,10 @@ Finally - done...
 kubectl get pods
 No resources found in default namespace.
 ```
+
+
+This concludes the module.
+<hr>
+
+[Distributed Kafka ingestion with HDInsight](README.md)
+
