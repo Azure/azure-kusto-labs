@@ -52,4 +52,4 @@ Details are [here.](common/conf-dev-machine.md)
 # Start the labs
 
 1.  [Distributed KafkaConnect with Confluent Platform 5.5.0 on Azure Kubernetes Service](confluent-kafka/README.md)
-2.  [Distributed KafkaConnect with HDInsight Kafka 4.0, and connectors on Azure Kubernetes Service](hdi-kafka/README.md)
+2.  [Distributed KafkaConnect with HDInsight Kafka 4.0, and connectors on Azure Kubernetes Service](hdinsight-kafka/README.md)
