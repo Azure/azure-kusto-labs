@@ -112,5 +112,6 @@ crimes-topic    1          8512795         28780481        20267686        conne
 
 This concludes this module.<br><br>
 <hr>
+
 [Distributed Kafka ingestion with HDInsight](README.md)
 
