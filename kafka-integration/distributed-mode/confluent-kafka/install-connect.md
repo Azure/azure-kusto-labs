@@ -209,21 +209,21 @@ Confluent has a bunch of connectors available out of the box, and we have added 
 <hr>
 
 ## 7.3. Update your Kusto connector conf, in Postman, and send
-Modify the conf under - 02-Provision-Kusto-Connector-Service.
+Modify the conf under - 03-Provision-Kusto-Connector-Service.
 
 ![CONCON-03](../images/con-con-3.png)
 <br>
 <hr>
 
 ## 7.4. View the configuration of your Kusto connectors
-Execute the REST call under - "03-Show-Kusto-Connector-Conf"
+Execute the REST call under - "04-Show-Kusto-Connector-Conf"
 
 ![CONCON-04](../images/con-con-4.png)
 <br>
 <hr>
 
 ## 7.5. Check connector status
-Execute the REST call under - "04-Show-Kusto-Connector-Status"
+Execute the REST call under - "05-Show-Kusto-Connector-Status"
 
 ![CONCON-05](../images/con-con-5.png)
 <br>
