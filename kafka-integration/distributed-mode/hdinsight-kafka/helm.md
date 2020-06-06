@@ -166,7 +166,7 @@ prometheus:
     resources: {}
 ```
 
-5) Kafka updated<br>
+5) Kafka updated with **YOUR broker list**<br>
 
 ```
 ## You can list load balanced service endpoint, or list of all brokers (which is hard in K8s).  e.g.:
