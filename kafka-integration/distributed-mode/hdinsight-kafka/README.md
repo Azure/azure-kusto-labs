@@ -19,11 +19,19 @@ This is a lengthy lab, dedicate 8 hours for this hands on lab if you are ne to A
 
 This lab required the foundational resources provisioned, as detailed [here.](../common/README.md)
 
+# 3. Provision HDInsight Kafka
+Details are [here](create-hdi.md)
+
+# 4. Create a topic
+Details are [here](create-topic.md)
+
+# 5. Consume from Kafka (test)
+Details are [here](smoke-test-kafka.md)
+
 # 3. Provision an Azure Kubernetes Service cluster
 The Azure Kubernetes Cluster (AKS) will serve as the underlying infrastructure for KafkaConnect.<br>  
 Details for provisioning are [here.](create-aks.md)
 
-# 4. Install HDInsight Kafka
 
 
 # 7.  Create table in ADX
