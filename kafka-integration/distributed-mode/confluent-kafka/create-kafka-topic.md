@@ -10,7 +10,7 @@ This document details creation of a Kafka topic.<br>
 
 1.  SSH to broker b0
 ```
-kubectl -n operator exec -it kafka-0 bash
+kubectl -n operator exec -it kafka-0 -- bash
 ```
 
 2. Create topic on broker b0 from the SSH terminal from #1
