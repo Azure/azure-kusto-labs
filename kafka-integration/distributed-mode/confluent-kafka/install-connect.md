@@ -11,6 +11,11 @@ This will merely create KafkaConnect pods with default Confluent shipped connect
 
 # 2. Install KafkaConnect service
 
+
+```
+cd ~/opt/kafka/confluent-operator/helm
+```
+
 ```
 helm install connectors ./confluent-operator --values $VALUES_FILE --namespace operator --set connect.enabled=true
 ```
