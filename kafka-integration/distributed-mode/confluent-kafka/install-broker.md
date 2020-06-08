@@ -29,6 +29,12 @@ zookeeper-2                    1/1     Running   0          12m
 ### 2.2. Install
 
 The command...
+
+
+```
+cd ~/opt/kafka/confluent-operator/helm
+```
+
 ```
 helm install kafka ./confluent-operator --values $VALUES_FILE --namespace operator --set kafka.enabled=true
 ```
