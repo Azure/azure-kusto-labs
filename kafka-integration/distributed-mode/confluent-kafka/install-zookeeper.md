@@ -21,6 +21,11 @@ cc-operator-67b8f68f6f-zm4bq   1/1     Running   0          3m5s
 ### 2.2. Install
 
 The command...
+
+```
+cd ~/opt/kafka/confluent-operator/helm
+```
+
 ```
 helm install zookeeper ./confluent-operator --values $VALUES_FILE --namespace operator --set zookeeper.enabled=true
 ```
