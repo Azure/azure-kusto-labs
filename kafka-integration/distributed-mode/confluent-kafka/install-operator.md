@@ -10,6 +10,7 @@ This module covers installing Confluent operator on AKS.
 
 ### 2.1. Command:
 ```
+cd ~/opt/kafka/confluent-operator/helm
 helm install operator ./confluent-operator --values $VALUES_FILE --namespace operator --set operator.enabled=true
 ```
 
