@@ -934,7 +934,7 @@ dummy-topic
 seq 10000 | kafka-console-producer --topic dummy-topic --broker-list kafka:9071  --producer.config kafka.properties
 ```
 
-### 4.3. Consume the messages to the topic
+### 4.3. Consume the messages from the topic
 ```
 kafka-console-consumer --from-beginning --topic dummy-topic --bootstrap-server kafka:9071 --consumer.config kafka.properties
 ```
