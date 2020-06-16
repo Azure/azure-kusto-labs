@@ -21,7 +21,7 @@ End to end lab that covers producing to Kafka (HDInsight Kafka 3.6) from Spark, 
 Featuring Fluent-Bit v1.3.11 for log collection and forwarding, Azure Event Hub as streaming source, and straight through ingestion into Azure Data Explorer with our Azure Event Hub integration.<br>
 
 ### 3. Cosmos DB integration with Azure Data Explorer
-#### [3.1 Cosmos DB integration with Azure Data Explorer using change feed](https://github.com/minwal/azure-kusto-labs/tree/master/cosmosdb-adx-integration)
+#### [3.1 Cosmos DB integration with Azure Data Explorer using change feed](cosmosdb-adx-integration)
 This lab covers end to end integration of Cosmos DB with Azure Data Explorer using Cosmos DB change feed for building near real-time analytical solution with a flavor of Azure Data Explorer dashboards.
 
 ## Contributing
