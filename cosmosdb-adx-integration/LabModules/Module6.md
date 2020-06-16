@@ -9,7 +9,7 @@ In this module, you will download the data simulator console app and run it to s
   }
   ```
 
-1. Download the data simulator console app from [here](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/src/NrtaDataGenerator.zip)
+1. Download the data simulator console app from [here](../src/NrtaDataGenerator.zip)
 2. Right click and open 'DataGeneratorLabSolution.sln' file using Visual Studio. I had used VS2019.
 3. Replace Cosmos DB primary key in angular brackets in App.config file as shown below 
 ```
