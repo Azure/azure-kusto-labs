@@ -2,7 +2,7 @@
 In this module, we will create an Azure function that gets triggered when data is added or changed in Cosmos DB. Azure function has a natively supported Cosmos DB trigger which will be leveraged in this case.<br/>
 
 1. You can create an Azure function using Visual Studio(VS) 'Azure functions' project or using azure portal as explained in this [link](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-cosmos-db-triggered-function#:~:text=Create%20Azure%20Cosmos%20DB%20trigger,-In%20your%20function&text=On%20the%20New%20Function%20page,Azure%20Cosmos%20DB%20trigger%20template.&text=The%20name%20of%20the%20function.&text=Select%20New%2C%20the%20Database%20Account,setting%20for%20your%20account%20connection.)
-To make it easy and cost effective for lab purpose, I have used VS way so you can run it on your local system. You can download azure function source code from [here](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/src/NrtaChangeFeedAzFunction.zip).
+To make it easy and cost effective for lab purpose, I have used VS way so you can run it on your local system. You can download azure function source code from [here](../src/NrtaChangeFeedAzFunction.zip).
 You can host it either on your local system or on Azure.
 2. Open 'NrtaChangeFeedAzFunction.sln' solution file using VS. I had used VS 2019.
 3. Open 'local.settings.json' file and fill in the values you had noted on notepad in previous modules. If you kept all the services and resources names same as described in previous lab modules then you just need to change the account keys in angular brackets in settings file shown below -
