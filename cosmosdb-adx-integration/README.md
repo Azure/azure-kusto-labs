@@ -45,18 +45,18 @@ For more details on ADX, refer to this [documentation](https://azure.microsoft.c
  - Basic knowledge on Azure portal
 
 ## Lets get started
-[Module 1 - Create Cosmos DB account, database and container](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/LabModules/Module1.md)
+[Module 1 - Create Cosmos DB account, database and container](LabModules/Module1.md)
 
-[Module 2 - Create Storage account](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/LabModules/Module2.md)
+[Module 2 - Create Storage account](LabModules/Module2.md)
 
-[Module 3 - Create and configure Azure Event Hub](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/LabModules/Module3.md)
+[Module 3 - Create and configure Azure Event Hub](LabModules/Module3.md)
 
-[Module 4 - Create and Host Azure function to be triggered by Cosmos DB Change feed](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/LabModules/Module4.md)
+[Module 4 - Create and Host Azure function to be triggered by Cosmos DB Change feed](LabModules/Module4.md)
 
-[Module 5 - Create and Configure Azure Data Explorer cluster](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/LabModules/Module5.md)
+[Module 5 - Create and Configure Azure Data Explorer cluster](LabModules/Module5.md)
 
-[Module 6 - Set up data simulator to feed data into Cosmos DB](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/LabModules/Module6.md)
+[Module 6 - Set up data simulator to feed data into Cosmos DB](LabModules/Module6.md)
 
-[Module 7 - Explore, analyze and visualize data in near real time using Azure Data Explorer](https://github.com/minwal/cosmos-adx-int/blob/minwal-patch-1/LabModules/Module7.md)
+[Module 7 - Explore, analyze and visualize data in near real time using Azure Data Explorer](LabModules/Module7.md)
 
 
