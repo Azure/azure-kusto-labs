@@ -1,4 +1,4 @@
-# Integrating Azure Cosmos DB and Azure Data Explorer via Cosmos DB Change feed
+# Integration of Azure Cosmos DB with Azure Data Explorer via Cosmos DB Change feed
 
 **In this hands on lab you will learn about the power of near real-time analytics solution and how easy it is to build one using Azure Cosmos DB and Azure Data Explorer(ADX).**
 
@@ -13,9 +13,10 @@ In this lab you will build the solution architecture as shown below. You will si
 ![](images/RefArch.png)
 
 ## Key advantages of this architecture
- - Transactional data is readily available for analysis so you can query data in near real-time as opposed to waiting for days to get the data.
- - You can query data without impacting the OLTP system's performance.
- - Drill down from analytic aggregates always point to fresh data.
+ - Readily available operational data for analysis as opposed to waiting for days to get the data.
+ - Querying data without impacting the OLTP system's performance.
+ - Quick and fast interactive queries over fresh and large data sets.
+ - Drill down from analytic aggregates always point to the fresh data.
 
 ## Brief on each of the components in this lab -
 1. **Data Generation component** - This will simulate random data for the lab. Its a simple .NET program to generate sample data simulating ecommerce website's shopping events including viewing of items, adding items to a shopping cart, purchase items. 
