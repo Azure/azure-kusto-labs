@@ -13,8 +13,7 @@ This repository features self-contained, hands-on-labs with detailed and step-by
 ## Labs
 
 ### 1.  Kafka Ingestion series
-#### 1.1.  HDInsight Kafka - standalone mode with connector on edge node
-End to end lab that covers producing to Kafka (HDInsight Kafka 3.6) from Spark, connector download, and configuration and leveraging the same to integrate into Azure Data Explorer.
+[Mutiple labs](https://github.com/Azure/azure-kusto-labs/tree/master/kafka-integration) that cover stan-alone and distributed modes of Kafka ingestion across Azure HDInsight and Confluent Kafka cluster flavors.
 
 ### 2.  Kubernetes Container Log Analytics
 #### [2.1. Kubernetes Container Log Analytics with Fluent-Bit](k8s-container-log-analytics/fluent-bit/README.md)
