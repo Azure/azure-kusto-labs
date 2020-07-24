@@ -13,7 +13,7 @@ It covers:
 
 ![HDI](../images/HDI-E2E.png)
 
-This is a lengthy lab, dedicate 8 hours for this hands on lab if you are ne to Azure and all the distributed systems featured in this lab.
+This is a lengthy lab, dedicate 8 hours for this hands on lab if you are new to Azure and all the distributed systems featured in this lab.
 
 # 2. Pre-requisites
 
