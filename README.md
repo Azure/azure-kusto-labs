@@ -13,7 +13,7 @@ This repository features self-contained, hands-on-labs with detailed and step-by
 ## Labs
 
 ### 1.  Kafka Ingestion series
-[Mutiple labs](https://github.com/Azure/azure-kusto-labs/tree/master/kafka-integration) that cover stan-alone and distributed modes of Kafka ingestion across Azure HDInsight and Confluent Kafka cluster flavors.
+[Mutiple labs](https://github.com/Azure/azure-kusto-labs/tree/master/kafka-integration) that cover stand-alone and distributed modes of Kafka ingestion across Azure HDInsight and Confluent Kafka cluster flavors.
 
 ### 2.  Kubernetes Container Log Analytics
 #### [2.1. Kubernetes Container Log Analytics with Fluent-Bit](k8s-container-log-analytics/fluent-bit/README.md)
