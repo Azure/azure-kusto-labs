@@ -9,10 +9,10 @@ This set of HoLs features Kafka integration with ADX and covers "how to integrat
 Is Azure's managed Kafka as a service with disaggregated compute and storage model and unlike other offerings of HDInsight, actually leverages managed disks with an option for you to choose a SKU with SSD/premium disks and also configure number of disks per node.<br><br>
 
 ## Confluent IaaS Kafka - Operator based on Azure Kubernetes Service
-Featured in the labs is a licensed (free for 30 days) version of Kafka from Confluent, runs on Azure Kubernetes Service (AKS), and leverages the Confluent operator for provisioning on AKS.<br><br>  
+Featured in this labs is a licensed (free for 30 days) version of Kafka from Confluent, runs on Azure Kubernetes Service (AKS), and leverages the Confluent operator for provisioning on AKS.<br><br>  
 
 ## Confluent PaaS Kafka - Confluent Cloud
-Featured in the labs is cloud PaaS version of Kafka from Confluent (managed).<br><br> 
+Featured in this labs is cloud PaaS version of Kafka from Confluent (managed).<br><br> 
 
 ## About the labs
 The labs are:
