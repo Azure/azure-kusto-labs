@@ -7,7 +7,7 @@ This module features provisioning of the following resources:
 4. An Azure Kubernetes Service Cluster
 
 ## 1. Provision an Azure resource group
-As Azure resource group is a logical container for your Azure resources for the lab.  Follow the steps below to provision an Azure resource group<br>
+An Azure resource group is a logical container for your Azure resources for the lab.  Follow the steps below to provision an Azure resource group<br>
 
 
 ![RG](images/01-rg-01.png)
