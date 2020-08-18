@@ -117,6 +117,7 @@ We will need an Azure storage account to download a public dataset, and transfor
 <br>
 <hr>
 <br>
+
 ![STORAGE](images/01-storage-13.png)
 <br>
 <br>
