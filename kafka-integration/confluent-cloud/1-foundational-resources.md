@@ -140,6 +140,8 @@ We will need an Azure storage account to download a public dataset, and transfor
 ## 3. Provision an Databricks Workspace and Cluster
 We will use Spark on Azure Databricks to produce to Kafka some data.  Follow the steps below to provision an Azure Databricks workspace and cluster.
 
+### Provision an Azure Databricks workspace
+
 ![SPARK](images/01-spark-01.png)
 <br>
 <br>
@@ -199,6 +201,9 @@ We will use Spark on Azure Databricks to produce to Kafka some data.  Follow the
 <br>
 <hr>
 <br>
+
+
+### Create a Spark cluster
 
 ![SPARK](images/01-spark-11.png)
 <br>
