@@ -231,3 +231,7 @@ We will use Spark on Azure Databricks to produce to Kafka some data.  Follow the
 
 
 ## 4. Provision an Azure Kubernetes Service Cluster
+
+We will run the Kafka connectors on an Azure Kubernetes Service (AKS) instance.  This section covers creartion of an AKS cluster.
+
+
