@@ -10,7 +10,7 @@ This module features provisioning of the following resources:
 As Azure resource group is a logical container for your Azure resources for the lab.  Follow the steps below to provision an Azure resource group<br>
 
 
-![RG](../images/01-rg-01.png)
+![RG](images/01-rg-01.png)
 
 ![RG](../images/01-rg-02.png)
 
