@@ -1,20 +1,20 @@
 # KAFKA INTEGRATION LABS
 <br>
 
-# About
+# 1. About
 
 This set of HoLs features Kafka integration with ADX and covers "how to integrate" with both the popluar Kafka offerings we see on Azure - **HDInsight Kafka**,  **Confluent Kafka IaaS** and **Confluent Cloud Kafka PaaS**.  <br>
 
-## HDInsight Kafka
+## 1.1. HDInsight Kafka
 Is Azure's managed Kafka as a service with disaggregated compute and storage model and unlike other offerings of HDInsight, actually leverages managed disks with an option for you to choose a SKU with SSD/premium disks and also configure number of disks per node.<br><br>
 
-## Confluent IaaS Kafka - Operator based on Azure Kubernetes Service
+## 1.2. Confluent IaaS Kafka - Operator based on Azure Kubernetes Service
 Featured in this labs is a licensed (free for 30 days) version of Kafka from Confluent, runs on Azure Kubernetes Service (AKS), and leverages the Confluent operator for provisioning on AKS.<br><br>  
 
-## Confluent PaaS Kafka - Confluent Cloud
+## 1.3. Confluent PaaS Kafka - Confluent Cloud
 Featured in this labs is cloud PaaS version of Kafka from Confluent (managed).<br><br> 
 
-## About the labs
+## 1.4. About the labs
 The labs are:
 - **end to end** 
 - **scripted** (no need to bing/google - not a hack) and **self contained**
@@ -27,7 +27,7 @@ The labs are:
 - the labs that feature distributed modes of KafkaConnect also feature secure environments (**VNet injected** Kafka, Azure Databricks and Azure Data Explorer)
 - Dedicate at least 4-8 hours for each of the labs that features KafkaConnect in distrbuted mode
 
-# Standalone KafkaConnect with HDInsight Kafka 3.6
+# 2. Standalone KafkaConnect with HDInsight Kafka 3.6
 
 | # | Focus | Level |Time to complete |
 | :--- | :--- | :--- | :--- |
@@ -35,7 +35,7 @@ The labs are:
 
 This lab environment can be deleted.  The distributed KafkaConnect labs do not use this environment.
 
-# Distributed KafkaConnect with HDInsight Kafka and Confluent Kafka IaaS, separately
+# 3. Distributed KafkaConnect with HDInsight Kafka and Confluent Kafka IaaS, separately
 
 This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect workers running on Azure Kubernetes service and Confluent Kafka and associated KafkaConnect workers running on the same Azure Kubernetes service cluster.  Azure Databricks is leveraged to download public dataset, curate it and publish to Kafka for the lab.  All services are Vnet injected as mentioned earlier.  The documentation for this lab is shared across both Kafka offerings so you can complete them back to back in the order you choose.  Its a level 400 lab in terms of overall complexity (due to provisioning and configuration).  Allocate about 8 hours for the first lab and about 6-7 hours for the second as it builds on the same environment.<br>
 
@@ -45,6 +45,6 @@ This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect worke
 | 2 | [Distributed KafkaConnect Kusto integration with Confluent Kafka](distributed-mode/confluent-kafka/README.md) | 300 | 8-16 hours|
 | 3 | [HDInsight Kafka based distributed KafkaConnect Kusto integration](distributed-mode/hdinsight-kafka/README.md) | 300 | 8 hours|
 
-# Distributed KafkaConnect with Confluent Cloud (Kafka PaaS managed by Confluent)
+# 4. Distributed KafkaConnect with Confluent Cloud (Kafka PaaS managed by Confluent)
 
 This lab is independent of the above, does not use the common environment, and features Confluent Cloud, with connectors running on Azure Kubernetes Service.  Azure Databricks is leveraged to download a public dataset, curate it and publish to Kafka for the lab.  The documentation and resources for this lab have no dependency on the labs above.  Allocate about 8-10 hours for this lab.<br>
