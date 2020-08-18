@@ -1,10 +1,10 @@
 # About
 
 This module features provisioning of the following resources:
-[1. An Azure Resource Group](1-foundational-resources.md#1-provision-an-azure-resource-group)
-[2. An Azure Storage Account]()
-[3. An Azure Databricks Workspace and Cluster]()
-[4. An Azure Kubernetes Service Cluster]()
+[1. An Azure Resource Group](1-foundational-resources.md#1-provision-an-azure-resource-group) <br>
+[2. An Azure Storage Account]() <br>
+[3. An Azure Databricks Workspace and Cluster]() <br>
+[4. An Azure Kubernetes Service Cluster]() <br>
 
 ## 1. Provision an Azure Resource Group
 
