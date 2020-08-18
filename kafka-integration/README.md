@@ -47,4 +47,4 @@ This set of labs features HDInsight Kafka 3.6 with associated KafkaConnect worke
 
 # 4. Distributed KafkaConnect with Confluent Cloud (Kafka PaaS managed by Confluent)
 
-This lab is independent of the above, does not use the common environment, and features Confluent Cloud, with connectors running on Azure Kubernetes Service.  Azure Databricks is leveraged to download a public dataset, curate it and publish to Kafka for the lab.  The documentation and resources for this lab have no dependency on the labs above.  Allocate about 8-10 hours for this lab.<br>
+**This lab is independent of the above labs**, does not use the common environment, and features Confluent Cloud, with connectors running on Azure Kubernetes Service.  Azure Databricks is leveraged to download a public dataset, curate it and publish to Kafka for the lab.  The documentation and resources for this lab have no dependency on the labs above.  Allocate about 8-10 hours for this lab.<br>
