@@ -6,7 +6,7 @@ This module features provisioning of the following resources:
 3. An Azure Databricks Workspace and Cluster
 4. An Azure Kubernetes Service Cluster
 
-## 1. Provision an Azure resource group
+## 1. Provision an Azure Resource Group
 
 An Azure resource group is a logical container for your Azure resources for the lab.  Follow the steps below to provision an Azure resource group<br>
 
@@ -45,6 +45,8 @@ An Azure resource group is a logical container for your Azure resources for the 
 ## 2. Provision an Azure Storage Account
 
 We will need an Azure storage account to download a public dataset, and transform it for use in the lab.  We will need three storage containers, one for downloading, one for raw data and one for curated data.  Follow the screenshots below to provision the storage account and containers.
+
+### Provision the account
 
 ![STORAGE](images/01-storage-01.png)
 <br>
@@ -94,6 +96,8 @@ We will need an Azure storage account to download a public dataset, and transfor
 <hr>
 <br>
 
+### Provision storage containers
+
 ![STORAGE](images/01-storage-09.png)
 <br>
 <br>
@@ -118,6 +122,8 @@ We will need an Azure storage account to download a public dataset, and transfor
 <hr>
 <br>
 
+### Capture storage account key for use in the lab
+
 ![STORAGE](images/01-storage-13.png)
 <br>
 <br>
@@ -132,6 +138,91 @@ We will need an Azure storage account to download a public dataset, and transfor
 
 
 ## 3. Provision an Databricks Workspace and Cluster
+We will use Spark on Azure Databricks to produce to Kafka some data.  Follow the steps below to provision an Azure Databricks workspace and cluster.
+
+![SPARK](images/01-spark-01.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-02.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-03.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-04.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-05.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-06.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-07.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-08.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-09.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-10.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-11.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-12.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-13.png)
+<br>
+<br>
+<hr>
+<br>
+
+![SPARK](images/01-spark-14.png)
+<br>
+<br>
+<hr>
+<br>
 
 
 ## 4. Provision an Azure Kubernetes Service Cluster
