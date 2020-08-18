@@ -12,15 +12,19 @@ An Azure resource group is a logical container for your Azure resources for the 
 
 <img src="https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/images/01-rg-01.png" width=600 align=left>
 
-![RG](images/01-rg-01.png?s=100)
+<br>
 
-![RG](images/01-rg-02.png)
+<img src="https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/images/01-rg-02.png" width=600 align=left>
 
-![RG](images/01-rg-03.png)
 
-![RG](images/01-rg-04.png)
+<img src="https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/images/01-rg-03.png" width=600 align=left>
 
-![RG](images/01-rg-05.png)
+
+<img src="https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/images/01-rg-04.png" width=600 align=left>
+
+
+<img src="https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/images/01-rg-05.png" width=600 align=left>
+
 
 <hr>
 
