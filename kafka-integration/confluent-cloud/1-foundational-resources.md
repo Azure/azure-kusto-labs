@@ -10,7 +10,7 @@ This module features provisioning of the following resources:
 An Azure resource group is a logical container for your Azure resources for the lab.  Follow the steps below to provision an Azure resource group<br>
 
 
-<img src="https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/images/01-rg-01.png" width=500 align=left>
+<img src="https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/images/01-rg-01.png" width=600 align=left>
 
 ![RG](images/01-rg-01.png?s=100)
 
