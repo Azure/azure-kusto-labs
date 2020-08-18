@@ -12,15 +12,15 @@ As Azure resource group is a logical container for your Azure resources for the 
 
 ![RG](images/01-rg-01.png)
 
-![RG](../images/01-rg-02.png)
+![RG](images/01-rg-02.png)
 
-![RG](../images/01-rg-03.png)
+![RG](images/01-rg-03.png)
 
-![RG](../images/01-rg-04.png)
+![RG](images/01-rg-04.png)
 
-![RG](../images/01-rg-05.png)
+![RG](images/01-rg-05.png)
 
-
+<hr>
 
 ## 2. Provision an Azure Storage Account
 
