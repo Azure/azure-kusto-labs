@@ -2,7 +2,7 @@
 
 In this module, we will (1) provision Confluent Cloud, (2) create a Kafka cluster there, (3) download and configure Confluent Cloud CLI and (4) create a Kafka topic, and (5) finally capture details we will need to interop with the cluster from Spark to produce to and KafkaConnect cluster to consume from.
 
-1. Provision Confluent Cloud the first time
+1. Provision Confluent Cloud the first time, rename your environment
 2. Create a Kafka cluster on Confluent Cloud
 3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice
 4. From Confluent CLI, generate an API key for use externally
@@ -18,6 +18,8 @@ Follow the below through step 6.
 https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-marketplace/
 
 ## 2. Create a Kafka cluster on Confluent Cloud
+
+### 2.1. Create your Kafka cluster
 
 ![CC](images/02-cc-07.png)
 <br>
@@ -54,7 +56,39 @@ https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-market
 <hr>
 <br>
 
-## 3. Create/rename your environment in Confluent Cloud
+### 2.2. Rename your default environment
+
+![CC](images/02-cc-12.png)
+<br>
+<br>
+<hr>
+<br>
+
+![CC](images/02-cc-13.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 2.3. Locate and note down your bootstrap server load balancer FQDN and port
+
+![CC](images/02-cc-14.png)
+<br>
+<br>
+<hr>
+<br>
+
+![CC](images/02-cc-15.png)
+<br>
+<br>
+<hr>
+<br>
+
+Author's bootstrap server load balancer FQDN and port-
+```
+pkc-lgwgm.eastus2.azure.confluent.cloud:9092
+```
+Note this down for use in the CLI to create a topic, from Spark to produce to Kafka and from the connector cluster to consume from Kafka.
 
 
 ## 3.  Download Confluent CLI & switch to environment, and cluster of choice
@@ -186,8 +220,13 @@ Set API Key "BSKF4xxxxx" as the active API key for "lkc-1npp5".
 ## 5.  Create a Kafka topic
 The command-
 ```
---create --bootstrap-server pkc-lgwgm.eastus2.azure.confluent.cloud:9092 --replication-factor 3 --partitions 6 --topic crimes
+indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 --dry-run 
+Created topic "crimes".
 ```
-Author's output -
 
+Author's output -
+```
+indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 --dry-run 
+Created topic "crimes".
+```
 
