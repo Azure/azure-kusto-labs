@@ -5,7 +5,7 @@ This module features provisioning of the following resources:<br>
 [2. An Azure Storage Account](1-foundational-resources.md#2-provision-an-azure-storage-account) <br>
 [3. An Azure Databricks Workspace and Cluster](1-foundational-resources.md#3-provision-an-databricks-workspace-and-cluster) <br>
 [4. An Azure Kubernetes Service Cluster](1-foundational-resources.md#4-provision-an-azure-kubernetes-service-cluster) <br>
-[5. Network peering of #2 and #3]()<br>
+[5. Virtual Network peering configuration() <br>
 [6. An Azure Active Directory Service Principal]()<br>
 
 ## 1. Provision an Azure Resource Group
@@ -327,13 +327,62 @@ We will run the Kafka connectors on an Azure Kubernetes Service (AKS) instance. 
 <hr>
 <br>
 
+
 ![K8S](images/01-aks-16.png)
 <br>
 <br>
 <hr>
 <br>
 
+## 5. Configure Virtual Network peering 
+For the purpose of simplicity, we provisioned Azure Databricks and Azure Kubernetes Service standalone without creating a single virtual network with subnets for each service.  This ended up with each service creating its own virtual network. We need to locate these autocreated virtual networks and peer them to enable private communication between them.
 
-## 5. Provision an Azure Active Directory Service Principal
+### 5.1. Find the virtual network for your Kubernetes (Kafka connector) cluster 
+
+
+![PEER](images/01-vnet-peer-01.png)
+<br>
+<br>
+<hr>
+<br>
+
+![PEER](images/01-vnet-peer-02.png)
+<br>
+<br>
+<hr>
+<br>
+
+![PEER](images/01-vnet-peer-03.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+### 5.2. Find the virtual network for your Databricks (Spark) cluster 
+
+![PEER](images/01-vnet-peer-04.png)
+<br>
+<br>
+<hr>
+<br>
+
+![PEER](images/01-vnet-peer-05.png)
+<br>
+<br>
+<hr>
+<br>
+
+![PEER](images/01-vnet-peer-06.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+### 5.3. Peer #5.1 vnet with #5.2 vnet
+
+
+## 6. Provision an Azure Active Directory Service Principal
 
 
