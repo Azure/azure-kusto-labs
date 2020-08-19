@@ -1,6 +1,13 @@
 # About
 
-In this module, we will provision Confluent Cloud, create a Kafka cluster there, and create a Kafka topic, and finally capture details we will need to interop with the cluster from Spark to produce to and KafkaConnect cluster to consume from.
+In this module, we will (1) provision Confluent Cloud, (2) create a Kafka cluster there, (3) download and configure Confluent Cloud CLI and (4) create a Kafka topic, and (5) finally capture details we will need to interop with the cluster from Spark to produce to and KafkaConnect cluster to consume from.
+
+1. Provision Confluent Cloud the first time
+2. Create a Kafka cluster on Confluent Cloud
+3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice
+4. From Confluent CLI, generate an API key for use externally
+5. From Confluent CLI, create a topic
+
 
 ## 1. Provision Confluent Cloud the first time
 
@@ -10,7 +17,7 @@ Follow the steps below to create an instance of the Confluent cloud with billing
 Follow the below through step 6.
 https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-marketplace/
 
-## 2. Create your Kafka cluster on Confluent Cloud
+## 2. Create a Kafka cluster on Confluent Cloud
 
 ![CC](images/02-cc-07.png)
 <br>
@@ -152,6 +159,7 @@ Save the API key and secret. The secret is not retrievable later.
 ### 4.2. Persist key to the API key store
 Optional: Add the API secret with ccloud api-key store <key> <secret>. When you create an API key with the CLI, it is automatically stored locally. However, when you create an API key using the UI, API, or with the CLI on another machine, the secret is not available for CLI use until you store it. This is required because secrets cannot be retrieved after creation.
 
+The command-
 ```
 ccloud api-key store <api-key> <api-secret> --resource <resource-id>
 ```
@@ -163,7 +171,7 @@ Stored API secret for API key "BSKF4xxxxx".
   ```
   
 ### 4.3. Set the API key to use
-
+The command-
 ```
 ccloud api-key use <key> --resource <resource-id>
 ```
@@ -175,7 +183,11 @@ Set API Key "BSKF4xxxxx" as the active API key for "lkc-1npp5".
 ```
 
 
-## 4.  Create a Kafka cluster
-
+## 5.  Create a Kafka topic
+The command-
+```
+--create --bootstrap-server pkc-lgwgm.eastus2.azure.confluent.cloud:9092 --replication-factor 3 --partitions 6 --topic crimes
+```
+Author's output -
 
 
