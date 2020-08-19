@@ -218,10 +218,11 @@ Set API Key "BSKF4xxxxx" as the active API key for "lkc-1npp5".
 
 
 ## 5.  Create a Kafka topic
+
+### 5.1. Create
 The command-
 ```
-indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 --dry-run 
-Created topic "crimes".
+ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 
 ```
 
 Author's output -
@@ -230,3 +231,71 @@ indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --pa
 Created topic "crimes".
 ```
 
+### 5.2. List
+
+The command-
+```
+ccloud kafka topic list --cluster <clusterID>
+```
+
+Author's output -
+```
+indra:kafka akhanolk$ ccloud kafka topic list --cluster lkc-g9zrn
+   Name   
++--------+
+  crimes 
+```
+
+### 5.3. Describe
+
+The command-
+```
+ccloud kafka topic describe crimes --cluster <clusterID>
+```
+
+Author's output -
+```
+indra:kafka akhanolk$ ccloud kafka topic describe crimes --cluster lkc-g9zrn
+Topic: crimes PartitionCount: 6 ReplicationFactor: 3
+  Topic  | Partition | Leader | Replicas |   ISR     
++--------+-----------+--------+----------+----------+
+  crimes |         0 |      5 | [5 7 2]  | [5 7 2]   
+  crimes |         1 |     10 | [10 5 0] | [10 5 0]  
+  crimes |         2 |      0 | [0 10 9] | [0 10 9]  
+  crimes |         3 |      4 | [4 6 8]  | [4 6 8]   
+  crimes |         4 |      7 | [7 3 1]  | [7 3 1]   
+  crimes |         5 |      1 | [1 11 4] | [1 11 4]  
+
+Configuration
+ 
+                   Name                   |        Value         
++-----------------------------------------+---------------------+
+  cleanup.policy                          | delete               
+  compression.type                        | producer             
+  delete.retention.ms                     |            86400000  
+  file.delete.delay.ms                    |               60000  
+  flush.messages                          | 9223372036854775807  
+  flush.ms                                | 9223372036854775807  
+  follower.replication.throttled.replicas |                      
+  index.interval.bytes                    |                4096  
+  leader.replication.throttled.replicas   |                      
+  max.compaction.lag.ms                   | 9223372036854775807  
+  max.message.bytes                       |             2097164  
+  message.downconversion.enable           | true                 
+  message.format.version                  | 2.3-IV1              
+  message.timestamp.difference.max.ms     | 9223372036854775807  
+  message.timestamp.type                  | CreateTime           
+  min.cleanable.dirty.ratio               |                 0.5  
+  min.compaction.lag.ms                   |                   0  
+  min.insync.replicas                     |                   2  
+  preallocate                             | false                
+  retention.bytes                         |                  -1  
+  retention.ms                            |           604800000  
+  segment.bytes                           |           104857600  
+  segment.index.bytes                     |            10485760  
+  segment.jitter.ms                       |                   0  
+  segment.ms                              |           604800000  
+  unclean.leader.election.enable          | false 
+```
+ 
+This concludes the module.  You may now proceed to [create an Azure Data Explorer cluster](3-adx.md).
