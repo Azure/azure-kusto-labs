@@ -300,4 +300,5 @@ Configuration
 
 <br><br>
 <hr>
+
 This concludes the module.  You may now proceed to [create an Azure Data Explorer cluster](3-adx.md).
