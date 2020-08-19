@@ -5,8 +5,7 @@ This module features provisioning of the following resources:<br>
 [2. An Azure Storage Account](1-foundational-resources.md#2-provision-an-azure-storage-account) <br>
 [3. An Azure Databricks Workspace and Cluster](1-foundational-resources.md#3-provision-an-databricks-workspace-and-cluster) <br>
 [4. An Azure Kubernetes Service Cluster](1-foundational-resources.md#4-provision-an-azure-kubernetes-service-cluster) <br>
-[5. Virtual Network peering configuration](1-foundational-resources.md#5-configure-virtual-network-peering) <br>
-[6. An Azure Active Directory Service Principal]()<br>
+[5. An Azure Active Directory Service Principal]()<br>
 
 ## 1. Provision an Azure Resource Group
 
@@ -334,55 +333,75 @@ We will run the Kafka connectors on an Azure Kubernetes Service (AKS) instance. 
 <hr>
 <br>
 
-## 5. Configure Virtual Network peering 
-For the purpose of simplicity, we provisioned Azure Databricks and Azure Kubernetes Service standalone without creating a single virtual network with subnets for each service.  This ended up with each service creating its own virtual network. We need to locate these autocreated virtual networks and peer them to enable private communication between them.
-
-### 5.1. Find the virtual network for your Kubernetes (Kafka connector) cluster 
 
 
-![PEER](images/01-vnet-peer-01.png)
+## 5. Provision an Azure Active Directory Service Principal
+We will use an Azure Active Directory Service Principal as the privileged identity with access to ADX tables for accessing ADX from Kafka connectors.<br>
+There are three items we need to save for subsequent use in this lab-<br>
+1.  Azure Active Directory Service Principal Name (SPN) client ID<br>
+2.  Azure Active Directory Service Principal Name (SPN) secret<br>
+3.  Azure Active Directory Service tenant ID<br>
+Ensure you write them down some place...<br><br>
+
+The following are steps to create the same- <br>
+
+![SPN](images/01-spn-01.png)
 <br>
 <br>
 <hr>
 <br>
 
-![PEER](images/01-vnet-peer-02.png)
+![SPN](images/01-spn-02.png)
 <br>
 <br>
 <hr>
 <br>
 
-![PEER](images/01-vnet-peer-03.png)
+![SPN](images/01-spn-03.png)
 <br>
 <br>
 <hr>
 <br>
 
-
-### 5.2. Find the virtual network for your Databricks (Spark) cluster 
-
-![PEER](images/01-vnet-peer-04.png)
+![SPN](images/01-spn-04.png)
 <br>
 <br>
 <hr>
 <br>
 
-![PEER](images/01-vnet-peer-05.png)
+![SPN](images/01-spn-05.png)
 <br>
 <br>
 <hr>
 <br>
 
-![PEER](images/01-vnet-peer-06.png)
+![SPN](images/01-spn-08.png)
 <br>
 <br>
 <hr>
 <br>
 
+![SPN](images/01-spn-07.png)
+<br>
+<br>
+<hr>
+<br>
 
-### 5.3. Peer #5.1 vnet with #5.2 vnet
+![SPN](images/01-spn-08.png)
+<br>
+<br>
+<hr>
+<br>
 
+![SPN](images/01-spn-09.png)
+<br>
+<br>
+<hr>
+<br>
 
-## 6. Provision an Azure Active Directory Service Principal
-
+![SPN](images/01-spn-10.png)
+<br>
+<br>
+<hr>
+<br>
 
