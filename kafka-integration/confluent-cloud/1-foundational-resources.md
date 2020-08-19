@@ -5,7 +5,7 @@ This module features provisioning of the following resources:<br>
 [2. An Azure Storage Account](1-foundational-resources.md#2-provision-an-azure-storage-account) <br>
 [3. An Azure Databricks Workspace and Cluster](1-foundational-resources.md#3-provision-an-databricks-workspace-and-cluster) <br>
 [4. An Azure Kubernetes Service Cluster](1-foundational-resources.md#4-provision-an-azure-kubernetes-service-cluster) <br>
-[5. Virtual Network peering configuration() <br>
+[5. Virtual Network peering configuration(1-foundational-resources.md#5-configure-virtual-network-peering) <br>
 [6. An Azure Active Directory Service Principal]()<br>
 
 ## 1. Provision an Azure Resource Group
