@@ -10,7 +10,7 @@ Follow the steps below to create an instance of the Confluent cloud with billing
 Follow the below through step 6.
 https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-marketplace/
 
-## 2. Create your Kafka cluster
+## 2. Create your Kafka cluster on Confluent Cloud
 
 ![CC](images/02-cc-07.png)
 <br>
