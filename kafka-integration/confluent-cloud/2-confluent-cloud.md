@@ -12,6 +12,41 @@ https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-market
 
 ## 2. Create your Kafka cluster
 
+![CC](images/02-cc-07.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+![CC](images/02-cc-08.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+
+![CC](images/02-cc-09.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+![CC](images/02-cc-10.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+![CC](images/02-cc-11.png)
+<br>
+<br>
+<hr>
+<br>
+
 
 ## 3.  Download Confluent CLI
 
