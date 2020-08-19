@@ -5,7 +5,7 @@ This module features provisioning of the following resources:<br>
 [2. An Azure Storage Account](1-foundational-resources.md#2-provision-an-azure-storage-account) <br>
 [3. An Azure Databricks Workspace and Cluster](1-foundational-resources.md#3-provision-an-databricks-workspace-and-cluster) <br>
 [4. An Azure Kubernetes Service Cluster](1-foundational-resources.md#4-provision-an-azure-kubernetes-service-cluster) <br>
-[5. An Azure Active Directory Service Principal]()<br>
+[5. An Azure Active Directory Service Principal](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/1-foundational-resources.md#5-provision-an-azure-active-directory-service-principal)<br>
 
 ## 1. Provision an Azure Resource Group
 
@@ -405,3 +405,4 @@ The following are steps to create the same- <br>
 <hr>
 <br>
 
+This concludes this module.  Click [here](2-confluent-cloud.md) to proceed to the next module.
