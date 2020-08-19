@@ -2,11 +2,11 @@
 
 In this module, we will (1) provision Confluent Cloud, (2) create a Kafka cluster there, (3) download and configure Confluent Cloud CLI and (4) create a Kafka topic, and (5) finally capture details we will need to interop with the cluster from Spark to produce to and KafkaConnect cluster to consume from.
 
-1. Provision Confluent Cloud the first time, rename your environment
-2. Create a Kafka cluster on Confluent Cloud
-3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice
-4. From Confluent CLI, generate an API key for use externally
-5. From Confluent CLI, create a topic
+[1. Provision Confluent Cloud the first time, rename your environment](2-confluent-cloud.md#1-provision-confluent-cloud-the-first-time)<br>
+[2. Create a Kafka cluster on Confluent Cloud](2-confluent-cloud.md#2-create-a-kafka-cluster-on-confluent-cloud)<br>
+[3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice](2-confluent-cloud.md#3--download-confluent-cli--switch-to-environment-and-cluster-of-choice)<br>
+[4. From Confluent CLI, generate an API key for use externally](2-confluent-cloud.md#4--from-confluent-cli-generate-an-api-key-for-use-externally-spark-connectors-etc)<br>
+[5. From Confluent CLI, create a topic](2-confluent-cloud.md#5--create-a-kafka-topic)<br>
 
 
 ## 1. Provision Confluent Cloud the first time
@@ -297,5 +297,7 @@ Configuration
   segment.ms                              |           604800000  
   unclean.leader.election.enable          | false 
 ```
- 
+
+<br><br>
+<hr>
 This concludes the module.  You may now proceed to [create an Azure Data Explorer cluster](3-adx.md).
