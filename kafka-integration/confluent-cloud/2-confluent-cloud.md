@@ -15,7 +15,7 @@ In this module, we will provision Confluent Cloud, and configure various Kafka r
 Follow the steps below to create an instance of the Confluent cloud with billing tied to your Azure payment method.
 <br>Note that Confluent Cloud is not tied to an Azure resource group, so it will not be visible in your resource group.
 <br><br>Step by step guide is available here.
-Follow the below through step 6.
+Follow the below through step 6.<br>
 https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-marketplace/
 
 ## 2. Create a Kafka cluster on Confluent Cloud
@@ -318,7 +318,27 @@ indra:kafka akhanolk$ ccloud schema-registry cluster enable --cloud azure --geo 
 ```
 
 ### 6.2. Describe
+Docs are available [here.](https://docs.confluent.io/current/cloud/cli/command-reference/schema-registry/cluster/ccloud_schema-registry_cluster_describe.html)
 
+The command to enable-
+```
+ccloud schema-registry cluster describe -o human
+```
+
+Author's output -
+```
+indra:kafka akhanolk$ ccloud schema-registry cluster describe -o human
++----------------------+--------------------------------------------------+
+| Name                 | account schema-registry                          |
+| Cluster ID           | lsrc-qpm3p                                       |
+| Endpoint URL         | https://xxxxx.westus2.azure.confluent.cloud |
+| Used Schemas         |                                                0 |
+| Available Schemas    |                                             1000 |
+| Global Compatibility | <Requires API Key>                               |
+| Mode                 | <Requires API Key>                               |
+| Service Provider     |                                                  |
++----------------------+--------------------------------------------------+
+```
 
 
 <br><br>
