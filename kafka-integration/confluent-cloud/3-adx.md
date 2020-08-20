@@ -107,7 +107,7 @@ Go to the portal, to you resource group, and click on 'Add' and type 'Azure Data
 <br>
 
 
-## 3. Capture the information you need for the lab
+## 3. Jot down the information you need for the lab
 
 | # | Key | Value |
 | :--- | :--- | :--- |
