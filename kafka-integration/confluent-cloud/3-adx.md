@@ -4,7 +4,7 @@ This module covers provisioning Azure Data Explorer (ADX).
 
 ## 1. Provision an ADX cluster
 
-Go to the portal, to you resource group, and click on 'Add' and type 'Azure Data Explorer' and run through the process of provisioning as detailed below. It is crucial to provision it in the same region as the rest of your Azure resources for the lab.  The author is using East US 2 as the region.
+Go to the portal, to your resource group, and click on 'Add' and type 'Azure Data Explorer' and run through the process of provisioning as detailed below. It is crucial to provision it in the same region as the rest of your Azure resources for the lab.  The author is using East US 2 as the region.
 
 ![CC](images/03-adx-01.png)
 <br>
@@ -106,8 +106,6 @@ Go to the portal, to you resource group, and click on 'Add' and type 'Azure Data
 <hr>
 <br>
 
-
-## 3. Jot down the information you need for the lab
 
 # 7.  Jot down the information you need for the lab
 
