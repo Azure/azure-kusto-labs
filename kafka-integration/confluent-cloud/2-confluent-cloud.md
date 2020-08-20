@@ -7,7 +7,7 @@ In this module, we will (1) provision Confluent Cloud, (2) create a Kafka cluste
 [3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice](2-confluent-cloud.md#3--download-confluent-cli--switch-to-environment-and-cluster-of-choice)<br>
 [4. From Confluent CLI, generate an API key for use externally](2-confluent-cloud.md#4--from-confluent-cli-generate-an-api-key-for-use-externally-spark-connectors-etc)<br>
 [5. From Confluent CLI, create a topic](2-confluent-cloud.md#5--create-a-kafka-topic)<br>
-[6. From Confluent CLI, enable schema registry](2-confluent-cloud.md#6--enable schema registry)<br>
+[6. From Confluent CLI, enable schema registry](2-confluent-cloud.md#6--from-confluent-cli-enable-schema-registry)<br>
 
 
 ## 1. Provision Confluent Cloud the first time
