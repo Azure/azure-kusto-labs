@@ -112,6 +112,7 @@ Go to the portal, to you resource group, and click on 'Add' and type 'Azure Data
 | # | Key | Value |
 | :--- | :--- | :--- |
 | 1 | ADX ingest cluster URL| <yourIngestClusterURI>|
+| 2 | ADX database name| crimes_db|
 
 <br><br><hr>
 This concludes this module.  You can now move to the next module.
