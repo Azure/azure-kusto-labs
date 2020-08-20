@@ -8,6 +8,7 @@ In this module, we will provision Confluent Cloud, and configure various Kafka r
 [4. From Confluent CLI, generate an API key for use externally](2-confluent-cloud.md#4--from-confluent-cli-generate-an-api-key-for-use-externally-spark-connectors-etc)<br>
 [5. From Confluent CLI, create a topic](2-confluent-cloud.md#5--create-a-kafka-topic)<br>
 [6. From Confluent CLI, enable schema registry](2-confluent-cloud.md#6--from-confluent-cli-enable-schema-registry)<br>
+[7. From Confluent CLI, register a schema with the schema registry]()<br>
 
 
 ## 1. Provision Confluent Cloud the first time
@@ -339,7 +340,6 @@ indra:kafka akhanolk$ ccloud schema-registry cluster describe -o human
 | Service Provider     |                                                  |
 +----------------------+--------------------------------------------------+
 ```
-
 
 <br><br>
 <hr>
