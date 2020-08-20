@@ -300,6 +300,7 @@ Configuration
 
 ## 6.  From Confluent CLI, enable schema registry
 
+### 6.1. Enable
 Docs from Confluent are [here.](https://docs.confluent.io/current/cloud/cli/command-reference/schema-registry/cluster/ccloud_schema-registry_cluster_enable.html#ccloud-schema-registry-cluster-enable)<br>
 
 The command to enable-
@@ -315,6 +316,9 @@ indra:kafka akhanolk$ ccloud schema-registry cluster enable --cloud azure --geo 
 | Endpoint URL | https://xxxxx.westus2.azure.confluent.cloud |
 +--------------+--------------------------------------------------+
 ```
+
+### 6.2. Describe
+
 
 
 <br><br>
