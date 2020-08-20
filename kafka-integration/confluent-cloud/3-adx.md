@@ -109,5 +109,9 @@ Go to the portal, to you resource group, and click on 'Add' and type 'Azure Data
 
 ## 3. Capture the information you need for the lab
 
+| # | Key | Value |
+| :--- | :--- | :--- |
+| 1 | ADX ingest cluster URL| <yourIngestClusterURI>|
+
 <br><br><hr>
 This concludes this module.  You can now move to the next module.
