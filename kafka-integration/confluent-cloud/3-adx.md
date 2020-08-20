@@ -109,10 +109,24 @@ Go to the portal, to you resource group, and click on 'Add' and type 'Azure Data
 
 ## 3. Jot down the information you need for the lab
 
+# 7.  Jot down the information you need for the lab
+
 | # | Key | Value |
 | :--- | :--- | :--- |
-| 1 | ADX ingest cluster URL| <yourIngestClusterURI>|
-| 2 | ADX database name| crimes_db|
+| 1 | Resource group| kafka-confluentcloud-lab-rg |
+| 2 | Azure region|  |
+| 3 | Azure storage account|  |
+| 4 | Azure storage account key|  |
+| 5 | Azure Active Directory Service Principal application/client ID|  |
+| 6 | Azure Active Directory Service Principal application secret key|  |
+| 7 | Azure Active Directory tenant ID|  |
+| 8 | Kafka bootstrap server list|  |
+| 9 | Kafka topic|  |
+| 10 | Kafka API key|  |
+| 11 | Kafka API secret|  |
+| 12 | Kafka schema registry URL|  |
+| 13 | ADX ingest cluster URL| <yourIngestClusterURI>|
+| 14 | ADX database name| crimes_db|
 
 <br><br><hr>
 This concludes this module.  You can now move to the next module.
