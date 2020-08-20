@@ -405,4 +405,16 @@ The following are steps to create the same- <br>
 <hr>
 <br>
 
+# 6.  Jot down the information you need for the lab
+
+| # | Key | Value |
+| :--- | :--- | :--- |
+| 1 | Resource group| kafka-confluentcloud-lab-rg |
+| 2 | Azure region|  |
+| 3 | Azure storage account|  |
+| 4 | Azure storage account key|  |
+| 5 | Azure Active Directory Service Principal application/client ID|  |
+| 6 | Azure Active Directory Service Principal application secret key|  |
+| 7 | Azure Active Directory tenant ID|  |
+
 This concludes this module.  Click [here](2-confluent-cloud.md) to proceed to the next module.
