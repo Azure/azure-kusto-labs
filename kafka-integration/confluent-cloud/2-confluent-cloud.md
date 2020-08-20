@@ -129,9 +129,9 @@ indra:kafka akhanolk$ ccloud environment list
 ```
 
 2.  Switch to the  environment - useful when you have multiple.
-
+The command-
 ```
-ccloud environment use env-0jmy2
+ccloud environment use <yourEnvID>
 ```
 
 Here is the author's output-
@@ -160,7 +160,7 @@ indra:kafka akhanolk$ ccloud kafka cluster list
 2.  Switch to cluster of choice<br>
 You might have more than one cluster; To set your CLI to work with a cluster of choice, run this command with the ID of the cluster-
 ```
-ccloud kafka cluster use lkc-g9zrn
+ccloud kafka cluster use <yourClusterID>
 ```
 
 Author's output-
@@ -175,11 +175,10 @@ Set Kafka cluster "lkc-g9zrn" as the active cluster for environment "env-0jmy2".
 ### 4.1. Generate the key
 Run this command, replace last parameter with your cluster ID-
 ```
-ccloud kafka cluster use lkc-g9zrn
+ccloud kafka cluster use <yourClusterID>
 ```
 
 Author's output -
-
 ```
 indra:kafka akhanolk$ ccloud api-key create --resource lkc-g9zrn
 It may take a couple of minutes for the API key to be ready.
@@ -195,7 +194,7 @@ Optional: Add the API secret with ccloud api-key store <key> <secret>. When you 
 
 The command-
 ```
-ccloud api-key store <api-key> <api-secret> --resource <resource-id>
+ccloud api-key store <api-key> <api-secret> --resource <yourClusterID>
 ```
   
 Author's output -
@@ -207,7 +206,7 @@ Stored API secret for API key "BSKF4xxxxx".
 ### 4.3. Set the API key to use
 The command-
 ```
-ccloud api-key use <key> --resource <resource-id>
+ccloud api-key use <key> --resource <yourClusterID>
 ```
 
 Author's output -
@@ -222,7 +221,7 @@ Set API Key "BSKF4xxxxx" as the active API key for "lkc-1npp5".
 ### 5.1. Create
 The command-
 ```
-ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 
+ccloud kafka topic create crimes --cluster <yourClusterID>  --partitions <yourTopicPartitionCount> 
 ```
 
 Author's output -
