@@ -341,6 +341,25 @@ indra:kafka akhanolk$ ccloud schema-registry cluster describe -o human
 +----------------------+--------------------------------------------------+
 ```
 
+
+# 7.  Jot down the information you need for the lab
+
+| # | Key | Value |
+| :--- | :--- | :--- |
+| 1 | Resource group| kafka-confluentcloud-lab-rg |
+| 2 | Azure region|  |
+| 3 | Azure storage account|  |
+| 4 | Azure storage account key|  |
+| 5 | Azure Active Directory Service Principal application/client ID|  |
+| 6 | Azure Active Directory Service Principal application secret key|  |
+| 7 | Azure Active Directory tenant ID|  |
+| 8 | Kafka bootstrap server list|  |
+| 9 | Kafka topic|  |
+| 10 | Kafka API key|  |
+| 11 | Kafka API secret|  |
+| 12 | Kafka schema registry URL|  |
+
+
 <br><br>
 <hr>
 
