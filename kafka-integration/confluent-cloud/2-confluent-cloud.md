@@ -1,6 +1,6 @@
 # About
 
-In this module, we will (1) provision Confluent Cloud, (2) create a Kafka cluster there, (3) download and configure Confluent Cloud CLI and (4) create a Kafka topic, and (5) finally capture details we will need to interop with the cluster from Spark to produce to and KafkaConnect cluster to consume from.
+In this module, we will provision Confluent Cloud, and configure various Kafka related entities, and finally capture details we will need to interop with the cluster from Spark to produce to and KafkaConnect cluster to consume from.
 
 [1. Provision Confluent Cloud the first time, rename your environment](2-confluent-cloud.md#1-provision-confluent-cloud-the-first-time)<br>
 [2. Create a Kafka cluster on Confluent Cloud](2-confluent-cloud.md#2-create-a-kafka-cluster-on-confluent-cloud)<br>
@@ -300,6 +300,21 @@ Configuration
 
 ## 6.  From Confluent CLI, enable schema registry
 
+Docs from Confluent are [here.](https://docs.confluent.io/current/cloud/cli/command-reference/schema-registry/cluster/ccloud_schema-registry_cluster_enable.html#ccloud-schema-registry-cluster-enable)<br>
+
+The command to enable-
+```
+ccloud schema-registry cluster enable --cloud azure --geo <yourGeo> -o human
+```
+
+Author's output -
+```
+indra:kafka akhanolk$ ccloud schema-registry cluster enable --cloud azure --geo us -o human
++--------------+--------------------------------------------------+
+| Id           | lsrc-qpm3p                                       |
+| Endpoint URL | https://xxxxx.westus2.azure.confluent.cloud |
++--------------+--------------------------------------------------+
+```
 
 
 <br><br>
