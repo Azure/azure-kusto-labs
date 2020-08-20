@@ -72,13 +72,13 @@ https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-market
 
 ### 2.3. Locate and note down your bootstrap server load balancer FQDN and port
 
-![CC](images/02-cc-14.png)
+![CC](images/02-cc-16.png)
 <br>
 <br>
 <hr>
 <br>
 
-![CC](images/02-cc-15.png)
+![CC](images/02-cc-17.png)
 <br>
 <br>
 <hr>
