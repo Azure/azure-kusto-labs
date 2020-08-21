@@ -167,4 +167,4 @@ E.g.
 | 14 | ADX table mapping name| crimes_mapping|
   
 <br><br><hr>
-This concludes this module.  You can now move to the next module.
+This concludes this module.  You can now move to the [next module that covers configuring Spark - our Kafka producer.](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/4-configure-spark.md)
