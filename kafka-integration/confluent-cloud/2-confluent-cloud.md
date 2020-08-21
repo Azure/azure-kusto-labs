@@ -9,6 +9,7 @@ In this module, we will provision Confluent Cloud, and configure various Kafka r
 [5. From Confluent CLI, create a topic](2-confluent-cloud.md#5--create-a-kafka-topic)<br>
 [6. From Confluent CLI, enable schema registry](2-confluent-cloud.md#6--from-confluent-cli-enable-schema-registry)<br>
 [7. From Confluent CLI, register a schema with the schema registry]()<br>
+[8. Jot down information needed in subsequent labs]()<br>
 
 
 ## 1. Provision Confluent Cloud the first time
@@ -341,8 +342,11 @@ indra:kafka akhanolk$ ccloud schema-registry cluster describe -o human
 +----------------------+--------------------------------------------------+
 ```
 
+# 7. Register the schema of the dataset we will use in the schema registry from Confluent CLI
 
-# 7.  Jot down the information you need for the lab
+
+
+# 8.  Jot down the information you need for the lab
 
 | # | Key | Value |
 | :--- | :--- | :--- |
