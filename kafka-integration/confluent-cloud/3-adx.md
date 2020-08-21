@@ -1,6 +1,6 @@
 # About
 
-This module covers provisioning Azure Data Explorer (ADX), creation of a database, table, table mapping and grants for the service principal we created to access the environment from the Kafka connector cluster.  We also configure an ingestion batching policy on the ADX table.  Our integration from Kafka to ADX is batch and queued.  So the tuning parameters of lowest of flush interval, flush bytes, flush items will trigger an ingestion into ADX and is conifgured via the ingestion batching policy.  We will execute the database object creations via the ADX web UI.
+This module covers provisioning Azure Data Explorer (ADX), creation of a database, table, table mapping and grants for the service principal we created to access the environment from the Kafka connector cluster.  We also configure an ingestion batching policy on the ADX table.  Our integration from Kafka to ADX is batch and queued.  So the tuning parameters of lowest of (flush interval, flush bytes, flush items) will trigger an ingestion into ADX and is conifgured via the ingestion batching policy.  We will execute the database object creations via the ADX web UI.  We will be using the public dataset, Chicago crimes for the lab as shared in the introduction to the lab.
 
 ## 1. Provision an ADX cluster
 
