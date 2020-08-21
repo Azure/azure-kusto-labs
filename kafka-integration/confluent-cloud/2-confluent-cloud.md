@@ -354,7 +354,7 @@ indra:kafka akhanolk$ ccloud schema-registry cluster describe -o human
 | 6 | Azure Active Directory Service Principal application secret key|  |
 | 7 | Azure Active Directory tenant ID|  |
 | 8 | Kafka bootstrap server list|  |
-| 9 | Kafka topic|  |
+| 9 | Kafka topic| crimes |
 | 10 | Kafka API key|  |
 | 11 | Kafka API secret|  |
 | 12 | Kafka schema registry URL|  |
