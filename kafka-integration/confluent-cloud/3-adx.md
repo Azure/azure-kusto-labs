@@ -106,8 +106,46 @@ Go to the portal, to your resource group, and click on 'Add' and type 'Azure Dat
 <hr>
 <br>
 
+## 3. Launch the ADX Web UI
 
-# 7.  Jot down the information you need for the lab
+
+
+## 4. Create a table
+
+```
+// Drop table if exists
+.drop table crimes ifexists
+
+// Create table
+.create table ['crimes']  (['case_id']:int,['case_nbr']:string, ['case_dt_tm']:string, ['block']:string,  ['iucr']:string, ['primary_type']:string, ['description']:string, ['location_description']:string, ['arrest_made']:bool, ['was_domestic']:bool,['beat']:string, ['district']:string, ['ward']:int, ['community_area']:int, ['fbi_code']:string, ['x_coordinate']:int, ['y_coordinate']:int, ['updated_dt']:datetime,['latitude']:real, ['longitude']:real, ['location_coords']:string, ['case_day_of_month']:int, ['case_hour']:int, ['case_day_of_week_nbr']:int, ['case_day_of_week_name']:string,['case_year']:int,   ['case_month']:int  )
+```
+
+## 5.  Create a table mapping
+```
+// Create mapping
+.create table ['crimes'] ingestion avro mapping 'crimes_mapping' '[{"column":"case_id","path":"$.case_id"}, {"column":"case_nbr","path":"$.case_nbr"}, {"column":"case_dt_tm","path":"$.case_dt_tm"}, {"column":"block","path":"$.block"},  {"column":"iucr","path":"$.iucr"}, {"column":"primary_type","path":"$.primary_type"}, {"column":"description","path":"$.description"}, {"column":"location_description","path":"$.location_description"}, {"column":"arrest_made","path":"$.arrest_made"}, {"column":"was_domestic","path":"$.was_domestic"},{"column":"beat","path":"$.beat"}, {"column":"district","path":"$.district"}, {"column":"ward","path":"$.ward"}, {"column":"community_area","path":"$.community_area"}, {"column":"fbi_code","path":"$.fbi_code"}, {"column":"x_coordinate","path":"$.x_coordinate"}, {"column":"y_coordinate","path":"$.y_coordinate"},  {"column":"updated_dt","path":"$.updated_dt"}, {"column":"latitude","path":"$.latitude"}, {"column":"longitude","path":"$.longitude"}, {"column":"location_coords","path":"$.location_coords"},  {"column":"case_day_of_month","path":"$.case_day_of_month"}, {"column":"case_hour","path":"$.case_hour"}, {"column":"case_day_of_week_nbr","path":"$.case_day_of_week_nbr"}, {"column":"case_day_of_week_name","path":"$.case_day_of_week_name"},{"column":"case_year","path":"$.case_year"},{"column":"case_month","path":"$.case_month"}]'
+```
+
+## 6.  Configure the ADX batching policy
+The ADX batching policy is a table level ingestion performance tuning knob for batch ingestion.
+
+```
+// Batching policy override of defaults, to consume faster
+.alter table crimes policy ingestionbatching @'{"MaximumBatchingTimeSpan":"00:00:15", "MaximumNumberOfItems": 100, "MaximumRawDataSizeMB": 300}'
+```
+
+## 6.  Grant permission for your service principal to the database
+```
+// Grant SPN access to database
+.add database crimes_db admins  ('aadapp=YourSPNAppID;YourTenantID') 'AAD App'
+```
+
+E.g.
+```
+.add database crimes_db admins  ('aadapp=4b59dd40-5302-abba-9f61-8d4923be3a64;72f988bf-doobiedoo-41af-91ab-2d7cd011db47') 'AAD App'
+```
+
+## 7.  Jot down the information you need for the lab
 
 | # | Key | Value |
 | :--- | :--- | :--- |
@@ -125,6 +163,8 @@ Go to the portal, to your resource group, and click on 'Add' and type 'Azure Dat
 | 12 | Kafka schema registry URL|  |
 | 13 | ADX ingest cluster URL| <yourIngestClusterURI>|
 | 14 | ADX database name| crimes_db|
-
+| 14 | ADX table name| crimes|
+| 14 | ADX table mapping name| crimes_mapping|
+  
 <br><br><hr>
 This concludes this module.  You can now move to the next module.
