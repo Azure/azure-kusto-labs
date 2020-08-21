@@ -139,6 +139,7 @@ Follow the steps below to launch the ADX web UI of your cluster.
 
 ## 4. Create a table
 
+Run this in the Web UI, query editor-
 ```
 // Drop table if exists
 .drop table crimes ifexists
@@ -148,13 +149,15 @@ Follow the steps below to launch the ADX web UI of your cluster.
 ```
 
 ## 5.  Create a table mapping
+Run this in the Web UI, query editor-
 ```
 // Create mapping
 .create table ['crimes'] ingestion avro mapping 'crimes_mapping' '[{"column":"case_id","path":"$.case_id"}, {"column":"case_nbr","path":"$.case_nbr"}, {"column":"case_dt_tm","path":"$.case_dt_tm"}, {"column":"block","path":"$.block"},  {"column":"iucr","path":"$.iucr"}, {"column":"primary_type","path":"$.primary_type"}, {"column":"description","path":"$.description"}, {"column":"location_description","path":"$.location_description"}, {"column":"arrest_made","path":"$.arrest_made"}, {"column":"was_domestic","path":"$.was_domestic"},{"column":"beat","path":"$.beat"}, {"column":"district","path":"$.district"}, {"column":"ward","path":"$.ward"}, {"column":"community_area","path":"$.community_area"}, {"column":"fbi_code","path":"$.fbi_code"}, {"column":"x_coordinate","path":"$.x_coordinate"}, {"column":"y_coordinate","path":"$.y_coordinate"},  {"column":"updated_dt","path":"$.updated_dt"}, {"column":"latitude","path":"$.latitude"}, {"column":"longitude","path":"$.longitude"}, {"column":"location_coords","path":"$.location_coords"},  {"column":"case_day_of_month","path":"$.case_day_of_month"}, {"column":"case_hour","path":"$.case_hour"}, {"column":"case_day_of_week_nbr","path":"$.case_day_of_week_nbr"}, {"column":"case_day_of_week_name","path":"$.case_day_of_week_name"},{"column":"case_year","path":"$.case_year"},{"column":"case_month","path":"$.case_month"}]'
 ```
 
 ## 6.  Configure the ADX batching policy
-The ADX batching policy is a table level ingestion performance tuning knob for batch ingestion.
+
+The ADX batching policy is a table level ingestion performance tuning knob for batch ingestion.<br>Run this in the Web UI, query editor-
 
 ```
 // Batching policy override of defaults, to consume faster
@@ -162,6 +165,7 @@ The ADX batching policy is a table level ingestion performance tuning knob for b
 ```
 
 ## 6.  Grant permission for your service principal to the database
+Run this in the Web UI, query editor-
 ```
 // Grant SPN access to database
 .add database crimes_db admins  ('aadapp=YourSPNAppID;YourTenantID') 'AAD App'
