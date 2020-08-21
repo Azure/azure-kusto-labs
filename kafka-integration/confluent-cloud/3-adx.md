@@ -139,6 +139,13 @@ Follow the steps below to launch the ADX web UI of your cluster.
 
 ## 4. Create a table
 
+This shows how to run DDL commands in ADX, in the web UI-
+![CC](images/03-adx-21.png)
+<br>
+<br>
+<hr>
+<br>
+
 Run this in the Web UI, query editor-
 ```
 // Drop table if exists
