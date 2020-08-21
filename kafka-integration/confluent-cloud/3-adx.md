@@ -147,20 +147,24 @@ This shows how to run DDL commands in ADX, in the web UI-
 <br>
 
 Run this in the Web UI, query editor-
+
 ```
 // Drop table if exists
 .drop table crimes ifexists
 
 // Create table
-.create table ['crimes']  (['case_id']:int,['case_nbr']:string, ['case_dt_tm']:string, ['block']:string,  ['iucr']:string, ['primary_type']:string, ['description']:string, ['location_description']:string, ['arrest_made']:bool, ['was_domestic']:bool,['beat']:string, ['district']:string, ['ward']:int, ['community_area']:int, ['fbi_code']:string, ['x_coordinate']:int, ['y_coordinate']:int, ['updated_dt']:datetime,['latitude']:real, ['longitude']:real, ['location_coords']:string, ['case_day_of_month']:int, ['case_hour']:int, ['case_day_of_week_nbr']:int, ['case_day_of_week_name']:string,['case_year']:int,   ['case_month']:int  )
+.create table ['crimes']  (['case_id']:int, ['case_nbr']:string, ['case_dt_tm']:datetime, ['block']:string, ['iucr']:string, ['primary_type']:string, ['description']:string, ['location_description']:string, ['arrest_made']:bool, ['was_domestic']:bool, ['beat']:string, ['district']:string, ['ward']:int, ['community_area']:int, ['fbi_code']:string, ['x_coordinate']:int, ['y_coordinate']:int, ['case_year']:int, ['updated_dt']:datetime, ['latitude']:real, ['longitude']:real, ['location_coords']:string, ['case_timestamp']:datetime, ['case_month']:int, ['case_day_of_month']:int, ['case_hour']:int, ['case_day_of_week_nbr']:int, ['case_day_of_week_name']:string)
+
 ```
 
 ## 5.  Create a table mapping
 Run this in the Web UI, query editor-
 ```
 // Create mapping
-.create table ['crimes'] ingestion avro mapping 'crimes_mapping' '[{"column":"case_id","path":"$.case_id"}, {"column":"case_nbr","path":"$.case_nbr"}, {"column":"case_dt_tm","path":"$.case_dt_tm"}, {"column":"block","path":"$.block"},  {"column":"iucr","path":"$.iucr"}, {"column":"primary_type","path":"$.primary_type"}, {"column":"description","path":"$.description"}, {"column":"location_description","path":"$.location_description"}, {"column":"arrest_made","path":"$.arrest_made"}, {"column":"was_domestic","path":"$.was_domestic"},{"column":"beat","path":"$.beat"}, {"column":"district","path":"$.district"}, {"column":"ward","path":"$.ward"}, {"column":"community_area","path":"$.community_area"}, {"column":"fbi_code","path":"$.fbi_code"}, {"column":"x_coordinate","path":"$.x_coordinate"}, {"column":"y_coordinate","path":"$.y_coordinate"},  {"column":"updated_dt","path":"$.updated_dt"}, {"column":"latitude","path":"$.latitude"}, {"column":"longitude","path":"$.longitude"}, {"column":"location_coords","path":"$.location_coords"},  {"column":"case_day_of_month","path":"$.case_day_of_month"}, {"column":"case_hour","path":"$.case_hour"}, {"column":"case_day_of_week_nbr","path":"$.case_day_of_week_nbr"}, {"column":"case_day_of_week_name","path":"$.case_day_of_week_name"},{"column":"case_year","path":"$.case_year"},{"column":"case_month","path":"$.case_month"}]'
+.create table ['crimes'] ingestion json mapping 'crimes_mapping' '[{"column":"case_id","path":"$.case_id","datatype":"int"}, {"column":"case_nbr","path":"$.case_nbr","datatype":"string"}, {"column":"case_dt_tm","path":"$.case_dt_tm","datatype":"datetime"}, {"column":"block","path":"$.block","datatype":"string"}, {"column":"iucr","path":"$.iucr","datatype":"string"}, {"column":"primary_type","path":"$.primary_type","datatype":"string"}, {"column":"description","path":"$.description","datatype":"string"}, {"column":"location_description","path":"$.location_description","datatype":"string"}, {"column":"arrest_made","path":"$.arrest_made","datatype":"bool"}, {"column":"was_domestic","path":"$.was_domestic","datatype":"bool"}, {"column":"beat","path":"$.beat","datatype":"string"}, {"column":"district","path":"$.district","datatype":"string"}, {"column":"ward","path":"$.ward","datatype":"int"}, {"column":"community_area","path":"$.community_area","datatype":"int"}, {"column":"fbi_code","path":"$.fbi_code","datatype":"string"}, {"column":"x_coordinate","path":"$.x_coordinate","datatype":"int"}, {"column":"y_coordinate","path":"$.y_coordinate","datatype":"int"}, {"column":"case_year","path":"$.case_year","datatype":"int"}, {"column":"updated_dt","path":"$.updated_dt","datatype":"datetime"}, {"column":"latitude","path":"$.latitude","datatype":"real"}, {"column":"longitude","path":"$.longitude","datatype":"real"}, {"column":"location_coords","path":"$.location_coords","datatype":"string"}, {"column":"case_timestamp","path":"$.case_timestamp","datatype":"datetime"}, {"column":"case_month","path":"$.case_month","datatype":"int"}, {"column":"case_day_of_month","path":"$.case_day_of_month","datatype":"int"}, {"column":"case_hour","path":"$.case_hour","datatype":"int"}, {"column":"case_day_of_week_nbr","path":"$.case_day_of_week_nbr","datatype":"int"}, {"column":"case_day_of_week_name","path":"$.case_day_of_week_name","datatype":"string"}]'
+
 ```
+
 
 ## 6.  Configure the ADX batching policy
 
