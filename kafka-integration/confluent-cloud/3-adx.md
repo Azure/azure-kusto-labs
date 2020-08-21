@@ -116,6 +116,25 @@ Go to the portal, to your resource group, and click on 'Add' and type 'Azure Dat
 
 ## 3. Launch the ADX Web UI
 
+Follow the steps below to launch the ADX web UI of your cluster.
+
+![CC](images/03-adx-18.png)
+<br>
+<br>
+<hr>
+<br>
+
+![CC](images/03-adx-18.png)
+<br>
+<br>
+<hr>
+<br>
+
+![CC](images/03-adx-20.png)
+<br>
+<br>
+<hr>
+<br>
 
 
 ## 4. Create a table
