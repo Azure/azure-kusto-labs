@@ -79,6 +79,14 @@ Go to the portal, to your resource group, and click on 'Add' and type 'Azure Dat
 <hr>
 <br>
 
+### Note down the cluster ingest URI - this is needed for Kafka ingestion.
+
+![CC](images/03-adx-17.png)
+<br>
+<br>
+<hr>
+<br>
+
 
 ## 2. Create a database in your ADX cluster
 
