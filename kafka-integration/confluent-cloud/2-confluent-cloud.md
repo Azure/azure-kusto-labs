@@ -7,9 +7,7 @@ In this module, we will provision Confluent Cloud, and configure various Kafka r
 [3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice](2-confluent-cloud.md#3--download-confluent-cli--switch-to-environment-and-cluster-of-choice)<br>
 [4. From Confluent CLI, generate an API key for use externally](2-confluent-cloud.md#4--from-confluent-cli-generate-an-api-key-for-use-externally-spark-connectors-etc)<br>
 [5. From Confluent CLI, create a topic](2-confluent-cloud.md#5--create-a-kafka-topic)<br>
-[6. From Confluent CLI, enable schema registry](2-confluent-cloud.md#6--from-confluent-cli-enable-schema-registry)<br>
-[7. From Confluent CLI, register a schema with the schema registry]()<br>
-[8. Jot down information needed in subsequent labs]()<br>
+[6. Jot down information needed in subsequent labs](2-confluent-cloud.md#8--jot-down-the-information-you-need-for-the-lab)<br>
 
 
 ## 1. Provision Confluent Cloud the first time
@@ -300,53 +298,9 @@ Configuration
   unclean.leader.election.enable          | false 
 ```
 
-## 6.  From Confluent CLI, enable schema registry
-
-### 6.1. Enable
-Docs from Confluent are [here.](https://docs.confluent.io/current/cloud/cli/command-reference/schema-registry/cluster/ccloud_schema-registry_cluster_enable.html#ccloud-schema-registry-cluster-enable)<br>
-
-The command to enable-
-```
-ccloud schema-registry cluster enable --cloud azure --geo <yourGeo> -o human
-```
-
-Author's output -
-```
-indra:kafka akhanolk$ ccloud schema-registry cluster enable --cloud azure --geo us -o human
-+--------------+--------------------------------------------------+
-| Id           | lsrc-qpm3p                                       |
-| Endpoint URL | https://xxxxx.westus2.azure.confluent.cloud |
-+--------------+--------------------------------------------------+
-```
-
-### 6.2. Describe
-Docs are available [here.](https://docs.confluent.io/current/cloud/cli/command-reference/schema-registry/cluster/ccloud_schema-registry_cluster_describe.html)
-
-The command to enable-
-```
-ccloud schema-registry cluster describe -o human
-```
-
-Author's output -
-```
-indra:kafka akhanolk$ ccloud schema-registry cluster describe -o human
-+----------------------+--------------------------------------------------+
-| Name                 | account schema-registry                          |
-| Cluster ID           | lsrc-qpm3p                                       |
-| Endpoint URL         | https://xxxxx.westus2.azure.confluent.cloud |
-| Used Schemas         |                                                0 |
-| Available Schemas    |                                             1000 |
-| Global Compatibility | <Requires API Key>                               |
-| Mode                 | <Requires API Key>                               |
-| Service Provider     |                                                  |
-+----------------------+--------------------------------------------------+
-```
-
-# 7. Register the schema of the dataset we will use in the schema registry from Confluent CLI
 
 
-
-# 8.  Jot down the information you need for the lab
+## 8.  Jot down the information you need for the lab
 
 | # | Key | Value |
 | :--- | :--- | :--- |
@@ -361,12 +315,10 @@ indra:kafka akhanolk$ ccloud schema-registry cluster describe -o human
 | 9 | Kafka topic| crimes |
 | 10 | Kafka API key|  |
 | 11 | Kafka API secret|  |
-| 12 | Kafka schema registry URL|  |
 
 
 <br><br>
 <hr>
-
 
 
 This concludes the module.  You may now proceed to [create an Azure Data Explorer cluster](3-adx.md).
