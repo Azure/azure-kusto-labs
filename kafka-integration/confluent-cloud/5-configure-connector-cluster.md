@@ -1,6 +1,7 @@
 # About
 
-This module covers the following steps that essentially sets the stage for integration-
+This module covers the following steps that essentially sets the stage for integration.  It is an involved module, a step missed may mean, things dont work for you.  Grab a acup of coffee/tea and get started.  It should take an hour or two.
+
 1.  Create a Docker Hub account if it does not exist
 2.  Install Docker desktop on your machine
 3.  Building a docker image for the KafkaConnect worker that include any connect worker level configurations, and the ADX connector jar
