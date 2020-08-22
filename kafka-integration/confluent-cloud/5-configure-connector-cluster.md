@@ -84,6 +84,7 @@ akhanolkar/kafka-connect-kusto-sink           1.0.1v1             1870ace80b29  
 ```
 
 ## 4. Push the image to Docker Hub
+
 Run the command below, replacing akhanolkar with your Docker username-
 ```
 docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
@@ -263,6 +264,7 @@ kubernetes                    ClusterIP   10.0.0.1       <none>        443/TCP  
 This is the service name- cp-kafka-connect-1598109267 
 
 ### 6.5. SSH into a pod
+
 Pick one pod from your list of 6 in #6.3<br>
 Here is the author's command and output-
 ```
@@ -316,7 +318,10 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
 ```
 
 ### 6.5.3.  Check if the environment conigs we applied in the docker file are available..
-
+Run the command-
+```
+printenv | sort
+```
 
 
 Author's output-
@@ -393,3 +398,32 @@ CONNECT_SASL_MECHANISM=PLAIN
 CONNECT_SECURITY_PROTOCOL=SASL_SSL
 CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
 ```
+
+Now - exit root..
+```
+exit
+```
+### 6.5.4.  Lets check logs to see if there are any errors
+Lets review the logs of one of the pods from 6.3
+
+```
+kubectl logs 
+```
+
+If you see something like this, we are good to go...
+```
+[2020-08-22 15:15:20,337] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] (Re-)joining group (org.apache.kafka.clients.consumer.internals.AbstractCoordinator)
+[2020-08-22 15:15:20,376] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Join group failed with org.apache.kafka.common.errors.MemberIdRequiredException: The group member needs to have a valid member id before actually entering a consumer group (org.apache.kafka.clients.consumer.internals.AbstractCoordinator)
+[2020-08-22 15:15:20,376] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] (Re-)joining group (org.apache.kafka.clients.consumer.internals.AbstractCoordinator)
+[2020-08-22 15:15:21,350] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Successfully joined group with generation 3 (org.apache.kafka.clients.consumer.internals.AbstractCoordinator)
+[2020-08-22 15:15:21,352] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Joined group at generation 3 with protocol version 2 and got assignment: Assignment{error=0, leader='connect-1-1de302ef-1397-40b3-b108-925feef75d1a', leaderUrl='http://10.244.3.7:8083/', offset=1, connectorIds=[], taskIds=[], revokedConnectorIds=[], revokedTaskIds=[], delay=0} with rebalance delay: 0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+[2020-08-22 15:15:21,352] WARN [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Catching up to assignment's config offset. (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+[2020-08-22 15:15:21,352] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Current config state offset -1 is behind group assignment 1, reading to end of config log (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+[2020-08-22 15:15:21,442] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Finished reading to end of log and updated config snapshot, new config log offset: 1 (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+[2020-08-22 15:15:21,442] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Starting connectors and tasks using config offset 1 (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+[2020-08-22 15:15:21,442] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Finished starting connectors and tasks (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+```
+
+## 7. Download Postman
+
+
