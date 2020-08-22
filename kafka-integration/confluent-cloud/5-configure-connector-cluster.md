@@ -55,14 +55,11 @@ Paste this into the file and save - be sure to edit it for bootstrap server list
 FROM confluentinc/cp-kafka-connect:5.5.0
 COPY kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar /usr/share/java
 
-ENV CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY="All"
-
-ENV producer.bootstrap.servers="YOUR-BOOTSTRAP-SERVER-LIST"
-ENV producer.security.protocol="SASL_SSL"
-ENV producer.ssl.endpoint.identification.algorithm="https"
-ENV producer.sasl.mechanism="PLAIN"
-ENV producer.sasl.jaas.config="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\YOUR-KAFKA-API-SECRET"\";"
-
+ENV CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
+ENV CONNECT_SASL_MECHANISM=PLAIN
+ENV CONNECT_SECURITY_PROTOCOL=SASL_SSL
+ENV CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
+ENV CONNECT_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\YOUR-KAFKA-API-SECRET"\";"
 ```
 
 What we are doing above is taking the base Docker image from the ConfluentInc repo, copying the ADX jar to /usr/share/java and setting an environment variable to allow overrides at the consumer level.
@@ -160,9 +157,24 @@ imageTag: 1.0.1v1
 Replace "yourBootStrapServerList" with your Confluent Cloud bootstrap server loadbalancer FQDN:Port
 ```
 kafka:
-  bootstrapServers: "yourBootStrapServerList"
+  bootstrapServers: "PLAINTEXT://yourBootStrapServerList"
  ```
+E.g. the author's bootstrap server entry is-
+```
+kafka:
+  bootstrapServers: "PLAINTEXT://nnn-nnnn.eastus2.azure.confluent.cloud:9092"
+```
 
+4. Set prometheous jmx monitoring to false as shown below-
+```
+prometheus:
+  ## JMX Exporter Configuration
+  ## ref: https://github.com/prometheus/jmx_exporter
+  jmx:
+    enabled: false
+```
+
+5.  Save
 
 ## 6. Provision KafkaConnect workers on our Azure Kubernetes Service cluster
 
@@ -225,12 +237,12 @@ Author's output-
 ```
 indra:kafka-confluentcloud-hol akhanolk$ kubectl get pods
 NAME                                           READY   STATUS    RESTARTS   AGE
-cp-kafka-connect-1598073371-6676d5b5bd-7sbzn   2/2     Running   0          79s
-cp-kafka-connect-1598073371-6676d5b5bd-8zdsd   2/2     Running   0          78s
-cp-kafka-connect-1598073371-6676d5b5bd-hgqxq   2/2     Running   0          78s
-cp-kafka-connect-1598073371-6676d5b5bd-lljj5   2/2     Running   0          78s
-cp-kafka-connect-1598073371-6676d5b5bd-p6kcq   2/2     Running   0          78s
-cp-kafka-connect-1598073371-6676d5b5bd-t7rl9   2/2     Running   0          78s
+cp-kafka-connect-1598109267-76465bff44-7s9vs   1/1     Running   0          5m27s
+cp-kafka-connect-1598109267-76465bff44-9btwt   1/1     Running   0          5m27s
+cp-kafka-connect-1598109267-76465bff44-j4pbq   1/1     Running   0          5m27s
+cp-kafka-connect-1598109267-76465bff44-rp5kt   1/1     Running   0          5m27s
+cp-kafka-connect-1598109267-76465bff44-wv5w2   1/1     Running   0          5m27s
+cp-kafka-connect-1598109267-76465bff44-x7rlm   1/1     Running   0          5m27s
 ```
 
 ### 6.4. Check service 
@@ -243,14 +255,141 @@ kubectl get svc
 Author's output -
 ```
 indra:kafka-confluentcloud-hol akhanolk$ kubectl get svc
-NAME                          TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
-cp-kafka-connect-1598073371   ClusterIP   10.0.26.26   <none>        8083/TCP   2m9s
-kubernetes                    ClusterIP   10.0.0.1     <none>        443/TCP    2d12h
+NAME                          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+cp-kafka-connect-1598109267   ClusterIP   10.0.146.166   <none>        8083/TCP   5m52s
+kubernetes                    ClusterIP   10.0.0.1       <none>        443/TCP    2d23h
 ```
+
+This is the service name- cp-kafka-connect-1598109267 
 
 ### 6.5. SSH into a pod
 Pick one pod from your list of 6 in #6.3<br>
 Here is the author's command and output-
 ```
 kubectl exec -it cp-kafka-connect-1598073371-6676d5b5bd-7sbzn -- bash
+```
+
+#### 6.5.1.  Check processes running
+
+```
+ps -ef
+```
+
+Author's output-
+```
+root@cp-kafka-connect-1598109267-76465bff44-7s9vs:/# ps -ef
+UID         PID   PPID  C STIME TTY          TIME CMD
+root          1      0  5 15:14 ?        00:01:19 java -Xms512M -Xmx512M -server -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+Expl
+root        186      0  0 15:15 pts/0    00:00:00 bash
+root        220    186  0 15:40 pts/0    00:00:00 ps -ef
+```
+
+#### 6.5.2.  Check /usr/share/jave to see if the ADX/Kusto jar is there
+
+Command-
+```
+ls -l /usr/share/java
+```
+Author's output-
+```
+root@cp-kafka-connect-1598109267-76465bff44-7s9vs:/# ls -l /usr/share/java
+total 10636
+drwxr-xr-x 2 root root     4096 Apr 18 17:23 acl
+drwxr-xr-x 2 root root     4096 Apr 18 17:22 confluent-common
+drwxr-xr-x 2 root root    12288 Apr 18 17:23 confluent-control-center
+drwxr-xr-x 2 root root     4096 Apr 18 17:23 confluent-hub-client
+drwxr-xr-x 2 root root    12288 Apr 18 17:23 confluent-rebalancer
+-rw-r--r-- 1 root root      957 May  6  2014 java_defaults.mk
+drwxr-xr-x 1 root root     4096 Apr 18 17:23 kafka
+drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-activemq
+drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-elasticsearch
+drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-ibmmq
+drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-jdbc
+drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-jms
+drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-s3
+drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-storage-common
+drwxr-xr-x 2 root root     4096 Apr 18 17:22 kafka-serde-tools
+-rw-r--r-- 1 root root 10797367 Aug  4 13:24 kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+drwxr-xr-x 2 root root     4096 Apr 18 17:23 monitoring-interceptors
+drwxr-xr-x 2 root root     4096 Apr 18 17:22 rest-utils
+drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
+```
+
+### 6.5.3.  Check if the environment conigs we applied in the docker file are available..
+
+
+
+Author's output-
+```
+root@cp-kafka-connect-1598109267-76465bff44-7s9vs:/# printenv | sort
+ALLOW_UNSIGNED=false
+COMPONENT=kafka-connect
+CONFLUENT_DEB_VERSION=1
+CONFLUENT_PLATFORM_LABEL=
+CONFLUENT_VERSION=5.5.0
+CONNECT_BOOTSTRAP_SERVERS=PLAINTEXT://nnn-nnnnn.eastus2.azure.confluent.cloud:9092
+CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=3
+CONNECT_CONFIG_STORAGE_TOPIC=cp-kafka-connect-1598109267-config
+CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
+CONNECT_GROUP_ID=cp-kafka-connect-1598109267
+CONNECT_INTERNAL_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+CONNECT_INTERNAL_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+CONNECT_KEY_CONVERTER=io.confluent.connect.avro.AvroConverter
+CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE=false
+CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL=http://cp-kafka-connect-1598109267-cp-schema-registry:8081
+CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=3
+CONNECT_OFFSET_STORAGE_TOPIC=cp-kafka-connect-1598109267-offset
+CONNECT_PLUGIN_PATH=/usr/share/java,/usr/share/confluent-hub-components
+CONNECT_REST_ADVERTISED_HOST_NAME=10.244.1.10
+CONNECT_SASL_JAAS_CONFIG=org.apache.kafka.common.security.plain.PlainLoginModule required username="xxxx" password="xxxx";
+CONNECT_SASL_MECHANISM=PLAIN
+CONNECT_SECURITY_PROTOCOL=SASL_SSL
+CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
+CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=3
+CONNECT_STATUS_STORAGE_TOPIC=cp-kafka-connect-1598109267-status
+CONNECT_VALUE_CONVERTER=io.confluent.connect.avro.AvroConverter
+CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE=false
+CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://cp-kafka-connect-1598109267-cp-schema-registry:8081
+CP_KAFKA_CONNECT_1598109267_PORT=tcp://10.0.146.166:8083
+CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP=tcp://10.0.146.166:8083
+CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP_ADDR=10.0.146.166
+CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP_PORT=8083
+CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP_PROTO=tcp
+CP_KAFKA_CONNECT_1598109267_SERVICE_HOST=10.0.146.166
+CP_KAFKA_CONNECT_1598109267_SERVICE_PORT=8083
+CP_KAFKA_CONNECT_1598109267_SERVICE_PORT_KAFKA_CONNECT=8083
+CUB_CLASSPATH=/etc/confluent/docker/docker-utils.jar
+HOME=/root
+HOSTNAME=cp-kafka-connect-1598109267-76465bff44-7s9vs
+KAFKA_ADVERTISED_LISTENERS=
+KAFKA_HEAP_OPTS=-Xms512M -Xmx512M
+KAFKA_JMX_PORT=5555
+KAFKA_VERSION=
+KAFKA_ZOOKEEPER_CONNECT=
+KUBERNETES_PORT=tcp://10.0.0.1:443
+KUBERNETES_PORT_443_TCP=tcp://10.0.0.1:443
+KUBERNETES_PORT_443_TCP_ADDR=10.0.0.1
+KUBERNETES_PORT_443_TCP_PORT=443
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+KUBERNETES_SERVICE_HOST=10.0.0.1
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_SERVICE_PORT_HTTPS=443
+LANG=C.UTF-8
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PWD=/
+PYTHON_PIP_VERSION=8.1.2
+PYTHON_VERSION=2.7.9-1
+SCALA_VERSION=2.12
+SHLVL=1
+TERM=xterm
+ZULU_OPENJDK_VERSION=8=8.38.0.13
+_=/usr/bin/printenv
+```
+The following should be there-
+```
+CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
+CONNECT_SASL_JAAS_CONFIG=org.apache.kafka.common.security.plain.PlainLoginModule required username="xxxx" password="xxxx";
+CONNECT_SASL_MECHANISM=PLAIN
+CONNECT_SECURITY_PROTOCOL=SASL_SSL
+CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
 ```
