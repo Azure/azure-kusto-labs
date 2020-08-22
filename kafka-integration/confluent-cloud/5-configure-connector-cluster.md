@@ -91,3 +91,79 @@ Run the command below, replacing akhanolkar with your Docker username-
 ```
 docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
 ```
+
+Author's output-
+```
+indra:kafka-confluentcloud-hol akhanolk$ docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
+The push refers to repository [docker.io/akhanolkar/kafka-connect-kusto-sink]
+958960eb74db: Pushed 
+c20428756bff: Layer already exists 
+75cd0f16c778: Layer already exists 
+b1aa21789e59: Layer already exists 
+0d9a93e8c391: Layer already exists 
+05c69d782ee2: Layer already exists 
+fb73194a06ee: Layer already exists 
+bc537b2bbfd6: Layer already exists 
+0818dd46b53a: Layer already exists 
+19e377f490b1: Layer already exists 
+a8ff4211732a: Layer already exists 
+1.0.1v1: digest: sha256:ae32c964bf277298b1541f52d956c6e6a5dc1263262178f8a9950e3244eacd71 size: 2639
+```
+
+You should be able to see the image in Docker Hub.
+
+## 5. Clone KafkaConnect helm charts from Confluent git repo & make necessary edits
+
+### 5.1. Clone the repo and copy what is required
+```
+cd ~
+git clone https://github.com/confluentinc/cp-helm-charts.git
+
+cd ~/kafka-confluentcloud-hol
+cp -R ~/cp-helm-charts/charts/cp-kafka-connect .
+```
+
+### 5.2. A quick browse
+
+```
+indra:kafka-confluentcloud-hol akhanolk$ tree cp-kafka-connect/
+cp-kafka-connect/
+├── Chart.yaml
+├── README.md
+├── templates
+│   ├── NOTES.txt
+│   ├── _helpers.tpl
+│   ├── deployment.yaml
+│   ├── jmx-configmap.yaml
+│   ├── secrets.yaml
+│   └── service.yaml
+└── values.yaml
+```
+
+Note the values.yaml - we will need to update this.
+
+### 5.3. Update values.yaml as follows
+
+We need to update the values.yaml with the following-<br>
+1. Replica count
+```
+replicaCount: 6
+```
+
+2. Image<br>
+Your docker ID, inplace of akhanolkar
+```
+image: akhanolkar/kafka-connect-kusto-sink
+imageTag: 1.0.1v1
+```
+3. Kafka bootstrap servers<br>
+Replace "yourBootStrapServerList" with your Confluent Cloud bootstrap server loadbalancer FQDN:Port
+```
+kafka:
+  bootstrapServers: "yourBootStrapServerList"
+ ```
+
+
+## 6. Provision KafkaConnect workers on our Azure Kubernetes Service cluster
+
+### 6.1. 
