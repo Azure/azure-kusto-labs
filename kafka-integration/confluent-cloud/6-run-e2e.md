@@ -1,6 +1,6 @@
 # About
 
-In this module, we will publish data from Spark to Kafka and watch it flow through to ADX through the KafkaConnect integration pipeline.
+This is the last module of the hands on lab.  In this module, we will publish data from Spark to Kafka and watch it flow through to ADX through the KafkaConnect integration pipeline.
 
 ## 1.  Run the Kafka producer in Spark on Azure Databricks
 
