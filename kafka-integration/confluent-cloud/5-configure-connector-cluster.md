@@ -538,7 +538,7 @@ Keep this session alive when you need to manipulate the ADX connectors.
 
 ## 8. Download & install Postman
 
-[Install Postman] if you dont already have it.
+[Install Postman](https://www.postman.com/downloads/) if you dont already have it.
 
 ## 9. Import the Postman JSON collection with KafkaConnect REST API call samples
 
@@ -635,7 +635,6 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.7. View status of connector tasks provisioned 
 
-
 ![POSTMAN](images/01-CONNECTOR-06.png)
 <br>
 <br>
@@ -657,7 +656,6 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br>
 <hr>
 <br>
-
 
 ### 9.10. List all individual connector tasks with status
 
