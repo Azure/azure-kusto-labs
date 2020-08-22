@@ -424,6 +424,261 @@ If you see something like this, we are good to go...
 [2020-08-22 15:15:21,442] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Finished starting connectors and tasks (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
 ```
 
-## 7. Download Postman
+### 6.6. Describe a pod to view details
+
+Run the command below with a pod name from 6.3
+```
+kubectl describe pod YOUR_POD_NAME
+```
+
+Author's output-
+```
+indra:kafka-confluentcloud-hol akhanolk$ kubectl describe pod cp-kafka-connect-1598109267-76465bff44-7s9vs
+Name:         cp-kafka-connect-1598109267-76465bff44-7s9vs
+Namespace:    default
+Priority:     0
+Node:         aks-agentpool-23362501-vmss000005/10.240.0.9
+Start Time:   Sat, 22 Aug 2020 10:14:30 -0500
+Labels:       app=cp-kafka-connect
+              pod-template-hash=76465bff44
+              release=cp-kafka-connect-1598109267
+Annotations:  <none>
+Status:       Running
+IP:           10.244.1.10
+IPs:
+  IP:           10.244.1.10
+Controlled By:  ReplicaSet/cp-kafka-connect-1598109267-76465bff44
+Containers:
+  cp-kafka-connect-server:
+    Container ID:   docker://f574c04da945ef986296a7ff341c277be9799e61d1c8702096d7ed792e8beb30
+    Image:          akhanolkar/kafka-connect-kusto-sink:1.0.1v3
+    Image ID:       docker-pullable://akhanolkar/kafka-connect-kusto-sink@sha256:65b7c05d5e795c7491d52a5e12636faa1f8f9b4a460a24ec081e6bf4047d405d
+    Port:           8083/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Sat, 22 Aug 2020 10:14:32 -0500
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      CONNECT_REST_ADVERTISED_HOST_NAME:             (v1:status.podIP)
+      CONNECT_BOOTSTRAP_SERVERS:                    PLAINTEXT://nnn-nnnnn.eastus2.azure.confluent.cloud:9092
+      CONNECT_GROUP_ID:                             cp-kafka-connect-1598109267
+      CONNECT_CONFIG_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-config
+      CONNECT_OFFSET_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-offset
+      CONNECT_STATUS_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-status
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL:    http://cp-kafka-connect-1598109267-cp-schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL:  http://cp-kafka-connect-1598109267-cp-schema-registry:8081
+      KAFKA_HEAP_OPTS:                              -Xms512M -Xmx512M
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR:    3
+      CONNECT_INTERNAL_KEY_CONVERTER:               org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER:             org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER:                        io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE:         false
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR:    3
+      CONNECT_PLUGIN_PATH:                          /usr/share/java,/usr/share/confluent-hub-components
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR:    3
+      CONNECT_VALUE_CONVERTER:                      io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE:       false
+      KAFKA_JMX_PORT:                               5555
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-p67xc (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  default-token-p67xc:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-p67xc
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason     Age   From                                        Message
+  ----    ------     ----  ----                                        -------
+  Normal  Scheduled  43m   default-scheduler                           Successfully assigned default/cp-kafka-connect-1598109267-76465bff44-7s9vs to aks-agentpool-23362501-vmss000005
+  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
+  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
+  Normal  Created    43m   kubelet, aks-agentpool-23362501-vmss000005  Created container cp-kafka-connect-server
+  Normal  Started    43m   kubelet, aks-agentpool-23362501-vmss000005  Started container cp-kafka-connect-server
+```
+
+Points to note here are-
+1.  The output of command "kubectl get svc" - the service ID is the group ID 
+```
+      CONNECT_GROUP_ID:                             cp-kafka-connect-1598109267
+```
+2.  Three special topics are created by KafkaConnect to maintain offsets of the connect tasks-
+```
+      CONNECT_CONFIG_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-config
+      CONNECT_OFFSET_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-offset
+      CONNECT_STATUS_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-status
+```
+These are specific to the service ID from "kubectl get svc".  If you uninstall and reinstall KafkaConnect, you will see another set of 3 topics, identifiable by the service ID.
+
+## 7. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods
+You will need the service ID from the command "kubectl get svc".  Substitute it in the below command.
+
+```
+sudo kubectl port-forward svc/YOIUR_SERVICE_ID 803:8083
+```
+
+Author's output-
+```
+indra:kafka-confluentcloud-hol akhanolk$ sudo kubectl port-forward svc/cp-kafka-connect-1598109267 803:8083
+Forwarding from 127.0.0.1:803 -> 8083
+Forwarding from [::1]:803 -> 8083
+.....
+```
+Keep this session alive when you need to manipulate the ADX connectors.
+
+## 8. Download & install Postman
+
+[Install Postman] if you dont already have it.
+
+## 9. Import the Postman JSON collection with KafkaConnect REST API call samples
+
+### 9.1. Download the Postman collection for the lab 
+
+Download [this](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/rest-calls/Confluent-Cloud-ADX-HoL-1-STUB.postman_collection.json) to you local machine.<br>
+We will import this into Postman.  Its a stub with all the REST calls pre-created.
 
 
+### 9.2. Launch Postman and click on the import button
+
+![POSTMAN](images/01-CONNECTOR-01.png)
+<br>
+<br>
+<hr>
+<br>
+
+Click on the import button and import from the file dowloaded in 9.1.
+
+![POSTMAN](images/01-CONNECTOR-01-2.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+### 9.3. View available connector plugins
+
+![POSTMAN](images/01-CONNECTOR-02.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 9.4. Check if the ADX/Kusto connector is already provisioned
+
+![POSTMAN](images/01-CONNECTOR-03.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 9.5. Provision the connector after editing the body of the REST call to match your configuration
+
+![POSTMAN](images/01-CONNECTOR-04.png)
+<br>
+<br>
+<hr>
+<br>
+
+You will need the following details-
+```
+{
+    "name": "KustoSinkConnectorCrimes",
+    "config": {
+        "connector.class": "com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector",
+        "topics": "crimes",
+        "kusto.url":"YOUR-ADX-INGEST-URI",
+        "aad.auth.authority": "YOUR-AAD-TENANT-ID",
+        "aad.auth.appid":"YOUR-ADD-SPN-APP-ID",
+        "aad.auth.appkey":"YOUR-AAD-SPN-SECRET",
+        "kusto.tables.topics.mapping": "[{'topic': 'crimes','db': 'crimes_db', 'table': 'crimes','format': 'json', 'mapping':'crimes_mapping'}]", 
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "tasks.max": "6",
+        "tempdir.path":"/var/tmp/",
+        "flush.size.bytes":"10485760",
+        "flush.interval.ms": "15000",
+        "behavior.on.error": "LOG",
+        "consumer.override.bootstrap.servers": "PLAINTEXT://YOUR-CONFLUENT-CLOUD-BOOTSTRAP-SERVER-ENDPOINT",
+        "consumer.override.ssl.endpoint.identification.algorithm": "https",
+        "consumer.override.security.protocol": "SASL_SSL",
+        "consumer.override.sasl.mechanism": "PLAIN",
+        "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\"YOUR-KAFKA-API-SECRET\";",
+        "consumer.override.request.timeout.ms": "20000",
+        "consumer.override.retry.backoff.ms": "500"
+    }
+}
+```
+
+Making this REST API call will actually launch copy tasks on your KafkaConnect workers.  We have a 1:1 ratio (1 AKS node = 1 KafkaConnect pod = 1 connector task)
+but depending on resources, you can oversubcribe and add more tasks.
+
+IDEALLY, you want as many tasks as Kafka topic partitions.
+
+### 9.6. View configuration of connector tasks provisioned already, if any
+
+
+![POSTMAN](images/01-CONNECTOR-05.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 9.7. View status of connector tasks provisioned 
+
+
+![POSTMAN](images/01-CONNECTOR-06.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 9.8. Pause connectors should you need to
+
+![POSTMAN](images/01-CONNECTOR-07.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 9.9. Resume connectors paused previously
+
+![POSTMAN](images/01-CONNECTOR-08.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+### 9.10. List all individual connector tasks with status
+
+![POSTMAN](images/01-CONNECTOR-09.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 9.11. Restart connectors when needed
+
+![POSTMAN](images/01-CONNECTOR-10.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 9.12. Delete connectors altogether
+
+![POSTMAN](images/01-CONNECTOR-11.png)
+<br>
+<br>
+<hr>
+<br>
