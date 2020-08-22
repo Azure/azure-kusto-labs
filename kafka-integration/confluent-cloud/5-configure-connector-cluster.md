@@ -626,7 +626,6 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.6. View configuration of connector tasks provisioned already, if any
 
-
 ![POSTMAN](images/05-CONNECTOR-05.png)
 <br>
 <br>
@@ -680,3 +679,6 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br>
 <hr>
 <br>
+
+<br><br><hr>
+This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
