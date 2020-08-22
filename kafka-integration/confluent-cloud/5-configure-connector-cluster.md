@@ -167,7 +167,7 @@ kafka:
 ## 6. Provision KafkaConnect workers on our Azure Kubernetes Service cluster
 
 ### 6.1. Login to Azure CLI & set the subscription to use
-[Install if it does not exist.](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)<br>
+[Install the CLI if it does not exist.](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)<br>
 
 1. Login
 ```
@@ -175,7 +175,82 @@ az login
 ```
 This will launch the Azure portal, sign-in dialog.  Sign-in.<br>
 
+
 2. Switch to the right Azure subscription in case you have multiple
 ```
 az account set --subscription YOUR_SUBSCRIPTION_GUID
+```
+
+3.  Get the AKS cluster admin acccess with this command<br>
+If you have named your cluster differently, be sure to replace accordingly-
+```
+az aks get-credentials --resource-group kafka-confluentcloud-lab-rg --name connector-k8s-cluster --admin
+```
+
+Author's output-
+```
+indra:kafka-confluentcloud-hol akhanolk$ az aks get-credentials --resource-group kafka-confluentcloud-lab-rg --name connector-k8s-cluster --admin
+Merged "connector-k8s-cluster-admin" as current context in /Users/akhanolk/.kube/config
+```
+
+### 6.2. Provision KafkaConnect on AKS
+
+Run the below-
+```
+helm install ./cp-kafka-connect --generate-name
+```
+
+Author's output-
+```
+indra:kafka-confluentcloud-hol akhanolk$ helm install ./cp-kafka-connect --generate-name
+NAME: cp-kafka-connect-1598073371
+LAST DEPLOYED: Sat Aug 22 00:16:13 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+This chart installs a Confluent Kafka Connect
+
+https://docs.confluent.io/current/connect/index.html
+```
+
+### 6.3. Check pods
+Run the below-
+```
+kubectl get pods
+```
+
+Author's output-
+```
+indra:kafka-confluentcloud-hol akhanolk$ kubectl get pods
+NAME                                           READY   STATUS    RESTARTS   AGE
+cp-kafka-connect-1598073371-6676d5b5bd-7sbzn   2/2     Running   0          79s
+cp-kafka-connect-1598073371-6676d5b5bd-8zdsd   2/2     Running   0          78s
+cp-kafka-connect-1598073371-6676d5b5bd-hgqxq   2/2     Running   0          78s
+cp-kafka-connect-1598073371-6676d5b5bd-lljj5   2/2     Running   0          78s
+cp-kafka-connect-1598073371-6676d5b5bd-p6kcq   2/2     Running   0          78s
+cp-kafka-connect-1598073371-6676d5b5bd-t7rl9   2/2     Running   0          78s
+```
+
+### 6.4. Check service 
+
+Run the below-
+```
+kubectl get svc
+```
+
+Author's output -
+```
+indra:kafka-confluentcloud-hol akhanolk$ kubectl get svc
+NAME                          TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+cp-kafka-connect-1598073371   ClusterIP   10.0.26.26   <none>        8083/TCP   2m9s
+kubernetes                    ClusterIP   10.0.0.1     <none>        443/TCP    2d12h
+```
+
+### 6.5. SSH into a pod
+Pick one pod from your list of 6 in #6.3<br>
+Here is the author's command and output-
+```
+kubectl exec -it cp-kafka-connect-1598073371-6676d5b5bd-7sbzn -- bash
 ```
