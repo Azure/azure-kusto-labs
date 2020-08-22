@@ -3,8 +3,8 @@
 This module covers the following steps that essentially sets the stage for integration.  It is an involved module, a step missed may mean, things dont work for you.  Grab a acup of coffee/tea and get started.  It should take an hour or two.
 
 
-**Part A**
-<br>
+## Part A
+
 1.  Create a Docker Hub account if it does not exist
 2.  Install Docker desktop on your machine
 3.  Build a docker image for the KafkaConnect worker that include any connect worker level configurations, and the ADX connector jar
@@ -17,8 +17,8 @@ This module covers the following steps that essentially sets the stage for integ
 <hr>
 <br>
 
-**Part B**
-<br>
+## Part B
+
 5.  Provision KafkaConnect workers on our Azure Kubernetes Service cluster
 
 When we start off, all we have is an empty Kubernetes cluster-
@@ -40,13 +40,13 @@ When we are done, we have a live KafkaConnect cluster that is integrated with Co
 Note: This still does not have copy tasks (connector tasks) running yet
 
 
-**Part C**
-<br>
+## Part C
+
 6.  Install Postman on our local machine
 7.  Import KafkaConnect REST call JSON collection from Github into Postman
 
-**Part D**
-<br>
+## Part D
+
 8.  Launch the Kafka-ADX copy tasks, otherwise called connector tasks
 
 This is what we have at the end of this module, a Kusto sink connector cluster with copy tasks running.
