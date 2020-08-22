@@ -16,5 +16,26 @@ Follow the instructions [here](https://hub.docker.com/signup) and create an acco
 
 ## 2.  Install Docker desktop on your machine and launch it
 
+Follow the instructions [here](https://www.docker.com/products/docker-desktop) and complete the installation and start the service.
 
-The process to create the image is as follows-
+## 3. Create a local directory
+
+In linux/Mac-
+```
+cd ~
+mkdir kafka-confluentcloud-hol
+cd kafka-confluentcloud-hol
+```
+
+## 4. Download the ADX connector jar
+Run the following commands-<br>
+
+1.  Switch directories if needed
+```
+cd ~/kafka-confluentcloud-hol
+```
+2.  Download the jar
+```
+wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v1.0.1/kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar 
+```
+
