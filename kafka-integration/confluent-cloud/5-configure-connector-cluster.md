@@ -2,14 +2,60 @@
 
 This module covers the following steps that essentially sets the stage for integration.  It is an involved module, a step missed may mean, things dont work for you.  Grab a acup of coffee/tea and get started.  It should take an hour or two.
 
+
+**Part A**
+<br>
 1.  Create a Docker Hub account if it does not exist
 2.  Install Docker desktop on your machine
 3.  Build a docker image for the KafkaConnect worker that include any connect worker level configurations, and the ADX connector jar
 4.  Push the image to the Docker hub
+<br>
+
+![CONNECTOR](images/AKS-Image-Creation.png)
+<br>
+<br>
+<hr>
+<br>
+
+**Part B**
+<br>
 5.  Provision KafkaConnect workers on our Azure Kubernetes Service cluster
+
+When we start off, all we have is an empty Kubernetes cluster-
+
+![CONNECTOR](images/AKS-Empty.png)
+<br>
+<br>
+<hr>
+<br>
+
+When we are done, we have a live KafkaConnect cluster that is integrated with Confluent Cloud-
+
+![CONNECTOR](images/AKS-KafkaConnect.png)
+<br>
+<br>
+<hr>
+<br>
+
+Note: This still does not have copy tasks (connector tasks) running yet
+
+
+**Part C**
+<br>
 6.  Install Postman on our local machine
 7.  Import KafkaConnect REST call JSON collection from Github into Postman
+
+**Part D**
+<br>
 8.  Launch the Kafka-ADX copy tasks, otherwise called connector tasks
+
+This is what we have at the end of this module, a Kusto sink connector cluster with copy tasks running.
+
+![CONNECTOR](images/AKS-Connector-Cluster.png)
+<br>
+<br>
+<hr>
+<br>
 
 ## 1.  Create a Docker Hub account
 
