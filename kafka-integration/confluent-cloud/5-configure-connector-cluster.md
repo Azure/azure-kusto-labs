@@ -57,6 +57,12 @@ This is what we have at the end of this module, a Kusto sink connector cluster w
 <hr>
 <br>
 
+![CONNECTOR](images/AKS-ADX.png)
+<br>
+<br>
+<hr>
+<br>
+
 ## 1.  Create a Docker Hub account
 
 Follow the instructions [here](https://hub.docker.com/signup) and create an account.  Note down your user ID and password.
