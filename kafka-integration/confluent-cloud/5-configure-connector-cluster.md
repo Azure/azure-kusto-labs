@@ -166,4 +166,16 @@ kafka:
 
 ## 6. Provision KafkaConnect workers on our Azure Kubernetes Service cluster
 
-### 6.1. 
+### 6.1. Login to Azure CLI & set the subscription to use
+[Install if it does not exist.](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)<br>
+
+1. Login
+```
+az login
+```
+This will launch the Azure portal, sign-in dialog.  Sign-in.<br>
+
+2. Switch to the right Azure subscription in case you have multiple
+```
+az account set --subscription YOUR_SUBSCRIPTION_GUID
+```
