@@ -550,7 +550,7 @@ We will import this into Postman.  Its a stub with all the REST calls pre-create
 
 ### 9.2. Launch Postman and click on the import button
 
-![POSTMAN](images/01-CONNECTOR-01.png)
+![POSTMAN](images/05-CONNECTOR-01.png)
 <br>
 <br>
 <hr>
@@ -558,7 +558,7 @@ We will import this into Postman.  Its a stub with all the REST calls pre-create
 
 Click on the import button and import from the file dowloaded in 9.1.
 
-![POSTMAN](images/01-CONNECTOR-01-2.png)
+![POSTMAN](images/05-CONNECTOR-01-2.png)
 <br>
 <br>
 <hr>
@@ -567,7 +567,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 
 ### 9.3. View available connector plugins
 
-![POSTMAN](images/01-CONNECTOR-02.png)
+![POSTMAN](images/05-CONNECTOR-02.png)
 <br>
 <br>
 <hr>
@@ -575,7 +575,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 
 ### 9.4. Check if the ADX/Kusto connector is already provisioned
 
-![POSTMAN](images/01-CONNECTOR-03.png)
+![POSTMAN](images/05-CONNECTOR-03.png)
 <br>
 <br>
 <hr>
@@ -583,7 +583,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 
 ### 9.5. Provision the connector after editing the body of the REST call to match your configuration
 
-![POSTMAN](images/01-CONNECTOR-04.png)
+![POSTMAN](images/05-CONNECTOR-04.png)
 <br>
 <br>
 <hr>
@@ -626,7 +626,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.6. View configuration of connector tasks provisioned already, if any
 
-![POSTMAN](images/01-CONNECTOR-05.png)
+![POSTMAN](images/05-CONNECTOR-05.png)
 <br>
 <br>
 <hr>
@@ -634,7 +634,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.7. View status of connector tasks provisioned 
 
-![POSTMAN](images/01-CONNECTOR-06.png)
+![POSTMAN](images/05-CONNECTOR-06.png)
 <br>
 <br>
 <hr>
@@ -642,7 +642,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.8. Pause connectors should you need to
 
-![POSTMAN](images/01-CONNECTOR-07.png)
+![POSTMAN](images/05-CONNECTOR-07.png)
 <br>
 <br>
 <hr>
@@ -650,7 +650,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.9. Resume connectors paused previously
 
-![POSTMAN](images/01-CONNECTOR-08.png)
+![POSTMAN](images/05-CONNECTOR-08.png)
 <br>
 <br>
 <hr>
@@ -658,7 +658,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.10. List all individual connector tasks with status
 
-![POSTMAN](images/01-CONNECTOR-09.png)
+![POSTMAN](images/05-CONNECTOR-09.png)
 <br>
 <br>
 <hr>
@@ -666,7 +666,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.11. Restart connectors when needed
 
-![POSTMAN](images/01-CONNECTOR-10.png)
+![POSTMAN](images/05-CONNECTOR-10.png)
 <br>
 <br>
 <hr>
@@ -674,7 +674,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 
 ### 9.12. Delete connectors altogether
 
-![POSTMAN](images/01-CONNECTOR-11.png)
+![POSTMAN](images/05-CONNECTOR-11.png)
 <br>
 <br>
 <hr>
