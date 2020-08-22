@@ -2,6 +2,12 @@
 
 This is the last module of the hands on lab.  In this module, we will publish data from Spark to Kafka and watch it flow through to ADX through the KafkaConnect integration pipeline.
 
+![E2E](images/06-E2E-12.png)
+<br>
+<br>
+<hr>
+<br>
+
 ## 1.  Run the Kafka producer in Spark on Azure Databricks
 
 Log on to the Databricks cluster, ensure the cluster is running, if not start it.  Navigate to the Kafka producer notebook and run it.
@@ -108,7 +114,7 @@ Here is the Kusto query to view a few records-
 crimes | take 2
 ```
 
-![E2E](images/06-E2E-11.png)
+![E2E](images/06-E2E-13.png)
 <br>
 <br>
 <hr>
