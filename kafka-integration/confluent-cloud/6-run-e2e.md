@@ -85,3 +85,41 @@ Click on messages while here.
 <br>
 <hr>
 <br>
+
+## 3. Switch to Azure Data Explorer web UI and validate data delivery
+You should also see all messages consumed on Confluent Cloud.<br>
+
+### 3.1. Run a count to ensure the data made it
+Here is the Kusto query to check counts-
+```
+crimes | count
+```
+
+![E2E](images/06-E2E-10.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 3.2. Select a few records to make sure they parsed right
+
+Here is the Kusto query to view a few records-
+```
+crimes | take 2
+```
+
+![E2E](images/06-E2E-11.png)
+<br>
+<br>
+<hr>
+<br>
+
+<br><br><hr>
+This concludes the lab.  Please be sure to delete the resource group you created.
+
+
+
+
+
+
+
