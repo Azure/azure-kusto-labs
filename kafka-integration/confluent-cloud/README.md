@@ -45,5 +45,12 @@ Depends on your knowledge of Azure, and technologies included.  It should take a
 
 Approximately $300-$600 - depends on familiarity worth services and Azure, and whether you work contiunously.
 
-<hr>
-Lets get started!
+## 4. The lab - lets get started
+Follow sequentially, each module through completion.
+
+[]()<br>
+[]()<br>
+[]()<br>
+[]()<br>
+[]()<br>
+
