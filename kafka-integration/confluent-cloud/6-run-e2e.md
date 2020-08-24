@@ -1,12 +1,16 @@
 # About
 
-This is the last module of the hands on lab.  In this module, we will publish data from Spark to Kafka and watch it flow through to ADX through the KafkaConnect integration pipeline.
+This is the last module of the hands on lab.  In this module, we will publish messages from Spark to Kafka and watch it flow to ADX through the KafkaConnect integration pipeline.
 
 ![E2E](images/06-E2E-12.png)
 <br>
 <br>
 <hr>
 <br>
+
+[1. Run the Kafka producer in Spark on Azure Databricks](6-run-e2e.md#1--run-the-kafka-producer-in-spark-on-azure-databricks)<br>
+[2. Observe the Kafka data flow, topic, consumer groups, consumers and messages of the pipeline in the Confluent Cloud]()<br>
+[]()<br>
 
 ## 1.  Run the Kafka producer in Spark on Azure Databricks
 
@@ -18,7 +22,7 @@ Log on to the Databricks cluster, ensure the cluster is running, if not start it
 <hr>
 <br>
 
-## 2.  Watch the Kafka part of the pipeline in the Confluent Cloud 
+## 2.  Observe the Kafka data flow, topic, consumer groups, consumers and messages of the pipeline in the Confluent Cloud
 
 Log on to the Confluent cloud cluster.
 
