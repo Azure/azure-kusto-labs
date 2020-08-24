@@ -10,6 +10,14 @@ In this module, we will provision Confluent Cloud, and configure various Kafka r
 [6. Jot down information needed in subsequent labs](2-confluent-cloud.md#8--jot-down-the-information-you-need-for-the-lab)<br>
 
 
+![CC](images/CC-conf.png)
+<br>
+<br>
+<hr>
+<br>
+
+
+
 ## 1. Provision Confluent Cloud the first time
 
 Follow the steps below to create an instance of the Confluent cloud with billing tied to your Azure payment method.
