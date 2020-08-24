@@ -2,7 +2,7 @@
 
 This lab details usage of self-managed Azure Data Explorer KafkaConnect sink connector with Confluent Cloud on Azure.<br>
 
-## Pictorial overview of the lab
+## 1. Pictorial overview of the lab
 
 ![RG](images/E2E.png)
 <br>
