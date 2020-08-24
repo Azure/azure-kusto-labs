@@ -177,4 +177,5 @@ The following snippet shows how to publish to Kafka from Spark-
 ```
 
 <hr>
+
 This concludes this module.  Click here for the [next module](5-configure-connector-cluster.md) that covers provisioning KafkaConnect workers on AKS and launching sink/copy tasks.
