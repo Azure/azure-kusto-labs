@@ -7,11 +7,11 @@ This module covers the below steps-
 <hr>
 
 
-[1.  Import Spark code from Github into your Databricks workspace]()<br>
-[2.  Paste your storage and kafka configs into the notebook 0-configs]()<br>
-[3.  Mount your Azure Storage Account containers to your Databricks workspace]()<br>
-[4.  Download a public dataset and curate it for use in the lab]()<br>
-[5.  Publish curated data as messages to Kafka from Spark on Databricks]()<br>
+[1.  Import Spark code from Github into your Databricks workspace](4-configure-spark.md#1--import-spark-code-from-github-into-your-databricks-workspace)<br>
+[2.  Paste your storage and kafka configs into the notebook 0-configs](4-configure-spark.md#2--paste-your-storage-and-kafka-configs-into-the-notebook-0-configs)<br>
+[3.  Mount your Azure Storage Account containers to your Databricks workspace](4-configure-spark.md#3--mount-your-azure-storage-account-containers-to-your-databricks-workspace)<br>
+[4.  Download a public dataset and curate it for use in the lab](4-configure-spark.md#4--download-a-public-dataset-and-curate-it-for-use-in-the-lab)<br>
+[5.  Publish curated data as messages to Kafka from Spark on Databricks](4-configure-spark.md#5--read-the-chicago-crimes-data-in-spark-and-publish-to-kafka-as-json-messages)<br>
 
 ## 1.  Import Spark code from Github into your Databricks workspace
 
