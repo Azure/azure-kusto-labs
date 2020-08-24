@@ -12,9 +12,10 @@ This lab details usage of self-managed Azure Data Explorer KafkaConnect sink con
 
 ## Lab summary
 
-The lab showcases very basic Kafka ingestion into ADX. It does not show case a real time usecase, and does not include some of the streaming capabilities of Confluent Cloud and Kafka in general to keep the lab simple and **Azure Data Explorer integration** focused.<br>
+The lab showcases very basic Kafka ingestion into ADX. It does not feature a real time usecase, and does not include some of the streaming capabilities of Confluent Cloud, and Kafka in general, to keep the lab simple and **Azure Data Explorer integration** focused.<br>
 
-Essentially there are the below aspects to the lab-<br>
+Essentially the following are the aspects covered in the lab; Each aspect covered includes provisioning (screenshots included), code, step-by-step instructions, commands and the outcome-<br>
+
 ### 1.  The data
 We will use the Chicago crimes public dataset.  It is about 7 million records.<br>
 
@@ -30,4 +31,14 @@ We will use Azure Kubernetes Service (AKS), collectively AKS and Kubernetes in g
 ### 5. Azure Data Explorer cluster as the sink
 For the purpose of simplicity, we will use a cluster that is not in a virtual network.
 
+## Audience for the lab
 
+Any data practitioner - architect or developer.
+
+## Duration
+
+It should take about 8 hours
+
+## Azure credit needed
+
+Approximately $300
