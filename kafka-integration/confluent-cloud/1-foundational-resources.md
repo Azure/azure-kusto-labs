@@ -8,7 +8,7 @@
 [6. Run the end to end pipeline](6-run-e2e.md)<br>
 <hr>
 
-# About
+# About this module
 
 This module features provisioning of the following resources:<br>
 ![RG](images/Foundational-Resources.png)
@@ -433,4 +433,19 @@ The following are steps to create the same- <br>
 | 6 | Azure Active Directory Service Principal application secret key|  |
 | 7 | Azure Active Directory tenant ID|  |
 
+<hr>
+
 This concludes this module.  Click [here](2-confluent-cloud.md) to proceed to the next module.
+
+<hr>
+
+# Main menu
+[Home page](README.md)<br>
+[1. Provision foundational resources](1-foundational-resources.md)<br>
+[2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
+[3. Provision Azure Data Explorer, and associated database objects and permissions](3-adx.md)<br>
+[4. Import the Spark Kafka producer code, and configure Spark to produce to your Confluent Cloud Kafka topic](4-configure-spark.md)<br>
+[5. Configure the KafkaConnect cluster, launch connector tasks](5-configure-connector-cluster.md)<br>
+[6. Run the end to end pipeline](6-run-e2e.md)<br>
+<hr>
+
