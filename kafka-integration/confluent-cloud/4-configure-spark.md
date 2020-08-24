@@ -1,6 +1,6 @@
 # About
 
-This module covers -
+This module covers the below steps-
 ![Spark](images/Spark.png)
 <br>
 <br>
