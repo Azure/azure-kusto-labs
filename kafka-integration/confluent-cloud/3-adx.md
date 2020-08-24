@@ -8,6 +8,17 @@ This module covers provisioning Azure Data Explorer (ADX), creation of a databas
 <hr>
 <br>
 
+[1. Provision an ADX cluster](3-adx.md#1-provision-an-adx-cluster)<br>
+[2. Create a database in your ADX cluster](3-adx.md#2-create-a-database-in-your-adx-cluster)<br>
+[3. Launch the ADX Web UI](3-adx.md#3-launch-the-adx-web-ui)<br>
+[4. Create a table](3-adx.md#4-create-a-table)<br>
+[5. Create a table mapping](3-adx.md#5--create-a-table-mapping)<br>
+[6. Configure the ADX batching policy](3-adx.md#6--configure-the-adx-batching-policy)<br>
+[7. Grant permission for your service principal to the database](3-adx.md#7--grant-permission-for-your-service-principal-to-the-database)<br>
+[8. Jot down the information you need for the lab](3-adx.md#8--jot-down-the-information-you-need-for-the-lab)<br>
+
+<hr>
+
 ## 1. Provision an ADX cluster
 
 Go to the portal, to your resource group, and click on 'Add' and type 'Azure Data Explorer' and run through the process of provisioning as detailed below. It is crucial to provision it in the same region as the rest of your Azure resources for the lab.  The author is using East US 2 as the region.
@@ -181,7 +192,7 @@ The ADX batching policy is a table level ingestion performance tuning knob for b
 .alter table crimes policy ingestionbatching @'{"MaximumBatchingTimeSpan":"00:00:15", "MaximumNumberOfItems": 100, "MaximumRawDataSizeMB": 300}'
 ```
 
-## 6.  Grant permission for your service principal to the database
+## 7.  Grant permission for your service principal to the database
 Run this in the Web UI, query editor-
 ```
 // Grant SPN access to database
@@ -193,7 +204,7 @@ E.g.
 .add database crimes_db admins  ('aadapp=4b59dd40-5302-abba-9f61-8d4923be3a64;72f988bf-doobiedoo-41af-91ab-2d7cd011db47') 'AAD App'
 ```
 
-## 7.  Jot down the information you need for the lab
+## 8.  Jot down the information you need for the lab
 
 | # | Key | Value |
 | :--- | :--- | :--- |
