@@ -32,8 +32,9 @@ This allows you to read/write from storage containers like they are local file s
 ## 4.  Download a public dataset and curate it for use in the lab
 We will download Chicago crimes public dataset and curate it. Run the notebook using the "Run all" button at the top of the notebook.
 
-## 5.  Read the Chicago crimes data in Spark and publish to Kafka as Json messabes
+## 5.  Read the Chicago crimes data in Spark and publish to Kafka as Json messages
 
+This first image shows the call to the notebook 0-configs
 ![Spark](images/04-producer-01.png)
 <br>
 <br>
@@ -72,4 +73,4 @@ The following snippet shows how to publish to Kafka from Spark-
 ```
 
 <hr>
-This concludes this module.  Click here for the next module.
+This concludes this module.  Click here for the [next module](5-configure-connector-cluster.md) that covers provisioning KafkaConnect workers on AKS and launching sink/copy tasks.
