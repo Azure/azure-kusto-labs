@@ -1,6 +1,12 @@
 # About
 
 This module features provisioning of the following resources:<br>
+![RG](images/Foundational-Resources.png)
+<br>
+<br>
+<hr>
+<br>
+
 [1. An Azure Resource Group](1-foundational-resources.md#1-provision-an-azure-resource-group) <br>
 [2. An Azure Storage Account](1-foundational-resources.md#2-provision-an-azure-storage-account) <br>
 [3. An Azure Databricks Workspace and Cluster](1-foundational-resources.md#3-provision-an-databricks-workspace-and-cluster) <br>
