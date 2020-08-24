@@ -1,13 +1,6 @@
 # About
 
-In this module, we will provision Confluent Cloud, and configure various Kafka related entities, and finally capture details we will need to interop with the cluster from Spark to produce to and KafkaConnect cluster to consume from.
-
-[1. Provision Confluent Cloud the first time, rename your environment](2-confluent-cloud.md#1-provision-confluent-cloud-the-first-time)<br>
-[2. Create a Kafka cluster on Confluent Cloud](2-confluent-cloud.md#2-create-a-kafka-cluster-on-confluent-cloud)<br>
-[3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice](2-confluent-cloud.md#3--download-confluent-cli--switch-to-environment-and-cluster-of-choice)<br>
-[4. From Confluent CLI, generate an API key for use externally](2-confluent-cloud.md#4--from-confluent-cli-generate-an-api-key-for-use-externally-spark-connectors-etc)<br>
-[5. From Confluent CLI, create a topic](2-confluent-cloud.md#5--create-a-kafka-topic)<br>
-[6. Jot down information needed in subsequent labs](2-confluent-cloud.md#8--jot-down-the-information-you-need-for-the-lab)<br>
+In this module, you will-
 
 
 ![CC](images/CC-conf.png)
@@ -15,6 +8,14 @@ In this module, we will provision Confluent Cloud, and configure various Kafka r
 <br>
 <hr>
 <br>
+
+
+[1. Provision Confluent Cloud the first time, rename your environment](2-confluent-cloud.md#1-provision-confluent-cloud-the-first-time)<br>
+[2. Create a Kafka cluster on Confluent Cloud](2-confluent-cloud.md#2-create-a-kafka-cluster-on-confluent-cloud)<br>
+[3. Download Confluent CLI & switch/set CLI context to environment, and cluster of choice](2-confluent-cloud.md#3--download-confluent-cli--switch-to-environment-and-cluster-of-choice)<br>
+[4. From Confluent CLI, generate an API key for use externally](2-confluent-cloud.md#4--from-confluent-cli-generate-an-api-key-for-use-externally-spark-connectors-etc)<br>
+[5. From Confluent CLI, create a topic](2-confluent-cloud.md#5--create-a-kafka-topic)<br>
+[6. Jot down information needed in subsequent labs](2-confluent-cloud.md#8--jot-down-the-information-you-need-for-the-lab)<br>
 
 
 
