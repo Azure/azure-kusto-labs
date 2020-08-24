@@ -2,6 +2,11 @@
 
 This module covers the following steps that essentially sets the stage for integration.  It is an involved module, a step missed may mean, things dont work for you.  Grab a acup of coffee/tea and get started.  It should take an hour or two.
 
+![CONNECTOR](images/connector-CRUD.png)
+<br>
+<br>
+<hr>
+<br>
 
 ## Part A
 
