@@ -34,7 +34,7 @@ You will need this link for importing.
 <hr>
 <br>
 
-![Spark](images/04-import-0\3.png)
+![Spark](images/04-import-03.png)
 <br>
 <br>
 <hr>
