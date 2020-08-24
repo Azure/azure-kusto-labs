@@ -59,11 +59,11 @@ Follow sequentially, every module through completion.
 
 ## 5. Resources
 
+[About the KafkaConnect framework](https://kafka.apache.org/documentation.html#connect)<br>
 [Confluent cloud on Azure](https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-marketplace/)<br>
 [Azure Data Explorer docs](https://docs.microsoft.com/en-us/azure/data-explorer/)<br>
 [Azure Data Explorer Kafka ingestion docs](https://docs.microsoft.com/en-us/azure/data-explorer/ingest-data-kafka)<br>
 [Git repo for the KafkaConnect Kusto sink connector](https://github.com/Azure/kafka-sink-azure-kusto)<br>
-[KafkaConnect framework](https://kafka.apache.org/documentation.html#connect)<br>
 [Confluent Connector Hub](https://www.confluent.io/hub/)<br>
 [From Zero to Hero with KafkaConnect - webinar by Robin Moffat](https://www.youtube.com/watch?v=Jkcp28ki82k)<br>
 
