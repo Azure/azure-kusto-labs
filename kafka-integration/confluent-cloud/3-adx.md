@@ -1,4 +1,14 @@
-# About
+
+#### Main menu
+[Home page](README.md)<br>
+[1. Provision foundational resources](1-foundational-resources.md)<br>
+[2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
+[3. Provision Azure Data Explorer, and associated database objects and permissions](3-adx.md)<br>
+[4. Import the Spark Kafka producer code, and configure Spark to produce to your Confluent Cloud Kafka topic](4-configure-spark.md)<br>
+[5. Configure the KafkaConnect cluster, launch connector tasks](5-configure-connector-cluster.md)<br>
+[6. Run the end to end pipeline](6-run-e2e.md)<br>
+
+# About this module
 
 This module covers provisioning Azure Data Explorer (ADX), creation of a database, table, table mapping and grants for the service principal we created to access the environment from the Kafka connector cluster.  We also configure an ingestion batching policy on the ADX table.  Our integration from Kafka to ADX is batch and queued.  So the tuning parameters of lowest of (flush interval, flush bytes, flush items) will trigger an ingestion into ADX and is conifgured via the ingestion batching policy.  We will execute the database object creations via the ADX web UI.  We will be using the public dataset, Chicago crimes for the lab as shared in the introduction to the lab.
 
@@ -227,3 +237,18 @@ E.g.
   
 <br><br><hr>
 This concludes this module.  You can now move to the [next module that covers configuring Spark - our Kafka producer.](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/4-configure-spark.md)
+
+
+
+<hr>
+
+#### Main menu
+[Home page](README.md)<br>
+[1. Provision foundational resources](1-foundational-resources.md)<br>
+[2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
+[3. Provision Azure Data Explorer, and associated database objects and permissions](3-adx.md)<br>
+[4. Import the Spark Kafka producer code, and configure Spark to produce to your Confluent Cloud Kafka topic](4-configure-spark.md)<br>
+[5. Configure the KafkaConnect cluster, launch connector tasks](5-configure-connector-cluster.md)<br>
+[6. Run the end to end pipeline](6-run-e2e.md)<br>
+<hr>
+
