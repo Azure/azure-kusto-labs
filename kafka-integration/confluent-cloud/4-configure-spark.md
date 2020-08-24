@@ -41,12 +41,14 @@ This first image shows the call to the notebook 0-configs
 <hr>
 <br>
 
+Here we are reading a Spark table for curated crimes data into a dataframe
 ![Spark](images/04-producer-02.png)
 <br>
 <br>
 <hr>
 <br>
 
+And here, we publish to Kafka
 ![Spark](images/04-producer-03.png)
 <br>
 <br>
