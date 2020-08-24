@@ -9,8 +9,8 @@ This is the last module of the hands on lab.  In this module, we will publish me
 <br>
 
 [1. Run the Kafka producer in Spark on Azure Databricks](6-run-e2e.md#1--run-the-kafka-producer-in-spark-on-azure-databricks)<br>
-[2. Observe the Kafka data flow, topic, consumer groups, consumers and messages of the pipeline in the Confluent Cloud]()<br>
-[]()<br>
+[2. Observe the Kafka data flow, topic, consumer groups, consumers and messages of the pipeline in the Confluent Cloud](6-run-e2e.md#2--observe-the-kafka-data-flow-topic-consumer-groups-consumers-and-messages-of-the-pipeline-in-the-confluent-cloud)<br>
+[3. Switch to Azure Data Explorer web UI and validate data delivery](6-run-e2e.md#3-switch-to-azure-data-explorer-web-ui-and-validate-data-delivery)<br>
 
 ## 1.  Run the Kafka producer in Spark on Azure Databricks
 
