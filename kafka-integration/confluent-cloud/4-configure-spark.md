@@ -51,6 +51,11 @@ Follow the steps below to run through the process of importing the code.<br><br>
 <hr>
 <br>
 
+![Spark](images/04-import-05.png)
+<br>
+<br>
+<hr>
+<br>
 
 ## 2.  Paste your storage and kafka configs into the notebook 0-configs
 Review the code first, in the notebook, "0-configs", paste your configs, and then run the notebook using the "Run all" button at the top of the notebook to ensure there are no issues.  This notebook will be called in the subsequent notebooks that need to reference the storage and kafka configs.
