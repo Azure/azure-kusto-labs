@@ -2,7 +2,7 @@
 
 This lab details usage of self-managed Azure Data Explorer KafkaConnect sink connector with Confluent Cloud on Azure.<br>
 
-KafkaConnect is an open source Apache Kafka framework for reliably and scalably integration Kafka with other systems with zero code and just configuration.  Azure Data Explorer has a KafkaConnect sink connector and is the highlight of this lab.
+[KafkaConnect](https://kafka.apache.org/documentation.html#connect) is an open source Apache Kafka framework for reliably and scalably integration Kafka with other systems with zero code and just configuration.  Azure Data Explorer has a KafkaConnect sink connector and is the focal point of this lab.
 
 ## 1. Pictorial overview of the lab
 
