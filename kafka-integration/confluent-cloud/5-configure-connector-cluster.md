@@ -8,6 +8,18 @@ This module covers the following steps that essentially sets the stage for integ
 <hr>
 <br>
 
+[1. Create a Docker Hub account](5-configure-connector-cluster.md#1--create-a-docker-hub-account)<br>
+[2. Install Docker desktop on your machine and launch it](5-configure-connector-cluster.md#2--install-docker-desktop-on-your-machine-and-launch-it)<br>
+[3. Build a Docker image](5-configure-connector-cluster.md#3-build-a-docker-image)<br>
+[4. Push the image to Docker Hub](5-configure-connector-cluster.md#4-push-the-image-to-docker-hub)<br>
+[5. Clone KafkaConnect helm charts from Confluent git repo & make necessary edits](5-configure-connector-cluster.md#5-clone-kafkaconnect-helm-charts-from-confluent-git-repo--make-necessary-edits)<br>
+[6. Provision KafkaConnect workers on our Azure Kubernetes Service cluster](5-configure-connector-cluster.md#6-provision-kafkaconnect-workers-on-our-azure-kubernetes-service-cluster)<br>
+[7. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods](5-configure-connector-cluster.md#7-start-port-forwarding-to-be-able-to-make-rest-calls-from-your-machine-to-kafkaconnect-service-running-on-aks-pods)<br>
+[8. Download & install Postman](5-configure-connector-cluster.md#8-download--install-postman)<br>
+
+
+The following section strives to explain further what we are doing in the lab pictorially.<br>
+
 ## Part A
 
 1.  Create a Docker Hub account if it does not exist
