@@ -19,7 +19,7 @@ This module covers the following steps that essentially sets the stage for integ
 [9. Import the Postman JSON collection with KafkaConnect REST API call samples & try them out](5-configure-connector-cluster.md#9-import-the-postman-json-collection-with-kafkaconnect-rest-api-call-samples)<br>
 
 
-The following section strives to explain further what we are doing in the lab pictorially.<br>
+The following section strives to explain further, pictorially, what we are doing in the lab, for clarity.<br>
 
 ## Part A
 
