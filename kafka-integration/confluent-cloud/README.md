@@ -2,7 +2,7 @@
 
 This lab details usage of self-managed Azure Data Explorer KafkaConnect sink connector with Confluent Cloud on Azure.<br>
 
-[KafkaConnect](https://kafka.apache.org/documentation.html#connect) is an open source Apache Kafka framework for reliably and scalably integration Kafka with other systems with zero code and just configuration.  Azure Data Explorer has a KafkaConnect sink connector and is the focal point of this lab.
+[KafkaConnect](https://kafka.apache.org/documentation.html#connect) is an open source Apache Kafka framework for reliably and scalably integration Kafka with other systems with zero code and just configuration.  Azure Data Explorer has an open source KafkaConnect sink connector and is the focal point of this lab.
 
 ## 1. Pictorial overview of the lab
 
@@ -63,6 +63,7 @@ Follow sequentially, every module through completion.
 [Azure Data Explorer docs](https://docs.microsoft.com/en-us/azure/data-explorer/)<br>
 [Azure Data Explorer Kafka ingestion docs](https://docs.microsoft.com/en-us/azure/data-explorer/ingest-data-kafka)<br>
 [Git repo for the KafkaConnect Kusto sink connector](https://github.com/Azure/kafka-sink-azure-kusto)<br>
-[KafkaConnect framework](https://kafka.apache.org/documentation.html#connect)
-[Robin Moffat's blogs]()
+[KafkaConnect framework](https://kafka.apache.org/documentation.html#connect)<br>
+[Confluent Connector Hub](https://www.confluent.io/hub/)<br>
+[From Zero to Hero with KafkaConnect - webinar by Robin Moffat](https://www.youtube.com/watch?v=Jkcp28ki82k)<br>
 
