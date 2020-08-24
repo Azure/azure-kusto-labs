@@ -346,7 +346,7 @@ This concludes the module.  You may now proceed to [create an Azure Data Explore
 
 <hr>
 
-# Main menu
+#### Main menu
 [Home page](README.md)<br>
 [1. Provision foundational resources](1-foundational-resources.md)<br>
 [2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
