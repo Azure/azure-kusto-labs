@@ -14,12 +14,13 @@ This module covers the below steps-
 [5.  Publish curated data as messages to Kafka from Spark on Databricks]()<br>
 
 ## 1.  Import Spark code from Github into your Databricks workspace
-Log on to your Databricks workspace from module 1.  Launch workspace.  Follow the steps below to run through the process of importing the code.<br>
+Log on to your Databricks workspace from module 1.  <br>
+Launch workspace.  <br>
+Follow the steps below to run through the process of importing the code.<br><br>
+
 The Spark code is available here-<br>
 https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/dbc/confluent-cloud-adx-hol.dbc
-<br>
-You will need this link for importing.
-
+<br>You will need this link for importing.
 
 
 ![Spark](images/04-import-01.png)
