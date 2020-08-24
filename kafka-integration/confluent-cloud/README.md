@@ -67,3 +67,5 @@ Follow sequentially, every module through completion.
 [Confluent Connector Hub](https://www.confluent.io/hub/)<br>
 [From Zero to Hero with KafkaConnect - webinar by Robin Moffat](https://www.youtube.com/watch?v=Jkcp28ki82k)<br>
 
+<hr>
+
