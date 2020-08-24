@@ -31,14 +31,19 @@ We will use Azure Kubernetes Service (AKS), collectively AKS and Kubernetes in g
 ### 2.5. Azure Data Explorer cluster as the sink
 For the purpose of simplicity, we will use a cluster that is not in a virtual network.
 
-## Audience for the lab
+## 3. Other details
+
+### 3.1. Audience for the lab
 
 Any data practitioner - architect or developer.
 
-## Duration
+### 3.2. Duration
 
-It should take about 8 hours
+Depends on your knowledge of Azure, and technologies included.  It should take about 8-12 hours if you are entirely unfamiliar.
 
-## Azure credit needed
+### 3.3. Azure credit needed
 
-Approximately $300
+Approximately $300-$600 - depends on familiarity worth services and Azure, and whether you work contiunously.
+
+<hr>
+Lets get started!
