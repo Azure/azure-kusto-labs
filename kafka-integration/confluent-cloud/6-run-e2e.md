@@ -127,6 +127,15 @@ crimes | take 2
 <br><br><hr>
 This concludes the lab.  Please be sure to delete the resource group you created.
 
+#### Main menu
+[Home page](README.md)<br>
+[1. Provision foundational resources](1-foundational-resources.md)<br>
+[2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
+[3. Provision Azure Data Explorer, and associated database objects and permissions](3-adx.md)<br>
+[4. Import the Spark Kafka producer code, and configure Spark to produce to your Confluent Cloud Kafka topic](4-configure-spark.md)<br>
+[5. Configure the KafkaConnect cluster, launch connector tasks](5-configure-connector-cluster.md)<br>
+[6. Run the end to end pipeline](6-run-e2e.md)<br>
+<hr>
 
 
 
