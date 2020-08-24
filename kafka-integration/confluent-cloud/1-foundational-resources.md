@@ -1,4 +1,4 @@
-# Main menu
+#### Main menu
 [Home page](README.md)<br>
 [1. Provision foundational resources](1-foundational-resources.md)<br>
 [2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
@@ -439,7 +439,7 @@ This concludes this module.  Click [here](2-confluent-cloud.md) to proceed to th
 
 <hr>
 
-# Main menu
+#### Main menu
 [Home page](README.md)<br>
 [1. Provision foundational resources](1-foundational-resources.md)<br>
 [2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
