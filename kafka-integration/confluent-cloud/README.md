@@ -2,6 +2,8 @@
 
 This lab details usage of self-managed Azure Data Explorer KafkaConnect sink connector with Confluent Cloud on Azure.<br>
 
+KafkaConnect is an open source Apache Kafka framework for reliably and scalably integration Kafka with other systems with zero code and just configuration.  Azure Data Explorer has a KafkaConnect sink connector and is the highlight of this lab.
+
 ## 1. Pictorial overview of the lab
 
 ![RG](images/E2E.png)
@@ -45,12 +47,22 @@ Depends on your knowledge of Azure, and technologies included.  It should take a
 
 Approximately $300-$600 - depends on familiarity worth services and Azure, and whether you work contiunously.
 
-## 4. The lab - lets get started
-Follow sequentially, each module through completion.
+## 4. THE LAB - lets get started
+Follow sequentially, every module through completion.
 
-[]()<br>
-[]()<br>
-[]()<br>
-[]()<br>
-[]()<br>
+[1. Provision foundational resources](1-foundational-resources.md)<br>
+[2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
+[3. Provision Azure Data Explorer, and associated database objects and permissions](3-adx.md)<br>
+[4. Import the Spark Kafka producer code, and configure Spark to produce to your Confluent Cloud Kafka topic](4-configure-spark.md)<br>
+[5. Configure the KafkaConnect cluster, launch connector tasks](5-configure-connector-cluster.md)<br>
+[6. Run the end to end pipeline](6-run-e2e.md)<br>
+
+## 5. Resources
+
+[Confluent cloud on Azure](https://www.confluent.io/blog/confluent-cloud-managed-kafka-service-azure-marketplace/)<br>
+[Azure Data Explorer docs](https://docs.microsoft.com/en-us/azure/data-explorer/)<br>
+[Azure Data Explorer Kafka ingestion docs](https://docs.microsoft.com/en-us/azure/data-explorer/ingest-data-kafka)<br>
+[Git repo for the KafkaConnect Kusto sink connector](https://github.com/Azure/kafka-sink-azure-kusto)<br>
+[KafkaConnect framework](https://kafka.apache.org/documentation.html#connect)
+[Robin Moffat's blogs]()
 
