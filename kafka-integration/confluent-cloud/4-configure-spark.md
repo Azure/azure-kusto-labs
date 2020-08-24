@@ -74,8 +74,7 @@ Review the code first, in the notebook, "0-configs", paste your configs, and the
 
 
 ## 3.  Mount your Azure Storage Account containers to your Databricks workspace
-Review the code first, in the notebook, "1-mount-blob-storage" and then run the notebook using the "Run all" button at the top of the notebook.<br>
-In this notebook, we mount the storage containers we created; Mounting blob storage containers allows you to read/write from storage containers like they are local file systems.<br>
+Review the code first, in the notebook, "1-mount-blob-storage" and then run the notebook using the "Run all" button at the top of the notebook.  In this notebook, we mount the storage containers we created; Mounting blob storage containers allows you to read/write from storage containers like they are local file systems.<br>
 
 ![Spark](images/04-mount-01.png)
 <br>
@@ -96,8 +95,7 @@ In this notebook, we mount the storage containers we created; Mounting blob stor
 <br>
 
 ## 4.  Download a public dataset and curate it for use in the lab
-Review the code first, in the notebook, "2-crimes-data-curation" and then run the notebook using the "Run all" button at the top of the notebook.<br>
-In this notebook, we download Chicago crimes public dataset and curate it. 
+Review the code first, in the notebook, "2-crimes-data-curation" and then run the notebook using the "Run all" button at the top of the notebook.  In this notebook, we download Chicago crimes public dataset and curate it. 
 
 ![Spark](images/04-curate-01.png)
 <br>
