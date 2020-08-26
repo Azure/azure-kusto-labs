@@ -195,7 +195,7 @@ Set Kafka cluster "lkc-g9zrn" as the active cluster for environment "env-0jmy2".
 ### 4.1. Generate the key
 Run this command, replace last parameter with your cluster ID-
 ```
-ccloud kafka cluster use <yourClusterID>
+ccloud api-key create --resource <yourClusterID>
 ```
 
 Author's output -
