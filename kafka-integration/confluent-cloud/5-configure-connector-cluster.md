@@ -488,7 +488,7 @@ exit
 Lets review the logs of one of the pods from 6.3
 
 ```
-kubectl logs 
+kubectl logs <podName>
 ```
 
 If you see something like this, we are good to go...
