@@ -246,7 +246,7 @@ ccloud kafka topic create crimes --cluster <yourClusterID>  --partitions <yourTo
 
 Author's output -
 ```
-indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 --dry-run 
+indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 
 Created topic "crimes".
 ```
 
