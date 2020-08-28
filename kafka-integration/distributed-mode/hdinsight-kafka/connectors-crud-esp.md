@@ -958,6 +958,6 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br>
 
 <br><br><hr>
-This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
+This concludes this module. 
 
 
