@@ -144,8 +144,6 @@ cd  kafka-hdi-hol
 
 scp sshuser@democluster-ssh.azurehdinsight.net:/etc/krb5.conf .
 
-# Rename the file downloaded
-mv krb5.conf old-krb5.conf
 ```
 
 ### 2.4. Create a HDI JaaS conf
