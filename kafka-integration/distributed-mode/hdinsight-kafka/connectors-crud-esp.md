@@ -550,7 +550,7 @@ indra:kafka-confluentcloud-hol akhanolk$ az aks get-credentials --resource-group
 Merged "connector-k8s-cluster-admin" as current context in /Users/akhanolk/.kube/config
 ```
 
-### 6.2. Provision KafkaConnect on AKS
+### 8.2. Provision KafkaConnect on AKS
 
 Run the below-
 ```
@@ -572,7 +572,7 @@ This chart installs a Confluent Kafka Connect
 https://docs.confluent.io/current/connect/index.html
 ```
 
-### 6.3. Check pods
+### 8.3. Check pods
 Run the below-
 ```
 kubectl get pods
@@ -590,7 +590,7 @@ cp-kafka-connect-1598109267-76465bff44-wv5w2   1/1     Running   0          5m27
 cp-kafka-connect-1598109267-76465bff44-x7rlm   1/1     Running   0          5m27s
 ```
 
-### 6.4. Check service 
+### 8.4. Check service 
 
 Run the below-
 ```
@@ -607,7 +607,7 @@ kubernetes                    ClusterIP   10.0.0.1       <none>        443/TCP  
 
 This is the service name- cp-kafka-connect-1598109267 
 
-### 6.5. SSH into a pod
+### 8.5. SSH into a pod
 
 Pick one pod from your list of 6 in #6.3<br>
 Here is the author's command and output-
@@ -615,7 +615,7 @@ Here is the author's command and output-
 kubectl exec -it cp-kafka-connect-1598073371-6676d5b5bd-7sbzn -- bash
 ```
 
-#### 6.5.1.  Check processes running
+#### 8.5.1.  Check processes running
 
 ```
 ps -ef
@@ -630,7 +630,7 @@ root        186      0  0 15:15 pts/0    00:00:00 bash
 root        220    186  0 15:40 pts/0    00:00:00 ps -ef
 ```
 
-#### 6.5.2.  Check /usr/share/jave to see if the ADX/Kusto jar is there
+#### 8.5.2.  Check /usr/share/jave to see if the ADX/Kusto jar is there
 
 Command-
 ```
@@ -661,7 +661,7 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:22 rest-utils
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
 ```
 
-### 6.5.3.  Check if the environment conigs we applied in the docker file are available..
+### 8.5.3.  Check if the environment conigs we applied in the docker file are available..
 Run the command-
 ```
 printenv | sort
@@ -747,7 +747,7 @@ Now - exit root..
 ```
 exit
 ```
-### 6.5.4.  Lets check logs to see if there are any errors
+### 8.5.4.  Lets check logs to see if there are any errors
 Lets review the logs of one of the pods from 6.3
 
 ```
@@ -768,7 +768,7 @@ If you see something like this, we are good to go...
 [2020-08-22 15:15:21,442] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Finished starting connectors and tasks (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
 ```
 
-### 6.6. Describe a pod to view details
+### 8.6. Describe a pod to view details
 
 Run the command below with a pod name from 6.3
 ```
@@ -864,7 +864,7 @@ Points to note here are-
 ```
 These are specific to the service ID from "kubectl get svc".  If you uninstall and reinstall KafkaConnect, you will see another set of 3 topics, identifiable by the service ID.
 
-## 7. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods
+## 9. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods
 You will need the service ID from the command "kubectl get svc".  Substitute it in the below command.
 
 ```
@@ -880,19 +880,19 @@ Forwarding from [::1]:803 -> 8083
 ```
 Keep this session alive when you need to manipulate the ADX connectors.
 
-## 8. Download & install Postman
+## 10. Download & install Postman
 
 [Install Postman](https://www.postman.com/downloads/) if you dont already have it.
 
-## 9. Import the Postman JSON collection with KafkaConnect REST API call samples
+## 11. Import the Postman JSON collection with KafkaConnect REST API call samples
 
-### 9.1. Download the Postman collection for the lab 
+### 11.1. Download the Postman collection for the lab 
 
 Download [this](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/rest-calls/Confluent-Cloud-ADX-HoL-1-STUB.postman_collection.json) to you local machine.<br>
 We will import this into Postman.  Its a stub with all the REST calls pre-created.
 
 
-### 9.2. Launch Postman and click on the import button
+### 11.2. Launch Postman and click on the import button
 
 ![POSTMAN](images/05-CONNECTOR-01.png)
 <br>
@@ -909,7 +909,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 <br>
 
 
-### 9.3. View available connector plugins
+### 11.3. View available connector plugins
 
 ![POSTMAN](images/05-CONNECTOR-02.png)
 <br>
@@ -917,7 +917,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 <hr>
 <br>
 
-### 9.4. Check if the ADX/Kusto connector is already provisioned
+### 11.4. Check if the ADX/Kusto connector is already provisioned
 
 ![POSTMAN](images/05-CONNECTOR-03.png)
 <br>
@@ -925,7 +925,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 <hr>
 <br>
 
-### 9.5. Provision the connector after editing the body of the REST call to match your configuration
+### 11.5. Provision the connector after editing the body of the REST call to match your configuration
 
 ![POSTMAN](images/05-CONNECTOR-04.png)
 <br>
@@ -968,7 +968,7 @@ but depending on resources, you can oversubcribe and add more tasks.
 
 IDEALLY, you want as many tasks as Kafka topic partitions.
 
-### 9.6. View configuration of connector tasks provisioned already, if any
+### 11.6. View configuration of connector tasks provisioned already, if any
 
 ![POSTMAN](images/05-CONNECTOR-05.png)
 <br>
@@ -976,7 +976,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.7. View status of connector tasks provisioned 
+### 11.7. View status of connector tasks provisioned 
 
 ![POSTMAN](images/05-CONNECTOR-06.png)
 <br>
@@ -984,7 +984,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.8. Pause connectors should you need to
+### 11.8. Pause connectors should you need to
 
 ![POSTMAN](images/05-CONNECTOR-07.png)
 <br>
@@ -992,7 +992,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.9. Resume connectors paused previously
+### 11.9. Resume connectors paused previously
 
 ![POSTMAN](images/05-CONNECTOR-08.png)
 <br>
@@ -1000,7 +1000,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.10. List all individual connector tasks with status
+### 11.10. List all individual connector tasks with status
 
 ![POSTMAN](images/05-CONNECTOR-09.png)
 <br>
@@ -1008,7 +1008,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.11. Restart connectors when needed
+### 11.11. Restart connectors when needed
 
 ![POSTMAN](images/05-CONNECTOR-10.png)
 <br>
@@ -1016,7 +1016,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.12. Delete connectors altogether
+### 11.12. Delete connectors altogether
 
 ![POSTMAN](images/05-CONNECTOR-11.png)
 <br>
