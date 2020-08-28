@@ -112,9 +112,9 @@ From the connector AKS cluster, we have to consume from kerberized HDInsight Kaf
 <hr>
 <br>
 
-### 2.2. Kerberos keytab for UPN with Kafka topic create/write access configured in Ranger
+### 2.2. Generate Kerberos keytab for UPN with Kafka topic create/write access configured in Ranger
 
-Connect to the head node and generate a headless keytab for the privileged user-
+Connect to the head node of the HDInsight cluster and generate a headless keytab for the privileged user-
 ```
 ktutil
 addent -password -p <UPN>@<REALM> -k 1 -e RC4-HMAC
@@ -136,13 +136,16 @@ cd  kafka-hdi-hol
 scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/kafka-client-hdi.keytab .
 ```
 
-### 2.3. krb5.conf from the cluster
+### 2.3. krb5.conf from the HDI cluster download the krb5.conf
 
 ```
 # From your local machine..
 cd  kafka-hdi-hol
 
 scp sshuser@democluster-ssh.azurehdinsight.net:/etc/krb5.conf .
+
+# Rename the file downloaded
+mv krb5.conf old-krb5.conf
 ```
 
 ### 2.4. Create a HDI JaaS conf
@@ -154,7 +157,7 @@ cd ~/kafka-hdi-hol
 vi hdi-esp-jaas.conf
 ```
 
-Paste this into the file, after updating with your UPN and Kerberos realm-
+Paste this into the file, after updating with your UPN (hdiadminjrs) and Kerberos realm (AADDS.JRSMYDOMAIN.COM)-
 ```
 KafkaClient {
     com.sun.security.auth.module.Krb5LoginModule required
