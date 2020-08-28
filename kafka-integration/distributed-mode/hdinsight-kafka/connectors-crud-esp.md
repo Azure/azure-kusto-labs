@@ -80,6 +80,58 @@ This is what we have at the end of this module, a Kusto sink connector cluster w
 <hr>
 <br>
 
+## 1. Create a local directory
+
+In linux/Mac-
+```
+cd ~
+mkdir kafka-hdi-hol
+cd kafka-hdi-hol
+```
+
+## 2.  Configs you need from HDInsight ESP Kafka cluster
+
+From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka.  For this, we need a user principal that has Ranger policy set to consume from Kafka.  In this example, we wil use the user hdiadminjrs.
+
+
+### 2.1.  Ranger policy for UPN to be used in the lab
+
+
+
+### 2.2. Kerberos keytab for UPN with Kafka topic create/write access configured in Ranger
+
+Connect to the head node and generate a headless keytab for the privileged user-
+```
+ktutil
+addent -password -p <UPN>@<REALM> -k 1 -e RC4-HMAC
+wkt <UPN>-headless.keytab
+```
+
+E.g. hdiadminjrs is the cluster administrator.  The realm is AADDS.JRSMYDOMAIN.COM.  The keytab name is hdiadminjrs.keytab.
+```
+ktutil
+addent -password -p hdiadminjrs@AADDS.JRSMYDOMAIN.COM -k 1 -e RC4-HMAC
+wkt hdiadminjrs.keytab
+```
+
+Scp the keytab to your local directory.  Example...
+```
+# From your local machine..
+cd  kafka-hdi-hol
+
+scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/hdiadminjrs.keytab .
+```
+
+### 2.3. krb5.conf from the cluster
+
+```
+# From your local machine..
+cd  kafka-hdi-hol
+
+scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/hdiadminjrs.keytab .
+```
+
+
 ## 1.  Create a Docker Hub account
 
 Follow the instructions [here](https://hub.docker.com/signup) and create an account.  Note down your user ID and password.
@@ -90,14 +142,7 @@ Follow the instructions [here](https://www.docker.com/products/docker-desktop) a
 
 ## 3. Build a Docker image
 
-### 3.1. Create a local directory
 
-In linux/Mac-
-```
-cd ~
-mkdir kafka-confluentcloud-hol
-cd kafka-confluentcloud-hol
-```
 
 ### 3.2. Download the ADX connector jar
 
@@ -105,7 +150,7 @@ Run the following commands-
 <br>
 1.  Switch directories if needed
 ```
-cd ~/kafka-confluentcloud-hol
+cd ~/kafka-hdi-hol
 ```
 2.  Download the jar
 ```
@@ -123,12 +168,21 @@ Paste this into the file and save - be sure to edit it for bootstrap server list
 ```
 FROM confluentinc/cp-kafka-connect:5.5.0
 COPY kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar /usr/share/java
+COPY krb5.conf /etc/krb5.conf
+COPY hdi-esp-jaas.conf /etc/hdi-esp-jaas.conf 
+COPY kafka-client-hdi.keytab /etc/security/keytabs/kafka-client-hdi.keytab
+
+ENV KAFKA_OPTS="-Djava.security.krb5.conf=/etc/krb5.conf"
 
 ENV CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
-ENV CONNECT_SASL_MECHANISM=PLAIN
-ENV CONNECT_SECURITY_PROTOCOL=SASL_SSL
-ENV CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
-ENV CONNECT_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\YOUR-KAFKA-API-SECRET"\";"
+
+ENV CONNECT_SASL_MECHANISM=GSSAPI
+ENV CONNECT_SASL_KERBEROS_SERVICE_NAME=kafka
+ENV CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
+ENV CONNECT_SASL_JAAS_CONFIG="com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/etc/security/keytabs/kafka-client-hdi.keytab\" principal=\"hdiadminjrs@AADDS.JRSMYDOMAIN.COM\";"
+
+
+
 ```
 
 What we are doing above is taking the base Docker image from the ConfluentInc repo, copying the ADX jar to /usr/share/java and setting an environment variable to allow overrides at the consumer level.
