@@ -56,7 +56,6 @@ When we are done, we have a live KafkaConnect cluster that is integrated with Co
 
 Note: This still does not have copy tasks (connector tasks) running yet
 
-
 ## Part C
 
 6.  Install Postman on our local machine
@@ -89,14 +88,29 @@ mkdir kafka-hdi-hol
 cd kafka-hdi-hol
 ```
 
-## 2.  Configs you need from HDInsight ESP Kafka cluster
+## 2.  Download configs you need from HDInsight ESP Kafka cluster
 
-From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka.  For this, we need a user principal that has Ranger policy set to consume from Kafka.  In this example, we wil use the user hdiadminjrs.
-
+From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka.  For this, we need a user principal that has Ranger policy set to consume from Kafka.  In this example, we wil use the user **hdiadminjrs**.
 
 ### 2.1.  Ranger policy for UPN to be used in the lab
 
+![RANGER](images/images/ranger-01.png)
+<br>
+<br>
+<hr>
+<br>
 
+![RANGER](images/images/ranger-02.png)
+<br>
+<br>
+<hr>
+<br>
+
+![RANGER](images/images/ranger-03.png)
+<br>
+<br>
+<hr>
+<br>
 
 ### 2.2. Kerberos keytab for UPN with Kafka topic create/write access configured in Ranger
 
@@ -107,19 +121,19 @@ addent -password -p <UPN>@<REALM> -k 1 -e RC4-HMAC
 wkt <UPN>-headless.keytab
 ```
 
-E.g. hdiadminjrs is the cluster administrator.  The realm is AADDS.JRSMYDOMAIN.COM.  The keytab name is hdiadminjrs.keytab.
+E.g. hdiadminjrs is the cluster administrator.  The realm is AADDS.JRSMYDOMAIN.COM.  The keytab name is kafka-client-hdi.keytab.
 ```
 ktutil
 addent -password -p hdiadminjrs@AADDS.JRSMYDOMAIN.COM -k 1 -e RC4-HMAC
-wkt hdiadminjrs.keytab
+wkt kafka-client-hdi.keytab
 ```
 
-Scp the keytab to your local directory.  Example...
+Copy the keytab from HDInsight to your local directory.  Example...
 ```
 # From your local machine..
 cd  kafka-hdi-hol
 
-scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/hdiadminjrs.keytab .
+scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/kafka-client-hdi.keytab .
 ```
 
 ### 2.3. krb5.conf from the cluster
@@ -128,23 +142,41 @@ scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/hdiadminj
 # From your local machine..
 cd  kafka-hdi-hol
 
-scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/hdiadminjrs.keytab .
+scp sshuser@democluster-ssh.azurehdinsight.net:/etc/krb5.conf .
+```
+
+### 2.4. Create a HDI JaaS conf
+
+Create a JaaS confiog file as follows-
+
+```
+cd ~/kafka-hdi-hol
+vi hdi-esp-jaas.conf
+```
+
+Paste this into the file, after updating with your UPN and Kerberos realm-
+```
+KafkaClient {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useKeyTab=true
+    storeKey=true
+    keyTab="/etc/security/keytabs/kafka-client-hdi.keytab"
+    principal="hdiadminjrs@AADDS.JRSMYDOMAIN.COM";
+};
 ```
 
 
-## 1.  Create a Docker Hub account
+## 3.  Create a Docker Hub account
 
 Follow the instructions [here](https://hub.docker.com/signup) and create an account.  Note down your user ID and password.
 
-## 2.  Install Docker desktop on your machine and launch it
+## 4.  Install Docker desktop on your machine and launch it
 
 Follow the instructions [here](https://www.docker.com/products/docker-desktop) and complete the installation and start the service.
 
-## 3. Build a Docker image
+## 5. Build a Docker image
 
-
-
-### 3.2. Download the ADX connector jar
+### 5.1. Download the ADX connector jar
 
 Run the following commands-
 <br>
@@ -157,7 +189,20 @@ cd ~/kafka-hdi-hol
 wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v1.0.1/kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar 
 ```
 
-### 3.3. Create a Docker file
+### 5.2. Review directory contents
+
+You should already have this.
+```
+cd ~/kafka-hdi-hol
+tree
+
+├── hdi-esp-jaas.conf
+├── kafka-client-hdi.keytab
+├── kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+└── krb5.conf
+```
+
+### 5.3. Create a Docker file
 
 Start a file-
 ```
