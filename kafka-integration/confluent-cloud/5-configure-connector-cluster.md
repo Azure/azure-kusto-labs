@@ -488,7 +488,11 @@ exit
 Lets review the logs of one of the pods from 6.3
 
 ```
+<<<<<<< HEAD
 kubectl logs 
+=======
+kubectl logs <podName>
+>>>>>>> 5ce78b7ed73f62c2c92f62c8084062717e693705
 ```
 
 If you see something like this, we are good to go...
