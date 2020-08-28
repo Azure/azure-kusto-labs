@@ -94,19 +94,19 @@ From the connector AKS cluster, we have to consume from kerberized HDInsight Kaf
 
 ### 2.1.  Ranger policy for UPN to be used in the lab
 
-![RANGER](images/images/ranger-01.png)
+![RANGER](images/ranger-01.png)
 <br>
 <br>
 <hr>
 <br>
 
-![RANGER](images/images/ranger-02.png)
+![RANGER](images/ranger-02.png)
 <br>
 <br>
 <hr>
 <br>
 
-![RANGER](images/images/ranger-03.png)
+![RANGER](images/ranger-03.png)
 <br>
 <br>
 <hr>
