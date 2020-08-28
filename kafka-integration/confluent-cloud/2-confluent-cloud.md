@@ -195,7 +195,11 @@ Set Kafka cluster "lkc-g9zrn" as the active cluster for environment "env-0jmy2".
 ### 4.1. Generate the key
 Run this command, replace last parameter with your cluster ID-
 ```
+<<<<<<< HEAD
+ccloud kafka cluster use <yourClusterID>
+=======
 ccloud api-key create --resource <yourClusterID>
+>>>>>>> 5ce78b7ed73f62c2c92f62c8084062717e693705
 ```
 
 Author's output -
@@ -246,7 +250,11 @@ ccloud kafka topic create crimes --cluster <yourClusterID>  --partitions <yourTo
 
 Author's output -
 ```
+<<<<<<< HEAD
+indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 --dry-run 
+=======
 indra:kafka akhanolk$ ccloud kafka topic create crimes --cluster lkc-g9zrn  --partitions 6 
+>>>>>>> 5ce78b7ed73f62c2c92f62c8084062717e693705
 Created topic "crimes".
 ```
 
