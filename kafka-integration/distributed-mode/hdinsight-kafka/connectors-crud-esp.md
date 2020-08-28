@@ -782,74 +782,7 @@ indra:kafka-confluentcloud-hol akhanolk$ kubectl describe pod cp-kafka-connect-1
 Name:         cp-kafka-connect-1598109267-76465bff44-7s9vs
 Namespace:    default
 Priority:     0
-Node:         aks-agentpool-23362501-vmss000005/10.240.0.9
-Start Time:   Sat, 22 Aug 2020 10:14:30 -0500
-Labels:       app=cp-kafka-connect
-              pod-template-hash=76465bff44
-              release=cp-kafka-connect-1598109267
-Annotations:  <none>
-Status:       Running
-IP:           10.244.1.10
-IPs:
-  IP:           10.244.1.10
-Controlled By:  ReplicaSet/cp-kafka-connect-1598109267-76465bff44
-Containers:
-  cp-kafka-connect-server:
-    Container ID:   docker://f574c04da945ef986296a7ff341c277be9799e61d1c8702096d7ed792e8beb30
-    Image:          akhanolkar/kafka-connect-kusto-sink:1.0.1v3
-    Image ID:       docker-pullable://akhanolkar/kafka-connect-kusto-sink@sha256:65b7c05d5e795c7491d52a5e12636faa1f8f9b4a460a24ec081e6bf4047d405d
-    Port:           8083/TCP
-    Host Port:      0/TCP
-    State:          Running
-      Started:      Sat, 22 Aug 2020 10:14:32 -0500
-    Ready:          True
-    Restart Count:  0
-    Environment:
-      CONNECT_REST_ADVERTISED_HOST_NAME:             (v1:status.podIP)
-      CONNECT_BOOTSTRAP_SERVERS:                    PLAINTEXT://nnn-nnnnn.eastus2.azure.confluent.cloud:9092
-      CONNECT_GROUP_ID:                             cp-kafka-connect-1598109267
-      CONNECT_CONFIG_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-config
-      CONNECT_OFFSET_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-offset
-      CONNECT_STATUS_STORAGE_TOPIC:                 cp-kafka-connect-1598109267-status
-      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL:    http://cp-kafka-connect-1598109267-cp-schema-registry:8081
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL:  http://cp-kafka-connect-1598109267-cp-schema-registry:8081
-      KAFKA_HEAP_OPTS:                              -Xms512M -Xmx512M
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR:    3
-      CONNECT_INTERNAL_KEY_CONVERTER:               org.apache.kafka.connect.json.JsonConverter
-      CONNECT_INTERNAL_VALUE_CONVERTER:             org.apache.kafka.connect.json.JsonConverter
-      CONNECT_KEY_CONVERTER:                        io.confluent.connect.avro.AvroConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE:         false
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR:    3
-      CONNECT_PLUGIN_PATH:                          /usr/share/java,/usr/share/confluent-hub-components
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR:    3
-      CONNECT_VALUE_CONVERTER:                      io.confluent.connect.avro.AvroConverter
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE:       false
-      KAFKA_JMX_PORT:                               5555
-    Mounts:
-      /var/run/secrets/kubernetes.io/serviceaccount from default-token-p67xc (ro)
-Conditions:
-  Type              Status
-  Initialized       True 
-  Ready             True 
-  ContainersReady   True 
-  PodScheduled      True 
-Volumes:
-  default-token-p67xc:
-    Type:        Secret (a volume populated by a Secret)
-    SecretName:  default-token-p67xc
-    Optional:    false
-QoS Class:       BestEffort
-Node-Selectors:  <none>
-Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
-                 node.kubernetes.io/unreachable:NoExecute for 300s
-Events:
-  Type    Reason     Age   From                                        Message
-  ----    ------     ----  ----                                        -------
-  Normal  Scheduled  43m   default-scheduler                           Successfully assigned default/cp-kafka-connect-1598109267-76465bff44-7s9vs to aks-agentpool-23362501-vmss000005
-  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
-  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
-  Normal  Created    43m   kubelet, aks-agentpool-23362501-vmss000005  Created container cp-kafka-connect-server
-  Normal  Started    43m   kubelet, aks-agentpool-23362501-vmss000005  Started container cp-kafka-connect-server
+....
 ```
 
 Points to note here are-
@@ -874,7 +807,7 @@ sudo kubectl port-forward svc/YOIUR_SERVICE_ID 803:8083
 
 Author's output-
 ```
-indra:kafka-confluentcloud-hol akhanolk$ sudo kubectl port-forward svc/cp-kafka-connect-1598109267 803:8083
+indra:kafka-hdi-hol akhanolk$ sudo kubectl port-forward svc/cp-kafka-connect-1598109267 803:8083
 Forwarding from 127.0.0.1:803 -> 8083
 Forwarding from [::1]:803 -> 8083
 .....
@@ -889,9 +822,8 @@ Keep this session alive when you need to manipulate the ADX connectors.
 
 ### 11.1. Download the Postman collection for the lab 
 
-Download [this](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/rest-calls/Confluent-Cloud-ADX-HoL-1-STUB.postman_collection.json) to you local machine.<br>
+Download [this](rest-calls/Connector-STUB.postman_collection.json) to you local machine.<br>
 We will import this into Postman.  Its a stub with all the REST calls pre-created.
-
 
 ### 11.2. Launch Postman and click on the import button
 
