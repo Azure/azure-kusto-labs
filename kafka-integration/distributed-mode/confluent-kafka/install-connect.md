@@ -180,7 +180,7 @@ key.converter=org.apache.kafka.connect.storage.StringConverter
 # 5.  Configure Postman collection JSON for the KafkaConnect REST calls
 
 ## 5.1. Launch Postman and import the collecton JSON
-1.  The collection JSON for the KafkaConnect REST APIs with the Kusto Connector conf is [here](../../conf/confluent/KafkaConnect/manage/REST/Confluent-KafkaConnect.postman_collection.json).<br>
+1.  The collection JSON for the KafkaConnect REST APIs with the Kusto Connector conf is [here](../../distributed-mode/conf/confluent-connect-rest-json/Confluent-KafkaConnect-Template.postman_collection.json).<br>
 2.  Download it to your machine and import it.
 
 ![CONCON-00](../images/con-con-0.png)
