@@ -46,7 +46,7 @@ When we start off, all we have is an empty Kubernetes cluster-
 <hr>
 <br>
 
-When we are done, we have a live KafkaConnect cluster that is integrated with Confluent Cloud-
+When we are done, we have a live KafkaConnect cluster that is integrated with the Kafka cluster (HDI ESP in this case)-
 
 ![CONNECTOR](images/AKS-KafkaConnect.png)
 <br>
