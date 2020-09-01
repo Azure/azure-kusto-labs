@@ -1,6 +1,6 @@
 # Quickstart: Ingestion from Kafka into Azure Data Explorer (Kusto) in Kafka Connect standalone mode
 
-This is a quickstart for getting up and running with a data ingestion setup from [Apache Kafka](https://kafka.apache.org/) to [Azure Data Explorer](https://docs.microsoft.com/en-us/azure/data-explorer/data-explorer-overview) using the [Kusto Sink Connector](https://github.com/Azure/kafka-sink-azure-kusto) without having to deal with the complexities of Kafka cluster setup, creating a Kafka producer app, Kusto sink connector cluster setup.  <br>
+This is a quickstart for getting up and running with a data ingestion from [Apache Kafka](https://kafka.apache.org/) to [Azure Data Explorer](https://docs.microsoft.com/en-us/azure/data-explorer/data-explorer-overview) using the [Kusto Sink Connector](https://github.com/Azure/kafka-sink-azure-kusto) without having to deal with the complexities of Kafka cluster setup, creating a Kafka producer app, Kusto sink connector cluster setup.  <br>
 
 The goal is to get started *quickly*, so all the requisite components for a Kafka ingestion pipeline into Kusto are self-contained and run in Docker containers - this includes a pseudo-distributed setup of Kafka, Zookeeper, Kafka Connect worker and the Kafka event generator/producer application. Follow through the lab and get a feel of the connector in isolation.  You can then move to the more involved labs that cover distributed Kafka Connect, and Azure PaaS and ISV IaaS Kafka offerings.<br> 
 
