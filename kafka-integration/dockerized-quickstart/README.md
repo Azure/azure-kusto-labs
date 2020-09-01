@@ -25,7 +25,67 @@ This lab is a contribution (thanks @abhirockzz) from the Cloud advocacy team - a
 - [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli?view=azure-cli-latest) on your machine, if you don't have it already
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install) on your machine, if you don't have it already
 
-## 2. Clone the lab's git repo
+## 2. Create an Azure Active Directory Service Principal
+
+This service principal will be the identity leveraged by the connector to write to the Azure Data Explorer table.  In the next step, we will grant permissions for this service principal to access Azure Data Explorer.<br>
+
+### 2.1. Login to your Azure subscription via Azure CLI
+```
+az login
+```
+This launches a browser to authentciate.  Follow the steps to authenticate.<br>
+
+### 2.2. Choose the subscription you want to run the lab in.  This is needed when you have multiple.
+```
+az account set --subscription YOUR_SUBSCRIPTION_GUID
+```
+
+### 2.3. Create the service principal
+Lets call our service principal, kusto-kafka-spn.  Run the command below to create it.
+```
+az ad sp create-for-rbac -n "kusto-kafka-spn"
+```
+
+You will get a JSON response as shown below. Note down the `appId`, `password` and `tenant` as you will need them in subsequent steps
+
+```json
+{
+  "appId": "fe7280c7-5705-4789-b17f-71a472340429",
+  "displayName": "kusto-kafka-spn",
+  "name": "http://kusto-kafka-spn",
+  "password": "29c719dd-f2b3-46de-b71c-4004fb6116ee",
+  "tenant": "42f988bf-86f1-42af-91ab-2d7cd011db42"
+}
+```
+
+## 3. Provision and configure Azure Data Explorer
+
+### 3.1. Create a cluster and database
+- Create an Azure Data Explorer cluster and a database from the Azure portal; Leave the caching and retention policies to their default values
+
+### 3.2. Create a table and associated mapping
+2. Create a table called (`Storms`) and the corressponding table mapping to data needing ingesting (`Storms_CSV_Mapping`):
+
+```kusto
+.create table Storms (StartTime: datetime, EndTime: datetime, EventId: int, State: string, EventType: string, Source: string)
+
+.create table Storms ingestion csv mapping 'Storms_CSV_Mapping' '[{"Name":"StartTime","datatype":"datetime","Ordinal":0}, {"Name":"EndTime","datatype":"datetime","Ordinal":1},{"Name":"EventId","datatype":"int","Ordinal":2},{"Name":"State","datatype":"string","Ordinal":3},{"Name":"EventType","datatype":"string","Ordinal":4},{"Name":"Source","datatype":"string","Ordinal":5}]'
+```
+
+### 3.3. Create a batch ingestion policy on the table for configurable ingestion latency
+
+The ingestion policy includes three parameters, the first one met triggers an ingestion into Azure Data Explorer table.
+```
+.alter table Storms policy ingestionbatching @'{"MaximumBatchingTimeSpan":"00:00:15", "MaximumNumberOfItems": 100, "MaximumRawDataSizeMB": 300}'
+```
+
+### 3.4. Grant permissions to the service principal to work with the database
+You will need the service principal details from section 2.3
+```
+.add database YOUR_DATABASE_NAME admins  ('aadapp=YOUR_APP_ID;YOUR_TENANT_ID') 'AAD App'
+```
+
+## 4. Clone the lab's git repo
 
 1. Clone the repo-
 ```shell
@@ -38,10 +98,12 @@ cd kafka-kusto-ingestion-tutorial
 
 ```
 
-## 3. Review contents
+## 5. Review contents
+
+### 5.1. List the contents
 
 ```
-cd 
+cd <>
 tree
 ```
 
@@ -62,41 +124,15 @@ tree
     └── main.go
  ```
 
+### 5.2. adx-sink-config.json
+This is the Kusto sink properties file where we need to include our configuration for the connector.<br>
+Here is what it looks like-
 
 
 
-## 4. Create an Azure Active Directory service principal
 
-This service principal will be the identity leveraged by the connector to write to the Azure Data Explorer table.  In the next step, we will grant permissions for this service principal to access Azure Data Explorer.<br>
 
-1. Login to your Azure subscription via Azure CLI
-```
-az login
-```
-This launches a browser to authentciate.  Follow the steps to authenticate.<br>
 
-2.  Choose the subscription you want to run the lab in.  This is needed when you have multiple.
-```
-az account set --subscription YOUR_SUBSCRIPTION_GUID
-```
-
-3.  Create the service principal
-Lets call our service principal, kusto-kafka-spn.  Run the command below to create it.
-```
-az ad sp create-for-rbac -n "kusto-kafka-spn"
-```
-
-You will get a JSON response as shown below. Note down the `appId`, `password` and `tenant` as you will need them in subsequent steps
-
-```json
-{
-  "appId": "fe7280c7-5705-4789-b17f-71a472340429",
-  "displayName": "kusto-kafka-spn",
-  "name": "http://kusto-kafka-spn",
-  "password": "29c719dd-f2b3-46de-b71c-4004fb6116ee",
-  "tenant": "42f988bf-86f1-42af-91ab-2d7cd011db42"
-}
-```
 
 
 
@@ -154,36 +190,7 @@ services:
 
 
 
-## Step 1: Setup and configure Azure Data Explorer
 
-1. Create an Azure Data Explorer cluster and a database
-2. Create a table (`Storms`) and the mapping (`Storms_CSV_Mapping`):
-
-```kusto
-.create table Storms (StartTime: datetime, EndTime: datetime, EventId: int, State: string, EventType: string, Source: string)
-
-.create table Storms ingestion csv mapping 'Storms_CSV_Mapping' '[{"Name":"StartTime","datatype":"datetime","Ordinal":0}, {"Name":"EndTime","datatype":"datetime","Ordinal":1},{"Name":"EventId","datatype":"int","Ordinal":2},{"Name":"State","datatype":"string","Ordinal":3},{"Name":"EventType","datatype":"string","Ordinal":4},{"Name":"Source","datatype":"string","Ordinal":5}]'
-```
-
-3. Create a Service Principal in order for the connector to authenticate and connect to Azure Data Explorer service.
-
-Use `az ad sp create-for-rbac` command:
-
-```
-az ad sp create-for-rbac -n "kusto-sp"
-```
-
-You will get a JSON response as such - please note down the `appId`, `password` and `tenant` as you will be using them in subsequent steps
-
-```json
-{
-  "appId": "fe7280c7-5705-4789-b17f-71a472340429",
-  "displayName": "kusto-sp",
-  "name": "http://kusto-sp",
-  "password": "29c719dd-f2b3-46de-b71c-4004fb6116ee",
-  "tenant": "42f988bf-86f1-42af-91ab-2d7cd011db42"
-}
-```
 
 ## Step 2: Kusto Sink connector setup
 
