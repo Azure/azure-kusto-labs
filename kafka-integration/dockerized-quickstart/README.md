@@ -214,6 +214,7 @@ services:
 
 ### 6.1. Start the containers - Kafka, connect, producer etc
 
+In a terminal, start the containers-
 ```shell
 docker-compose up
 ```
@@ -232,7 +233,7 @@ events-producer_1  | event  2007-01-01 00:00:00.0000000,2007-01-01 05:00:00.0000
 
 ### 6.2. Start the connector via Kafka Connect REST call
 
-Launch sink task
+In a separate terminal, launch sink task
 ```shell
 curl -X POST -H "Content-Type: application/json" --data @adx-sink-config.json http://localhost:8083/connectors
 ```
