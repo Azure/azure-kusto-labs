@@ -8,9 +8,9 @@ Follow through the lab which leverages the storm events public dataset, and get 
 
 This lab is a contribution (thanks @abhirockzz) from the Cloud advocacy team - a team that strives to improve developer experience on Azure.  
 
-1. Clone the git repo
-2. Review its contents
-3. Prerequisites
+1. Prerequisites
+2. Clone the git repo
+3. Review its contents
 4. Create an Azure Active Directory service principal
 5. Create an Azure Data Explorer cluster, database, table, grants, policies
 6. Edit the sink connector properties json
@@ -18,6 +18,85 @@ This lab is a contribution (thanks @abhirockzz) from the Cloud advocacy team - a
 8. Start the sink connector 
 9. Validate delivery of storm events into Azure Data Explorer
 10. Clean up
+
+## 1. Prerequisites
+
+- You will need a [Microsoft Azure account](https://docs.microsoft.com/azure/)
+- Install [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli?view=azure-cli-latest) if you don't have it already
+- Install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install) 
+
+## 2. Clone the lab's git repo
+
+1. Clone the repo-
+```shell
+git clone https://github.com/abhirockzz/kafka-kusto-ingestion-tutorial
+cd kafka-kusto-ingestion-tutorial
+```
+
+2. Switch directory to the lab-
+```
+
+```
+
+## 3. Review contents
+
+```
+cd 
+tree
+```
+
+```
+├── README.md
+├── adx-query.png
+├── adx-sink-config.json
+├── connector
+│   └── Dockerfile
+├── docker-compose.yaml
+└── storm-events-producer
+    ├── Dockerfile
+    ├── StormEvents.csv
+    ├── go.mod
+    ├── go.sum
+    ├── kafka
+    │   └── kafka.go
+    └── main.go
+ ```
+
+
+
+
+## 4. Create an Azure Active Directory service principal
+
+This service principal will be the identity leveraged by the connector to write to the Azure Data Explorer table.  In the next step, we will grant permissions for this service principal to access Azure Data Explorer.<br>
+
+1. Login to your Azure subscription via Azure CLI
+```
+az login
+```
+This launches a browser to authentciate.  Follow the steps to authenticate.<br>
+
+2.  Choose the subscription you want to run the lab in.  This is needed when you have multiple.
+```
+az account set --subscription YOUR_SUBSCRIPTION_GUID
+```
+
+3.  Create the service principal
+Lets call our service principal, kusto-kafka-spn.  Run the command below to create it.
+```
+az ad sp create-for-rbac -n "kusto-kafka-spn"
+```
+
+You will get a JSON response as shown below. Note down the `appId`, `password` and `tenant` as you will need them in subsequent steps
+
+```json
+{
+  "appId": "fe7280c7-5705-4789-b17f-71a472340429",
+  "displayName": "kusto-kafka-spn",
+  "name": "http://kusto-kafka-spn",
+  "password": "29c719dd-f2b3-46de-b71c-4004fb6116ee",
+  "tenant": "42f988bf-86f1-42af-91ab-2d7cd011db42"
+}
+```
 
 
 
@@ -71,17 +150,9 @@ services:
       - SOURCE_FILE=StormEvents.csv
 ```
 
-## Pre-requisites
 
-- You will need a [Microsoft Azure account](https://docs.microsoft.com/azure/). Maybe try a [free one?](https://azure.microsoft.com/free/)
-- Install [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli?view=azure-cli-latest) if you don't have it already (should be quick!) or just use the [Azure Cloud Shell](https://azure.microsoft.com/features/cloud-shell/) from your browser.
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install) installed
-- Clone this repo
 
-```shell
-git clone https://github.com/abhirockzz/kafka-kusto-ingestion-tutorial
-cd kafka-kusto-ingestion-tutorial
-```
+
 
 ## Step 1: Setup and configure Azure Data Explorer
 
