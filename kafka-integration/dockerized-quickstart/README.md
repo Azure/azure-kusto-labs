@@ -4,9 +4,22 @@ This is a quickstart for getting up and running with a data ingestion from [Apac
 
 The goal is to get started *quickly*, so all the requisite components for a Kafka ingestion pipeline into Kusto are self-contained and run in Docker containers - this includes a pseudo-distributed setup of Kafka, Zookeeper, Kafka Connect worker and the Kafka event generator/producer application. <br>
 
-Follow through the lab and get a feel of the connector in isolation.  You can then move to the more involved labs that cover distributed Kafka Connect, and Azure PaaS and ISV IaaS Kafka offerings.<br> 
+Follow through the lab which leverages the storm events public dataset, and get a feel of the connector in isolation.  You can then move to the [more involved labs](https://github.com/Azure/azure-kusto-labs/tree/master/kafka-integration) that cover distributed Kafka Connect, leveraging Azure PaaS and ISV IaaS Kafka offerings.<br> 
 
-This lab is a contribution from the Cloud advocacy team (specifically, abhirockzz) - a team that strives to improve developer experience on Azure.  
+This lab is a contribution (thanks @abhirockzz) from the Cloud advocacy team - a team that strives to improve developer experience on Azure.  
+
+1. Clone the git repo
+2. Review its contents
+3. Prerequisites
+4. Create an Azure Active Directory service principal
+5. Create an Azure Data Explorer cluster, database, table, grants, policies
+6. Edit the sink connector properties json
+7. Start Kafka & Kafka Connect services on Docker
+8. Start the sink connector 
+9. Validate delivery of storm events into Azure Data Explorer
+10. Clean up
+
+
 
 Here is the `docker-compose.yaml` in its entirety:
 
