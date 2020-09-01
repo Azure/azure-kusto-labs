@@ -27,11 +27,12 @@ The labs are:
 - the labs that feature distributed modes of KafkaConnect also feature secure environments (**VNet injected** Kafka, Azure Databricks and Azure Data Explorer)
 - Dedicate at least 4-8 hours for each of the labs that features KafkaConnect in distrbuted mode
 
-# 2. Standalone KafkaConnect with HDInsight Kafka 3.6
+# 2. Standalone KafkaConnect on Docker, with HDInsight Kafka 3.6 separately
 
 | # | Focus | Level |Time to complete |
 | :--- | :--- | :--- | :--- |
-| 1 | [Standalone KafkaConnect with HDInsight Kafka](standalone-mode/README.md) | 300 | 4-8 hours|
+| 1 | [Standalone KafkaConnect on Docker](dockerized-quickstart/README.md) | 200 | 1-2 hours|
+| 2 | [Standalone KafkaConnect with HDInsight Kafka](standalone-mode/README.md) | 300 | 4-8 hours|
 
 This lab environment can be deleted.  The distributed KafkaConnect labs do not use this environment.
 
