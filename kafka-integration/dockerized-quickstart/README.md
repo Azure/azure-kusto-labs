@@ -231,6 +231,11 @@ events-producer_1  | event  2007-01-01 00:00:00.0000000,2007-01-01 05:00:00.0000
 ....
 ```
 
+Should you need to check the logs, in a separate terminal run the following-
+```shell
+docker-compose logs -f | grep kusto-connect
+```
+
 ### 6.2. Start the connector via Kafka Connect REST call
 
 In a separate terminal, launch sink task
@@ -239,7 +244,7 @@ curl -X POST -H "Content-Type: application/json" --data @adx-sink-config.json ht
 ```
 
 Check status
-```
+```shell
 curl http://localhost:8083/connectors/storm/status
 ```
 
