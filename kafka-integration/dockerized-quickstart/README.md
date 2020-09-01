@@ -8,16 +8,15 @@ Follow through the lab which leverages the storm events public dataset, and get 
 
 This lab is a contribution (thanks @abhirockzz) from the Cloud advocacy team - a team that strives to improve developer experience on Azure.  
 
-1. Prerequisites
-2. Clone the git repo
-3. Review its contents
-4. Create an Azure Active Directory service principal
-5. Create an Azure Data Explorer cluster, database, table, grants, policies
-6. Edit the sink connector properties json
-7. Start Kafka & Kafka Connect services on Docker
-8. Start the sink connector 
-9. Validate delivery of storm events into Azure Data Explorer
-10. Clean up
+[1. Prerequisites](README.md#1-prerequisites)<br>
+[2. Create an Azure Active Directory Service Principal](README.md#2-create-an-azure-active-directory-service-principal)<br>
+[3. Provision and configure Azure Data Explorer](README.md#3-provision-and-configure-azure-data-explorer)<br>
+[4. Clone the lab's git repo](README.md#4-clone-the-labs-git-repo)<br>
+[5. Review contents](README.md#5-review-contents)<br>
+[6. Start the lab](README.md#6-start-the-lab)<br>
+[7. Check Azure Data Explorer for event delivery by the connector](README.md#7--check-azure-data-explorer-for-event-delivery-by-the-connector)<br>
+[8. Reset and Clean up](README.md#8-reset-and-clean-up)<br>
+
 
 ## 1. Prerequisites
 
@@ -210,7 +209,7 @@ services:
       - SOURCE_FILE=StormEvents.csv
 ```
 
-## 6. Start the lab
+## 6: Start the lab
 
 ### 6.1. Start the containers - Kafka, connect, producer etc
 
