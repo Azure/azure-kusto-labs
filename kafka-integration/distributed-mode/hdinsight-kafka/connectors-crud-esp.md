@@ -46,7 +46,7 @@ When we start off, all we have is an empty Kubernetes cluster-
 <hr>
 <br>
 
-When we are done, we have a live KafkaConnect cluster that is integrated with Confluent Cloud-
+When we are done, we have a live KafkaConnect cluster that is integrated with the Kafka cluster (HDI ESP in this case)-
 
 ![CONNECTOR](images/AKS-KafkaConnect.png)
 <br>
@@ -55,7 +55,6 @@ When we are done, we have a live KafkaConnect cluster that is integrated with Co
 <br>
 
 Note: This still does not have copy tasks (connector tasks) running yet
-
 
 ## Part C
 
@@ -80,60 +79,197 @@ This is what we have at the end of this module, a Kusto sink connector cluster w
 <hr>
 <br>
 
-## 1.  Create a Docker Hub account
-
-Follow the instructions [here](https://hub.docker.com/signup) and create an account.  Note down your user ID and password.
-
-## 2.  Install Docker desktop on your machine and launch it
-
-Follow the instructions [here](https://www.docker.com/products/docker-desktop) and complete the installation and start the service.
-
-## 3. Build a Docker image
-
-### 3.1. Create a local directory
+## 1. Create a local directory
 
 In linux/Mac-
 ```
 cd ~
-mkdir kafka-confluentcloud-hol
-cd kafka-confluentcloud-hol
+mkdir kafka-hdi-hol
+cd kafka-hdi-hol
 ```
 
-### 3.2. Download the ADX connector jar
+## 2.  Download configs you need from HDInsight ESP Kafka cluster
+
+From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka.  For this, we need a user principal that has Ranger policy set to consume from Kafka.  In this example, we wil use the user **hdiadminjrs**.
+
+### 2.1.  Ranger policy for UPN to be used in the lab
+
+![RANGER](images/ranger-01.png)
+<br>
+<br>
+<hr>
+<br>
+
+![RANGER](images/ranger-02.png)
+<br>
+<br>
+<hr>
+<br>
+
+![RANGER](images/ranger-03.png)
+<br>
+<br>
+<hr>
+<br>
+
+### 2.2. Generate Kerberos keytab for UPN with Kafka topic create/write access configured in Ranger
+
+Connect to the head node of the HDInsight cluster and generate a headless keytab for the privileged user-
+```
+ktutil
+addent -password -p <UPN>@<REALM> -k 1 -e RC4-HMAC
+wkt <UPN>-headless.keytab
+```
+
+E.g. hdiadminjrs is the cluster administrator.  The realm is AADDS.JRSMYDOMAIN.COM.  The keytab name is kafka-client-hdi.keytab.
+```
+ktutil
+addent -password -p hdiadminjrs@AADDS.JRSMYDOMAIN.COM -k 1 -e RC4-HMAC
+wkt kafka-client-hdi.keytab
+```
+
+Copy the keytab from HDInsight to your local directory.  Example...
+```
+# From your local machine..
+cd  kafka-hdi-hol
+
+scp sshuser@democluster-ssh.azurehdinsight.net:/home/AADDS/hdiadminjrs/kafka-client-hdi.keytab .
+```
+
+### 2.3. krb5.conf from the HDI cluster download the krb5.conf
+
+```
+# From your local machine..
+cd  kafka-hdi-hol
+
+scp sshuser@democluster-ssh.azurehdinsight.net:/etc/krb5.conf .
+
+```
+
+### 2.4. Create a HDI JaaS conf
+
+Create a JaaS confiog file as follows-
+
+```
+cd ~/kafka-hdi-hol
+vi hdi-esp-jaas.conf
+```
+
+Paste this into the file, after updating with your UPN (hdiadminjrs) and Kerberos realm (AADDS.JRSMYDOMAIN.COM)-
+```
+KafkaClient {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useKeyTab=true
+    storeKey=true
+    keyTab="/etc/security/keytabs/kafka-client-hdi.keytab"
+    principal="hdiadminjrs@AADDS.JRSMYDOMAIN.COM";
+};
+```
+
+## 3.  Create a Docker Hub account
+
+Follow the instructions [here](https://hub.docker.com/signup) and create an account.  Note down your user ID and password.
+
+## 4.  Install Docker desktop on your machine and launch it
+
+Follow the instructions [here](https://www.docker.com/products/docker-desktop) and complete the installation and start the service.
+
+## 5. Build a Docker image of the Kafka Connect worker
+
+### 5.1. Download the ADX connector jar
 
 Run the following commands-
 <br>
 1.  Switch directories if needed
 ```
-cd ~/kafka-confluentcloud-hol
+cd ~/kafka-hdi-hol
 ```
 2.  Download the jar
 ```
 wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v1.0.1/kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar 
 ```
 
-### 3.3. Create a Docker file
+### 5.2. Review directory contents so far
+
+You should already have this.
+```
+cd ~/kafka-hdi-hol
+tree
+
+├── hdi-esp-jaas.conf
+├── kafka-client-hdi.keytab
+├── kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+└── krb5.conf
+```
+
+### 5.3. Rename the krb5.conf to old.krb5.conf
+
+```
+cd ~/kafka-hdi-hol
+mv krb5.conf old-krb5.conf
+```
+
+### 5.4. Lets create a new krb5.conf
+
+```
+cd ~/kafka-hdi-hol
+vi krb5.conf 
+```
+
+Paste this & save-
+```
+[libdefaults]
+        default_realm = AADDS.JRSMYDOMAIN.COM
+
+
+[realms]
+    AADDS.JRSMYDOMAIN.COM = {
+                admin_server = aadds.jrsmydomain.com
+                kdc = aadds.jrsmydomain.com
+                default_domain = jrsmydomain.com
+        }
+
+[domain_realm]
+    aadds.jrsmydomain.com = AADDS.JRSMYDOMAIN.COM
+    .aadds.jrsmydomain.com = AADDS.JRSMYDOMAIN.COM
+
+
+[login]
+        krb4_convert = true
+        krb4_get_tickets = false
+```
+
+Then go into this file and replace with your domain and realm specifics as detailed in old-krb5.conf
+
+### 5.5. Create a Docker file
 
 Start a file-
 ```
 vi connect-worker-image-builder.dockerfile
 ```
 
-Paste this into the file and save - be sure to edit it for bootstrap server list, Kafka API key and Kafka API secrte to reflect yours..
+Paste this into the file and save - be sure to edit it your UPN and domain realm..
 ```
 FROM confluentinc/cp-kafka-connect:5.5.0
 COPY kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar /usr/share/java
+COPY krb5.conf /etc/krb5.conf
+COPY hdi-esp-jaas.conf /etc/hdi-esp-jaas.conf 
+COPY kafka-client-hdi.keytab /etc/security/keytabs/kafka-client-hdi.keytab
+
+ENV KAFKA_OPTS="-Djava.security.krb5.conf=/etc/krb5.conf"
 
 ENV CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
-ENV CONNECT_SASL_MECHANISM=PLAIN
-ENV CONNECT_SECURITY_PROTOCOL=SASL_SSL
-ENV CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
-ENV CONNECT_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\YOUR-KAFKA-API-SECRET"\";"
+
+ENV CONNECT_SASL_MECHANISM=GSSAPI
+ENV CONNECT_SASL_KERBEROS_SERVICE_NAME=kafka
+ENV CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
+ENV CONNECT_SASL_JAAS_CONFIG="com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/etc/security/keytabs/kafka-client-hdi.keytab\" principal=\"hdiadminjrs@AADDS.JRSMYDOMAIN.COM\";"
+
 ```
 
-What we are doing above is taking the base Docker image from the ConfluentInc repo, copying the ADX jar to /usr/share/java and setting an environment variable to allow overrides at the consumer level.
+What we are doing above is taking the base Docker image from the ConfluentInc repo, copying the ADX jar to /usr/share/java and setting an environment variable to allow overrides at the consumer level, and including security configuration.
 
-### 3.4. Create a Docker image off of 3.3
+### 5.6. Create a Docker image off of the Docker file
 
 Replace akhanolkar with your docker UID and run the below-
 ```
@@ -152,7 +288,7 @@ REPOSITORY                                    TAG                 IMAGE ID      
 akhanolkar/kafka-connect-kusto-sink           1.0.1v1             1870ace80b29        23 seconds ago      1.24GB
 ```
 
-## 4. Push the image to Docker Hub
+## 6. Push the image to Docker Hub
 
 Run the command below, replacing akhanolkar with your Docker username-
 ```
@@ -179,21 +315,21 @@ a8ff4211732a: Layer already exists
 
 You should be able to see the image in Docker Hub.
 
-## 5. Clone KafkaConnect helm charts from Confluent git repo & make necessary edits
+## 7. Clone KafkaConnect helm charts from Confluent git repo & make necessary edits
 
-### 5.1. Clone the repo and copy what is required
+### 7.1. Clone the repo and copy what is required
 ```
 cd ~
 git clone https://github.com/confluentinc/cp-helm-charts.git
 
-cd ~/kafka-confluentcloud-hol
+cd ~/kafka-hdi-hol
 cp -R ~/cp-helm-charts/charts/cp-kafka-connect .
 ```
 
-### 5.2. A quick browse
+### 7.2. A quick browse
 
 ```
-indra:kafka-confluentcloud-hol akhanolk$ tree cp-kafka-connect/
+indra:kafka-hdi-hol akhanolk$ tree cp-kafka-connect/
 cp-kafka-connect/
 ├── Chart.yaml
 ├── README.md
@@ -209,7 +345,7 @@ cp-kafka-connect/
 
 Note the values.yaml - we will need to update this.
 
-### 5.3. Update values.yaml as follows
+### 7.3. Update values.yaml as follows
 
 We need to update the values.yaml with the following-<br>
 1. Replica count
@@ -224,15 +360,15 @@ image: akhanolkar/kafka-connect-kusto-sink
 imageTag: 1.0.1v1
 ```
 3. Kafka bootstrap servers<br>
-Replace "yourBootStrapServerList" with your Confluent Cloud bootstrap server loadbalancer FQDN:Port
+Replace "yourBootStrapServerList" with your HDInsight Kafka bootstrap server loadbalancer FQDN:Port
 ```
 kafka:
-  bootstrapServers: "PLAINTEXT://yourBootStrapServerList"
+  bootstrapServers: "yourBootStrapServerList"
  ```
 E.g. the author's bootstrap server entry is-
 ```
 kafka:
-  bootstrapServers: "PLAINTEXT://nnn-nnnn.eastus2.azure.confluent.cloud:9092"
+  bootstrapServers: "nnn-nnnn.eastus2.azure.confluent.cloud:9092"
 ```
 
 4. Set prometheous jmx monitoring to false as shown below-
@@ -245,10 +381,150 @@ prometheus:
 ```
 
 5.  Save
+<br><br>
 
-## 6. Provision KafkaConnect workers on our Azure Kubernetes Service cluster
+Here is the author's sample
+```
+# Default values for cp-kafka-connect.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
 
-### 6.1. Login to Azure CLI & set the subscription to use
+replicaCount: 6
+
+## Image Info
+## ref: https://hub.docker.com/r/confluentinc/cp-kafka/
+#image: confluentinc/cp-kafka-connect
+#imageTag: 5.5.0
+
+image: akhanolkar/kafka-connect-kusto-sink-hdi-esp
+imageTag: 1.0.1v10
+
+
+## Specify a imagePullPolicy
+## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+imagePullPolicy: IfNotPresent
+
+## Specify an array of imagePullSecrets.
+## Secrets must be manually created in the namespace.
+## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+imagePullSecrets:
+
+servicePort: 8083
+
+## Kafka Connect properties
+## ref: https://docs.confluent.io/current/connect/userguide.html#configuring-workers
+configurationOverrides:
+  "plugin.path": "/usr/share/java,/usr/share/confluent-hub-components"
+  "key.converter": "io.confluent.connect.avro.AvroConverter"
+  "value.converter": "io.confluent.connect.avro.AvroConverter"
+  "key.converter.schemas.enable": "false"
+  "value.converter.schemas.enable": "false"
+  "internal.key.converter": "org.apache.kafka.connect.json.JsonConverter"
+  "internal.value.converter": "org.apache.kafka.connect.json.JsonConverter"
+  "config.storage.replication.factor": "3"
+  "offset.storage.replication.factor": "3"
+  "status.storage.replication.factor": "3"
+
+## Kafka Connect JVM Heap Option
+heapOptions: "-Xms512M -Xmx512M"
+
+## Additional env variables
+## CUSTOM_SCRIPT_PATH is the path of the custom shell script to be ran mounted in a volume
+customEnv: {}
+  # CUSTOM_SCRIPT_PATH: /etc/scripts/create-connectors.sh
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+## Custom pod annotations
+podAnnotations: {}
+
+## Node labels for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+nodeSelector: {}
+
+## Taints to tolerate on node assignment:
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+
+## Monitoring
+## Kafka Connect JMX Settings
+## ref: https://kafka.apache.org/documentation/#connect_monitoring
+jmx:
+  port: 5555
+
+## Prometheus Exporter Configuration
+## ref: https://prometheus.io/docs/instrumenting/exporters/
+prometheus:
+  ## JMX Exporter Configuration
+  ## ref: https://github.com/prometheus/jmx_exporter
+  jmx:
+    enabled: false
+    image: solsson/kafka-prometheus-jmx-exporter@sha256
+    imageTag: 6f82e2b0464f50da8104acd7363fb9b995001ddff77d248379f8788e78946143
+    imagePullPolicy: IfNotPresent
+    port: 5556
+
+    ## Resources configuration for the JMX exporter container.
+    ## See the `resources` documentation above for details.
+    resources: {}
+
+## You can list load balanced service endpoint, or list of all brokers (which is hard in K8s).  e.g.:
+## bootstrapServers: "PLAINTEXT://dozing-prawn-kafka-headless:9092"
+kafka:
+  bootstrapServers: "wn0-jrs03a.aadds.jrsmydomain.com:9092,wn1-jrs03a.aadds.jrsmydomain.com:9092,wn3-jrs03a.aadds.jrsmydomain.com:9092,wn2-jrs03a.aadds.jrsmydomain.com:9092"
+
+## If the Kafka Chart is disabled a URL and port are required to connect
+## e.g. gnoble-panther-cp-schema-registry:8081
+cp-schema-registry:
+  url: ""
+
+## List of volumeMounts for connect server container
+## ref: https://kubernetes.io/docs/concepts/storage/volumes/
+volumeMounts:
+# - name: credentials
+#   mountPath: /etc/creds-volume
+
+## List of volumeMounts for connect server container
+## ref: https://kubernetes.io/docs/concepts/storage/volumes/
+volumes:
+# - name: credentials
+#   secret:
+#     secretName: creds
+
+## Secret with multiple keys to serve the purpose of multiple secrets
+## Values for all the keys will be base64 encoded when the Secret is created or updated
+## ref: https://kubernetes.io/docs/concepts/configuration/secret/
+secrets:
+  # username: kafka123
+  # password: connect321
+
+## These values are used only when "customEnv.CUSTOM_SCRIPT_PATH" is defined.
+## "livenessProbe" is required only for the edge cases where the custom script to be ran takes too much time
+## and errors by the ENTRYPOINT are ignored by the container
+## As an example such a similar script is added to "cp-helm-charts/examples/create-connectors.sh"
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  # httpGet:
+  #   path: /connectors
+  #   port: 8083
+  # initialDelaySeconds: 30
+  # periodSeconds: 5
+  # failureThreshold: 10
+```
+
+## 8. Provision KafkaConnect workers on our Azure Kubernetes Service cluster
+
+### 8.1. Login to Azure CLI & set the subscription to use
 [Install the CLI if it does not exist.](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)<br>
 
 1. Login
@@ -266,16 +542,16 @@ az account set --subscription YOUR_SUBSCRIPTION_GUID
 3.  Get the AKS cluster admin acccess with this command<br>
 If you have named your cluster differently, be sure to replace accordingly-
 ```
-az aks get-credentials --resource-group kafka-confluentcloud-lab-rg --name connector-k8s-cluster --admin
+az aks get-credentials --resource-group YOUR_RESOURCE_GROUP --name YOUR_CLUSTER --admin
 ```
 
 Author's output-
 ```
-indra:kafka-confluentcloud-hol akhanolk$ az aks get-credentials --resource-group kafka-confluentcloud-lab-rg --name connector-k8s-cluster --admin
+indra:kafka-confluentcloud-hol akhanolk$ az aks get-credentials --resource-group kafka-hdi-rg --name connector-k8s-cluster --admin
 Merged "connector-k8s-cluster-admin" as current context in /Users/akhanolk/.kube/config
 ```
 
-### 6.2. Provision KafkaConnect on AKS
+### 8.2. Provision KafkaConnect on AKS
 
 Run the below-
 ```
@@ -284,7 +560,7 @@ helm install ./cp-kafka-connect --generate-name
 
 Author's output-
 ```
-indra:kafka-confluentcloud-hol akhanolk$ helm install ./cp-kafka-connect --generate-name
+indra:kafka-hdi-hol akhanolk$ helm install ./cp-kafka-connect --generate-name
 NAME: cp-kafka-connect-1598073371
 LAST DEPLOYED: Sat Aug 22 00:16:13 2020
 NAMESPACE: default
@@ -297,7 +573,7 @@ This chart installs a Confluent Kafka Connect
 https://docs.confluent.io/current/connect/index.html
 ```
 
-### 6.3. Check pods
+### 8.3. Check pods
 Run the below-
 ```
 kubectl get pods
@@ -315,7 +591,7 @@ cp-kafka-connect-1598109267-76465bff44-wv5w2   1/1     Running   0          5m27
 cp-kafka-connect-1598109267-76465bff44-x7rlm   1/1     Running   0          5m27s
 ```
 
-### 6.4. Check service 
+### 8.4. Check service 
 
 Run the below-
 ```
@@ -332,7 +608,7 @@ kubernetes                    ClusterIP   10.0.0.1       <none>        443/TCP  
 
 This is the service name- cp-kafka-connect-1598109267 
 
-### 6.5. SSH into a pod
+### 8.5. SSH into a pod
 
 Pick one pod from your list of 6 in #6.3<br>
 Here is the author's command and output-
@@ -340,7 +616,7 @@ Here is the author's command and output-
 kubectl exec -it cp-kafka-connect-1598073371-6676d5b5bd-7sbzn -- bash
 ```
 
-#### 6.5.1.  Check processes running
+#### 8.5.1.  Check processes running
 
 ```
 ps -ef
@@ -355,7 +631,7 @@ root        186      0  0 15:15 pts/0    00:00:00 bash
 root        220    186  0 15:40 pts/0    00:00:00 ps -ef
 ```
 
-#### 6.5.2.  Check /usr/share/jave to see if the ADX/Kusto jar is there
+#### 8.5.2.  Check /usr/share/jave to see if the ADX/Kusto jar is there
 
 Command-
 ```
@@ -386,7 +662,7 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:22 rest-utils
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
 ```
 
-### 6.5.3.  Check if the environment conigs we applied in the docker file are available..
+### 8.5.3.  Check if the environment conigs we applied in the docker file are available..
 Run the command-
 ```
 printenv | sort
@@ -395,57 +671,57 @@ printenv | sort
 
 Author's output-
 ```
-root@cp-kafka-connect-1598109267-76465bff44-7s9vs:/# printenv | sort
 ALLOW_UNSIGNED=false
 COMPONENT=kafka-connect
 CONFLUENT_DEB_VERSION=1
 CONFLUENT_PLATFORM_LABEL=
 CONFLUENT_VERSION=5.5.0
-CONNECT_BOOTSTRAP_SERVERS=PLAINTEXT://nnn-nnnnn.eastus2.azure.confluent.cloud:9092
+CONNECT_BOOTSTRAP_SERVERS=wn0-jrs03a.aadds.jrsmydomain.com:9092,wn1-jrs03a.aadds.jrsmydomain.com:9092,wn3-jrs03a.aadds.jrsmydomain.com:9092,wn2-jrs03a.aadds.jrsmydomain.com:9092
 CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=3
-CONNECT_CONFIG_STORAGE_TOPIC=cp-kafka-connect-1598109267-config
+CONNECT_CONFIG_STORAGE_TOPIC=cp-kafka-connect-1598575381-config
 CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
-CONNECT_GROUP_ID=cp-kafka-connect-1598109267
+CONNECT_GROUP_ID=cp-kafka-connect-1598575381
 CONNECT_INTERNAL_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
 CONNECT_INTERNAL_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
 CONNECT_KEY_CONVERTER=io.confluent.connect.avro.AvroConverter
 CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE=false
-CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL=http://cp-kafka-connect-1598109267-cp-schema-registry:8081
+CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL=http://cp-kafka-connect-1598575381-cp-schema-registry:8081
 CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=3
-CONNECT_OFFSET_STORAGE_TOPIC=cp-kafka-connect-1598109267-offset
+CONNECT_OFFSET_STORAGE_TOPIC=cp-kafka-connect-1598575381-offset
 CONNECT_PLUGIN_PATH=/usr/share/java,/usr/share/confluent-hub-components
-CONNECT_REST_ADVERTISED_HOST_NAME=10.244.1.10
-CONNECT_SASL_JAAS_CONFIG=org.apache.kafka.common.security.plain.PlainLoginModule required username="xxxx" password="xxxx";
-CONNECT_SASL_MECHANISM=PLAIN
-CONNECT_SECURITY_PROTOCOL=SASL_SSL
-CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
+CONNECT_REST_ADVERTISED_HOST_NAME=10.0.0.141
+CONNECT_SASL_JAAS_CONFIG=com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab="/etc/security/keytabs/kafka-client-hdi.keytab" principal="hdiadminjrs@AADDS.JRSMYDOMAIN.COM";
+CONNECT_SASL_KERBEROS_SERVICE_NAME=kafka
+CONNECT_SASL_MECHANISM=GSSAPI
+CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
 CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=3
-CONNECT_STATUS_STORAGE_TOPIC=cp-kafka-connect-1598109267-status
+CONNECT_STATUS_STORAGE_TOPIC=cp-kafka-connect-1598575381-status
 CONNECT_VALUE_CONVERTER=io.confluent.connect.avro.AvroConverter
 CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE=false
-CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://cp-kafka-connect-1598109267-cp-schema-registry:8081
-CP_KAFKA_CONNECT_1598109267_PORT=tcp://10.0.146.166:8083
-CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP=tcp://10.0.146.166:8083
-CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP_ADDR=10.0.146.166
-CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP_PORT=8083
-CP_KAFKA_CONNECT_1598109267_PORT_8083_TCP_PROTO=tcp
-CP_KAFKA_CONNECT_1598109267_SERVICE_HOST=10.0.146.166
-CP_KAFKA_CONNECT_1598109267_SERVICE_PORT=8083
-CP_KAFKA_CONNECT_1598109267_SERVICE_PORT_KAFKA_CONNECT=8083
+CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://cp-kafka-connect-1598575381-cp-schema-registry:8081
+CP_KAFKA_CONNECT_1598575381_PORT=tcp://10.10.253.124:8083
+CP_KAFKA_CONNECT_1598575381_PORT_8083_TCP=tcp://10.10.253.124:8083
+CP_KAFKA_CONNECT_1598575381_PORT_8083_TCP_ADDR=10.10.253.124
+CP_KAFKA_CONNECT_1598575381_PORT_8083_TCP_PORT=8083
+CP_KAFKA_CONNECT_1598575381_PORT_8083_TCP_PROTO=tcp
+CP_KAFKA_CONNECT_1598575381_SERVICE_HOST=10.10.253.124
+CP_KAFKA_CONNECT_1598575381_SERVICE_PORT=8083
+CP_KAFKA_CONNECT_1598575381_SERVICE_PORT_KAFKA_CONNECT=8083
 CUB_CLASSPATH=/etc/confluent/docker/docker-utils.jar
 HOME=/root
-HOSTNAME=cp-kafka-connect-1598109267-76465bff44-7s9vs
+HOSTNAME=cp-kafka-connect-1598575381-b4cf47488-2p47l
 KAFKA_ADVERTISED_LISTENERS=
 KAFKA_HEAP_OPTS=-Xms512M -Xmx512M
 KAFKA_JMX_PORT=5555
+KAFKA_OPTS=-Djava.security.krb5.conf=/etc/krb5.conf
 KAFKA_VERSION=
 KAFKA_ZOOKEEPER_CONNECT=
-KUBERNETES_PORT=tcp://10.0.0.1:443
-KUBERNETES_PORT_443_TCP=tcp://10.0.0.1:443
-KUBERNETES_PORT_443_TCP_ADDR=10.0.0.1
+KUBERNETES_PORT=tcp://10.10.0.1:443
+KUBERNETES_PORT_443_TCP=tcp://10.10.0.1:443
+KUBERNETES_PORT_443_TCP_ADDR=10.10.0.1
 KUBERNETES_PORT_443_TCP_PORT=443
 KUBERNETES_PORT_443_TCP_PROTO=tcp
-KUBERNETES_SERVICE_HOST=10.0.0.1
+KUBERNETES_SERVICE_HOST=10.10.0.1
 KUBERNETES_SERVICE_PORT=443
 KUBERNETES_SERVICE_PORT_HTTPS=443
 LANG=C.UTF-8
@@ -462,17 +738,17 @@ _=/usr/bin/printenv
 The following should be there-
 ```
 CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
-CONNECT_SASL_JAAS_CONFIG=org.apache.kafka.common.security.plain.PlainLoginModule required username="xxxx" password="xxxx";
-CONNECT_SASL_MECHANISM=PLAIN
-CONNECT_SECURITY_PROTOCOL=SASL_SSL
-CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
+CONNECT_SASL_JAAS_CONFIG=com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab="/etc/security/keytabs/kafka-client-hdi.keytab" principal="UPN@YOUR_REALM";
+CONNECT_SASL_MECHANISM=GSSAPI
+CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
+CONNECT_SASL_KERBEROS_SERVICE_NAME=kafka
 ```
 
 Now - exit root..
 ```
 exit
 ```
-### 6.5.4.  Lets check logs to see if there are any errors
+### 8.5.4.  Lets check logs to see if there are any errors
 Lets review the logs of one of the pods from 6.3
 
 ```
@@ -493,7 +769,7 @@ If you see something like this, we are good to go...
 [2020-08-22 15:15:21,442] INFO [Worker clientId=connect-1, groupId=cp-kafka-connect-1598109267] Finished starting connectors and tasks (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
 ```
 
-### 6.6. Describe a pod to view details
+### 8.6. Describe a pod to view details
 
 Run the command below with a pod name from 6.3
 ```
@@ -589,7 +865,7 @@ Points to note here are-
 ```
 These are specific to the service ID from "kubectl get svc".  If you uninstall and reinstall KafkaConnect, you will see another set of 3 topics, identifiable by the service ID.
 
-## 7. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods
+## 9. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods
 You will need the service ID from the command "kubectl get svc".  Substitute it in the below command.
 
 ```
@@ -605,19 +881,19 @@ Forwarding from [::1]:803 -> 8083
 ```
 Keep this session alive when you need to manipulate the ADX connectors.
 
-## 8. Download & install Postman
+## 10. Download & install Postman
 
 [Install Postman](https://www.postman.com/downloads/) if you dont already have it.
 
-## 9. Import the Postman JSON collection with KafkaConnect REST API call samples
+## 11. Import the Postman JSON collection with KafkaConnect REST API call samples
 
-### 9.1. Download the Postman collection for the lab 
+### 11.1. Download the Postman collection for the lab 
 
 Download [this](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/rest-calls/Confluent-Cloud-ADX-HoL-1-STUB.postman_collection.json) to you local machine.<br>
 We will import this into Postman.  Its a stub with all the REST calls pre-created.
 
 
-### 9.2. Launch Postman and click on the import button
+### 11.2. Launch Postman and click on the import button
 
 ![POSTMAN](images/05-CONNECTOR-01.png)
 <br>
@@ -634,7 +910,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 <br>
 
 
-### 9.3. View available connector plugins
+### 11.3. View available connector plugins
 
 ![POSTMAN](images/05-CONNECTOR-02.png)
 <br>
@@ -642,7 +918,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 <hr>
 <br>
 
-### 9.4. Check if the ADX/Kusto connector is already provisioned
+### 11.4. Check if the ADX/Kusto connector is already provisioned
 
 ![POSTMAN](images/05-CONNECTOR-03.png)
 <br>
@@ -650,7 +926,7 @@ Click on the import button and import from the file dowloaded in 9.1.
 <hr>
 <br>
 
-### 9.5. Provision the connector after editing the body of the REST call to match your configuration
+### 11.5. Provision the connector after editing the body of the REST call to match your configuration
 
 ![POSTMAN](images/05-CONNECTOR-04.png)
 <br>
@@ -676,12 +952,12 @@ You will need the following details-
         "tempdir.path":"/var/tmp/",
         "flush.size.bytes":"10485760",
         "flush.interval.ms": "15000",
-        "behavior.on.error": "LOG",
-        "consumer.override.bootstrap.servers": "PLAINTEXT://YOUR-CONFLUENT-CLOUD-BOOTSTRAP-SERVER-ENDPOINT",
-        "consumer.override.ssl.endpoint.identification.algorithm": "https",
-        "consumer.override.security.protocol": "SASL_SSL",
-        "consumer.override.sasl.mechanism": "PLAIN",
-        "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\"YOUR-KAFKA-API-SECRET\";",
+        "behavior.on.error": "LOG",        
+        "consumer.override.bootstrap.servers": "BOOTSTRAP-SERVER:PORT-CSV",
+        "consumer.override.security.protocol": "SASL_PLAINTEXT",
+        "consumer.override.sasl.mechanism": "GSSAPI",
+        "consumer.override.sasl.kerberos.service.name": "kafka",
+        "consumer.override.sasl.jaas.config": "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/etc/security/keytabs/kafka-client-hdi.keytab\" principal=\"UPN-NAME@REALM\";",
         "consumer.override.request.timeout.ms": "20000",
         "consumer.override.retry.backoff.ms": "500"
     }
@@ -693,7 +969,7 @@ but depending on resources, you can oversubcribe and add more tasks.
 
 IDEALLY, you want as many tasks as Kafka topic partitions.
 
-### 9.6. View configuration of connector tasks provisioned already, if any
+### 11.6. View configuration of connector tasks provisioned already, if any
 
 ![POSTMAN](images/05-CONNECTOR-05.png)
 <br>
@@ -701,7 +977,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.7. View status of connector tasks provisioned 
+### 11.7. View status of connector tasks provisioned 
 
 ![POSTMAN](images/05-CONNECTOR-06.png)
 <br>
@@ -709,7 +985,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.8. Pause connectors should you need to
+### 11.8. Pause connectors should you need to
 
 ![POSTMAN](images/05-CONNECTOR-07.png)
 <br>
@@ -717,7 +993,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.9. Resume connectors paused previously
+### 11.9. Resume connectors paused previously
 
 ![POSTMAN](images/05-CONNECTOR-08.png)
 <br>
@@ -725,7 +1001,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.10. List all individual connector tasks with status
+### 11.10. List all individual connector tasks with status
 
 ![POSTMAN](images/05-CONNECTOR-09.png)
 <br>
@@ -733,7 +1009,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.11. Restart connectors when needed
+### 11.11. Restart connectors when needed
 
 ![POSTMAN](images/05-CONNECTOR-10.png)
 <br>
@@ -741,7 +1017,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <hr>
 <br>
 
-### 9.12. Delete connectors altogether
+### 11.12. Delete connectors altogether
 
 ![POSTMAN](images/05-CONNECTOR-11.png)
 <br>
@@ -752,13 +1028,4 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br><br><hr>
 This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
 
-#### Main menu
-[Home page](README.md)<br>
-[1. Provision foundational resources](1-foundational-resources.md)<br>
-[2. Provision Confluent Cloud and configure Kafka](2-confluent-cloud.md)<br>
-[3. Provision Azure Data Explorer, and associated database objects and permissions](3-adx.md)<br>
-[4. Import the Spark Kafka producer code, and configure Spark to produce to your Confluent Cloud Kafka topic](4-configure-spark.md)<br>
-[5. Configure the KafkaConnect cluster, launch connector tasks](5-configure-connector-cluster.md)<br>
-[6. Run the end to end pipeline](6-run-e2e.md)<br>
-<hr>
 
