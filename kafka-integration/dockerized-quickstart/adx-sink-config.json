@@ -1,0 +1,17 @@
+{
+    "name": "storm",
+    "config": {
+        "connector.class": "com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector",
+        "flush.size.bytes": 10000,
+        "flush.interval.ms": 50000,
+        "tasks.max": 1,
+        "topics": "storm-events",
+        "kusto.tables.topics.mapping": "[{'topic': 'storm-events','db': '<enter database name>', 'table': 'Storms','format': 'csv', 'mapping':'Storms_CSV_Mapping'}]",
+        "aad.auth.authority": "<enter tenant ID>",
+        "aad.auth.appid": "<enter application ID>",
+        "aad.auth.appkey": "<enter client secret>",
+        "kusto.url": "https://ingest-<name of cluster>.<region>.kusto.windows.net",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+    }
+}

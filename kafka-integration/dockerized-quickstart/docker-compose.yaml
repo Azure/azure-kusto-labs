@@ -1,0 +1,45 @@
+version: "2"
+services:
+  zookeeper:
+    image: debezium/zookeeper:1.2
+    ports:
+      - 2181:2181
+  kafka:
+    image: debezium/kafka:1.2
+    ports:
+      - 9092:9092
+    links:
+      - zookeeper
+    depends_on:
+      - zookeeper
+    environment:
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+  kusto-connect:
+    build:
+      context: ./connector
+      args:
+        KUSTO_KAFKA_SINK_VERSION: 1.0.1
+    ports:
+      - 8083:8083
+    links:
+      - kafka
+    depends_on:
+      - kafka
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=adx
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+  events-producer:
+    build:
+      context: ./storm-events-producer
+    links:
+      - kafka
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_BOOTSTRAP_SERVER=kafka:9092
+      - KAFKA_TOPIC=storm-events
+      - SOURCE_FILE=StormEvents.csv
