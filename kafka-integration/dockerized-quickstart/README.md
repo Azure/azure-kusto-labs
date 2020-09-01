@@ -135,7 +135,7 @@ Here is what it looks like-
     "config": {
         "connector.class": "com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector",
         "flush.size.bytes": 10000,
-        "flush.interval.ms": 50000,
+        "flush.interval.ms": 10000,
         "tasks.max": 1,
         "topics": "storm-events",
         "kusto.tables.topics.mapping": "[{'topic': 'storm-events','db': '<enter database name>', 'table': 'Storms','format': 'csv', 'mapping':'Storms_CSV_Mapping'}]",
