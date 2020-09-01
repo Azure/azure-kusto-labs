@@ -210,7 +210,7 @@ services:
       - SOURCE_FILE=StormEvents.csv
 ```
 
-## 6: Start the lab
+## 6. Start the lab
 
 ### 6.1. Start the containers - Kafka, connect, producer etc
 
