@@ -299,3 +299,7 @@ To delete the Azure Data Explorer cluster/database, use [az cluster delete](http
 az kusto cluster delete -n <cluster name> -g <resource group name>
 az kusto database delete -n <database name> --cluster-name <cluster name> -g <resource group name>
 ```
+
+<hr>
+
+This concludes the hands on lab.  
