@@ -61,7 +61,7 @@ You will get a JSON response as shown below. Note down the `appId`, `password` a
 ## 3. Provision and configure Azure Data Explorer
 
 ### 3.1. Create a cluster and database
-- Create an Azure Data Explorer cluster and a database from the Azure portal; Leave the caching and retention policies to their default values
+- Create an [Azure Data Explorer cluster and a database from the Azure portal](https://docs.microsoft.com/en-us/azure/data-explorer/create-cluster-database-portal); Leave the caching and retention policies to their default values
 
 ### 3.2. Create a table and associated mapping
 2. Create a table called (`Storms`) and the corressponding table mapping to data needing ingesting (`Storms_CSV_Mapping`):
@@ -74,7 +74,7 @@ You will get a JSON response as shown below. Note down the `appId`, `password` a
 
 ### 3.3. Create a batch ingestion policy on the table for configurable ingestion latency
 
-The ingestion policy includes three parameters, the first one met triggers an ingestion into Azure Data Explorer table.
+The [ingestion policy](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/management/batchingpolicy) is a performance optimizer and includes three parameters, the first one met triggers an ingestion into Azure Data Explorer table.
 ```
 .alter table Storms policy ingestionbatching @'{"MaximumBatchingTimeSpan":"00:00:15", "MaximumNumberOfItems": 100, "MaximumRawDataSizeMB": 300}'
 ```
@@ -87,15 +87,17 @@ You will need the service principal details from section 2.3
 
 ## 4. Clone the lab's git repo
 
-1. Clone the repo-
+1. Create a local directory on your machine-
+```
+mkdir ~/kafka-kusto-hol
+cd ~/kafka-kusto-hol
+```
+
+2. Clone the repo-
 ```shell
-git clone https://github.com/abhirockzz/kafka-kusto-ingestion-tutorial
-cd kafka-kusto-ingestion-tutorial
-```
-
-2. Switch directory to the lab-
-```
-
+cd ~/kafka-kusto-hol
+git clone https://github.com/Azure/azure-kusto-labs
+cd azure-kusto-labs/kafka-integration/dockerized-quickstart
 ```
 
 ## 5. Review contents
@@ -103,10 +105,10 @@ cd kafka-kusto-ingestion-tutorial
 ### 5.1. List the contents
 
 ```
-cd <>
+cd ~/kafka-kusto-hol/azure-kusto-labs/kafka-integration/dockerized-quickstart
 tree
 ```
-
+This is what it should look like-
 ```
 ├── README.md
 ├── adx-query.png
@@ -125,18 +127,40 @@ tree
  ```
 
 ### 5.2. adx-sink-config.json
-This is the Kusto sink properties file where we need to include our configuration for the connector.<br>
+This is the Kusto sink properties file where we need to update our specific configuration details for the lab.<br>
 Here is what it looks like-
+```json
+{
+    "name": "storm",
+    "config": {
+        "connector.class": "com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector",
+        "flush.size.bytes": 10000,
+        "flush.interval.ms": 50000,
+        "tasks.max": 1,
+        "topics": "storm-events",
+        "kusto.tables.topics.mapping": "[{'topic': 'storm-events','db': '<enter database name>', 'table': 'Storms','format': 'csv', 'mapping':'Storms_CSV_Mapping'}]",
+        "aad.auth.authority": "<enter tenant ID>",
+        "aad.auth.appid": "<enter application ID>",
+        "aad.auth.appkey": "<enter client secret>",
+        "kusto.url": "https://ingest-<name of cluster>.<region>.kusto.windows.net",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+    }
+}
+```
+
+Replace the values for the following attributes as per your Azure Data Explorer setup - `aad.auth.authority`, `aad.auth.appid`, `aad.auth.appkey`, `kusto.tables.topics.mapping` (the database name) and `kusto.url`.
 
 
+### 5.3. connector/Dockerfile
 
+Has the commands for generating the docker image for the connector instance.  It includes download of the connector from the git repo release directory.
 
+### 5.4. storm-events-producer directory and its contents
 
+At a high level - this has a Go program that reads a local "StormEvents.csv" file and publishes the same to a Kafka topic.
 
-
-
-
-Here is the `docker-compose.yaml` in its entirety:
+### 5.5. docker-compose.yaml
 
 ```yaml
 version: "2"
@@ -186,15 +210,9 @@ services:
       - SOURCE_FILE=StormEvents.csv
 ```
 
+## 6: Start the lab
 
-
-
-
-
-
-## Step 2: Kusto Sink connector setup
-
-1. Start the containers:
+### 6.1. Start the containers - Kafka, connect, producer etc
 
 ```shell
 docker-compose up
@@ -212,42 +230,22 @@ events-producer_1  | event  2007-01-01 00:00:00.0000000,2007-01-01 05:00:00.0000
 ....
 ```
 
-2. Install the connector
+### 6.2. Start the connector via Kafka Connect REST call
 
-Copy the JSON contents below to a file (you can name it `adx-sink-config.json`). Replace the values for the following attributes as per your Azure Data Explorer setup - `aad.auth.authority`, `aad.auth.appid`, `aad.auth.appkey`, `kusto.tables.topics.mapping` (the database name) and `kusto.url`
-
-```json
-{
-    "name": "storm",
-    "config": {
-        "connector.class": "com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector",
-        "flush.size.bytes": 10000,
-        "flush.interval.ms": 50000,
-        "tasks.max": 1,
-        "topics": "storm-events",
-        "kusto.tables.topics.mapping": "[{'topic': 'storm-events','db': '<enter database name>', 'table': 'Storms','format': 'csv', 'mapping':'Storms_CSV_Mapping'}]",
-        "aad.auth.authority": "<enter tenant ID>",
-        "aad.auth.appid": "<enter application ID>",
-        "aad.auth.appkey": "<enter client secret>",
-        "kusto.url": "https://ingest-<name of cluster>.<region>.kusto.windows.net",
-        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-        "value.converter": "org.apache.kafka.connect.storage.StringConverter"
-    }
-}
-```
-
-Install the connector:
-
+Launch sink task
 ```shell
 curl -X POST -H "Content-Type: application/json" --data @adx-sink-config.json http://localhost:8083/connectors
+```
 
-//check status
+Check status
+```
 curl http://localhost:8083/connectors/storm/status
 ```
 
 The connector should start queueing ingestion processes to Azure Data Explorer.
 
-## Check Azure Data Explorer
+
+## 7.  Check Azure Data Explorer for event delivery by the connector
 
 Wait for sometime before data ends up in the `Storms` table. To confirm, check the row count and confirm that there are no failures in the ingestion process:
 
@@ -286,7 +284,7 @@ Storms
 These are just few examples. Dig into the [Kusto Query Language documentation](https://docs.microsoft.com/azure/data-explorer/kusto/query/) or explore tutorials about [how to ingest JSON formatted sample data into Azure Data Explorer](https://docs.microsoft.com/azure/data-explorer/ingest-json-formats?tabs=kusto-query-language), using [scalar operators](https://docs.microsoft.com/azure/data-explorer/write-queries#scalar-operators), [timecharts](https://docs.microsoft.com/azure/data-explorer/kusto/query/tutorial?pivots=azuredataexplorer#timecharts) etc.
 
 
-## Reset and Clean up
+## 8. Reset and Clean up
 
 If you want to re-start from scratch, simply stop the containers (`docker-compose down -v`), delete (`drop table Storms`) and re-create the `Storms` table (along with the mapping) and re-start containers (`docker-compose up`)
 
