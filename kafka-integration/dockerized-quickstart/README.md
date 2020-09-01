@@ -22,8 +22,8 @@ This lab is a contribution (thanks @abhirockzz) from the Cloud advocacy team - a
 ## 1. Prerequisites
 
 - You will need a [Microsoft Azure account](https://docs.microsoft.com/azure/)
-- Install [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli?view=azure-cli-latest) if you don't have it already
-- Install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install) 
+- [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli?view=azure-cli-latest) on your machine, if you don't have it already
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install) on your machine, if you don't have it already
 
 ## 2. Clone the lab's git repo
 
