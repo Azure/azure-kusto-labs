@@ -7,15 +7,18 @@ This module covers the following steps that essentially set the stage for integr
 <hr>
 <br>
 
-[1. Create a Docker Hub account](connectors-crud-esp.md#1--create-a-docker-hub-account)<br>
-[2. Install Docker desktop on your machine and launch it](connectors-crud-esp.md#2--install-docker-desktop-on-your-machine-and-launch-it)<br>
-[3. Build a Docker image](connectors-crud-esp.md#3-build-a-docker-image)<br>
-[4. Push the image to Docker Hub](connectors-crud-esp.md#4-push-the-image-to-docker-hub)<br>
-[5. Clone KafkaConnect helm charts from Confluent git repo & make necessary edits](connectors-crud-esp.md#5-clone-kafkaconnect-helm-charts-from-confluent-git-repo--make-necessary-edits)<br>
-[6. Provision KafkaConnect workers on our Azure Kubernetes Service cluster](connectors-crud-esp.md#6-provision-kafkaconnect-workers-on-our-azure-kubernetes-service-cluster)<br>
-[7. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods](connectors-crud-esp.md#7-start-port-forwarding-to-be-able-to-make-rest-calls-from-your-machine-to-kafkaconnect-service-running-on-aks-pods)<br>
-[8. Download & install Postman](connectors-crud-esp.md#8-download--install-postman)<br>
-[9. Import the Postman JSON collection with KafkaConnect REST API call samples & try them out](connectors-crud-esp.md#9-import-the-postman-json-collection-with-kafkaconnect-rest-api-call-samples)<br>
+[1. Create a local directory](connectors-crud-esp.md#1-create-a-local-directory)<br>
+[2. Download configs you need from HDInsight ESP Kafka cluster](connectors-crud-esp.md#2--download-configs-you-need-from-hdinsight-esp-kafka-cluster)<br>
+[3. Create a Docker Hub account](connectors-crud-esp.md#3--create-a-docker-hub-account)<br>
+[4. Install Docker desktop on your machine and launch it](connectors-crud-esp.md#4--install-docker-desktop-on-your-machine-and-launch-it)<br>
+[5. Build a Docker image of the Kafka Connect worker](connectors-crud-esp.md#5-build-a-docker-image-of-the-kafka-connect-worker)<br>
+[6. Push the image to Docker Hub](connectors-crud-esp.md#6-push-the-image-to-docker-hub)<br>
+[7. Clone KafkaConnect helm charts from Confluent git repo & make necessary edits](connectors-crud-esp.md#7-clone-kafkaconnect-helm-charts-from-confluent-git-repo--make-necessary-edits)<br>
+[8. Provision KafkaConnect workers on our Azure Kubernetes Service cluster](connectors-crud-esp.md#8-provision-kafkaconnect-workers-on-our-azure-kubernetes-service-cluster)<br>
+[9. Start port forwarding to be able to make REST calls from your machine to KafkaConnect service running on AKS pods](connectors-crud-esp.md#9-start-port-forwarding-to-be-able-to-make-rest-calls-from-your-machine-to-kafkaconnect-service-running-on-aks-pods)<br>
+[10. Download & install Postman](connectors-crud-esp.md#10-download--install-postman)<br>
+[11. Import the Postman JSON collection with KafkaConnect REST API call samples](connectors-crud-esp.md#11-import-the-postman-json-collection-with-kafkaconnect-rest-api-call-samples)<br>
+[12. Validate data delivery in Azure Data Explorer](connectors-crud-esp.md#12-validate-data-delivery-in-azure-data-explorer)<br>
 
 
 The following section strives to explain further, pictorially, what we are doing in the lab, for clarity.<br>
@@ -1028,4 +1031,9 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br><br><hr>
 This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
 
+## 12. Validate data delivery in Azure Data Explorer
 
+Launching the connector tasks in [section 11.5](connectors-crud-esp.md#115-provision-the-connector-after-editing-the-body-of-the-rest-call-to-match-your-configuration) starts the copy process.
+
+<br>
+This concludes this module.
