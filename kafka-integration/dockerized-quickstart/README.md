@@ -6,7 +6,7 @@ The goal is to get started *quickly*, so all the requisite components for a Kafk
 
 Follow through the lab which leverages the storm events public dataset, and get a feel of the connector in isolation.  You can then move to the [more involved labs](https://github.com/Azure/azure-kusto-labs/tree/master/kafka-integration) that cover distributed Kafka Connect, leveraging Azure PaaS and ISV IaaS Kafka offerings.<br> 
 
-This lab is a contribution (thanks @abhirockzz) from the Cloud advocacy team - a team that strives to improve developer experience on Azure.  
+This lab is a contribution (thanks Abhishek Gupta - @abhirockzz) from the Cloud advocacy team - a team that strives to improve developer experience on Azure.  
 
 [1. Prerequisites](README.md#1-prerequisites)<br>
 [2. Create an Azure Active Directory Service Principal](README.md#2-create-an-azure-active-directory-service-principal)<br>
