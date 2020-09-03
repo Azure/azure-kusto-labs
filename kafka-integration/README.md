@@ -12,7 +12,7 @@ Is Azure's managed Kafka as a service with disaggregated compute and storage mod
 Featured in this labs is a licensed (free for 30 days) version of Kafka from Confluent, runs on Azure Kubernetes Service (AKS), and leverages the Confluent operator for provisioning on AKS.<br><br>  
 
 ## 1.3. Confluent PaaS Kafka - Confluent Cloud
-Featured in this labs is cloud PaaS version of Kafka from Confluent (managed).<br><br> 
+Featured in this [lab](https://github.com/Azure/azure-kusto-labs/blob/master/kafka-integration/confluent-cloud/README.md) is cloud, managed, PaaS offering of Kafka from Confluent.<br><br> 
 
 ## 1.4. About the labs
 The labs are:
