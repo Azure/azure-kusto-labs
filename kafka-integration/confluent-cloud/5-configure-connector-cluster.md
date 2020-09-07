@@ -488,11 +488,7 @@ exit
 Lets review the logs of one of the pods from 6.3
 
 ```
-<<<<<<< HEAD
-kubectl logs 
-=======
 kubectl logs <podName>
->>>>>>> 5ce78b7ed73f62c2c92f62c8084062717e693705
 ```
 
 If you see something like this, we are good to go...
@@ -609,7 +605,7 @@ These are specific to the service ID from "kubectl get svc".  If you uninstall a
 You will need the service ID from the command "kubectl get svc".  Substitute it in the below command.
 
 ```
-sudo kubectl port-forward svc/YOIUR_SERVICE_ID 803:8083
+sudo kubectl port-forward svc/YOUR_SERVICE_ID 803:8083
 ```
 
 Author's output-
