@@ -762,6 +762,38 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br>
 
 <br><br><hr>
+
+
+## 10. Uninstall Kafka Connect from your AKS cluster
+This is strictly informational.
+```
+# 1. Get the service name
+kubectl get svc
+```
+
+E.g.
+```
+gaia:~ akhanolk$ kubectl get svc
+NAME                          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+cp-kafka-connect-1598109267   ClusterIP   10.0.146.166   <none>        8083/TCP   15d
+kubernetes                    ClusterIP   10.0.0.1       <none>        443/TCP    18d
+```
+
+Now uninstal referencing the service name-
+```
+# 2. Uninstall
+helm uninstall <serviceName>
+```
+
+E.g.
+```
+gaia:~ akhanolk$ helm uninstall cp-kafka-connect-1598109267
+release "cp-kafka-connect-1598109267" uninstalled
+
+gaia:~ akhanolk$ kubectl get pods
+No resources found in default namespace.
+```
+
 This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
 
 #### Main menu
