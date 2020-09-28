@@ -93,7 +93,7 @@ cd kafka-hdi-hol
 
 ## 2.  Download configs you need from HDInsight ESP Kafka cluster
 
-From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka.  For this, we need a user principal that has Ranger policy set to consume from Kafka.  In this example, we wil use the user **hdiadminjrs**.
+From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka.  For this, we need a user principal that has Ranger policy set to consume from Kafka, and also to create topics.  In this example, we wil use the user **hdiadminjrs**.
 
 ### 2.1.  Ranger policy for UPN to be used in the lab
 
