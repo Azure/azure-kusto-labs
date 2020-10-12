@@ -4,7 +4,7 @@ This is a quickstart for getting up and running with data ingestion from [Apache
 
 The goal is to get started *quickly*, so all the requisite components for a Kafka ingestion pipeline into Kusto are self-contained and run in Docker containers - this includes a pseudo-distributed setup of Kafka, Zookeeper, Kafka Connect worker and the Kafka event generator/producer application. <br>
 
-Follow through the lab which leverages the storm events public dataset, and get a feel for the connector in isolation.  You can then move to the [more involved labs](https://github.com/Azure/azure-kusto-labs/tree/master/kafka-integration) that cover distributed Kafka Connect, leveraging Azure PaaS and ISV IaaS Kafka offerings.<br> 
+Follow through the lab which leverages the storm events public dataset, and get a feel for the connector in isolation. You can then move to the [more involved labs](https://github.com/Azure/azure-kusto-labs/tree/master/kafka-integration) that cover distributed Kafka Connect, leveraging Azure PaaS and ISV IaaS Kafka offerings.<br> 
 
 This lab is a contribution (thanks Abhishek Gupta - @abhirockzz) from the Cloud advocacy team - a team that strives to improve developer experience on Azure.  
 
