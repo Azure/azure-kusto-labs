@@ -40,7 +40,7 @@ az account set --subscription YOUR_SUBSCRIPTION_GUID
 ```
 
 ### 2.3. Create the service principal
-Lets call our service principal, kusto-kafka-spn. Run the command below to create it.
+Let's call our service principal, kusto-kafka-spn. Run the command below to create it.
 ```
 az ad sp create-for-rbac -n "kusto-kafka-spn"
 ```
