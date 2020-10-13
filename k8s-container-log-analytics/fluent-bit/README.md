@@ -64,6 +64,8 @@ https://docs.microsoft.com/en-us/azure/event-hubs/authenticate-shared-access-sig
 
 ![AEH](images/05-aehns-SAP.png)
 
+**Now create an event hub.**  
+
 6.  Create an Azure Kubernetes cluster, node size Standard_DS2_v2, with 3 nodes, in the subnet created in step 3 <br>
 https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster
 
