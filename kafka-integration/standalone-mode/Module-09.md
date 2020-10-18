@@ -235,7 +235,7 @@ plugin.path=/usr/hdp/current/kafka-broker/libs/,/usr/share/java
 
 ### 10. Create the connect-kusto-sink.properties file with your Kafka topic, KafkaConnect conf, ADX conf
 
-a) Revisit the portal, your ADX cluster instance for the ingestion URI
+a) Revisit the portal, your ADX cluster instance for the ingestion URL
 
 ![CreateHDI01](images/06-kck-16.png)
 <br>
@@ -265,7 +265,8 @@ tasks.max=2
 topics=crimes_topic
 kusto.tables.topics_mapping=[{'topic': 'crimes_topic','db': 'crimes_db', 'table': 'crimes_curated_kafka','format': 'json', 'mapping':'crimes_curated_kafka_mapping'}]
 kusto.auth.authority=<yourAADTenantID>
-kusto.url=<yourADXClusterIngestURI>
+kusto.ingestion.url=<yourADXClusterIngestURL>
+kusto.query.url=<yourADXClusterQueryURL>
 kusto.auth.appid=<yourAADSPNApplicationID>
 kusto.auth.appkey=<yourAADSPNSecret>
 kusto.sink.tempdir=/var/tmp/
