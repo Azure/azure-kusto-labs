@@ -140,7 +140,7 @@ ENV CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
 ENV CONNECT_SASL_MECHANISM=PLAIN
 ENV CONNECT_SECURITY_PROTOCOL=SASL_SSL
 ENV CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
-ENV CONNECT_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\YOUR-KAFKA-API-SECRET"\";"
+ENV CONNECT_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\"YOUR-KAFKA-API-SECRET\";"
 ```
 
 What we are doing above is taking the base Docker image from the ConfluentInc repo, copying the ADX jar to /usr/share/java and setting an environment variable to allow overrides at the consumer level.
