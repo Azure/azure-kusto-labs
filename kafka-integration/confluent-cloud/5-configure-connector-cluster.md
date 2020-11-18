@@ -235,7 +235,17 @@ Your docker ID, inplace of akhanolkar
 image: akhanolkar/kafka-connect-kusto-sink
 imageTag: 1.0.1v1
 ```
-3. Kafka bootstrap servers<br>
+
+3. Set prometheous jmx monitoring to false as shown below-
+```
+prometheus:
+  ## JMX Exporter Configuration
+  ## ref: https://github.com/prometheus/jmx_exporter
+  jmx:
+    enabled: false
+```
+
+4. Kafka bootstrap servers<br>
 Replace "yourBootStrapServerList" with your Confluent Cloud bootstrap server loadbalancer FQDN:Port
 ```
 kafka:
@@ -245,15 +255,6 @@ E.g. the author's bootstrap server entry is-
 ```
 kafka:
   bootstrapServers: "PLAINTEXT://nnn-nnnn.eastus2.azure.confluent.cloud:9092"
-```
-
-4. Set prometheous jmx monitoring to false as shown below-
-```
-prometheus:
-  ## JMX Exporter Configuration
-  ## ref: https://github.com/prometheus/jmx_exporter
-  jmx:
-    enabled: false
 ```
 
 5.  Save
