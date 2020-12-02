@@ -121,7 +121,7 @@ cd ~/kafka-confluentcloud-hol
 ```
 2.  Download the jar
 ```
-wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v1.0.1/kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar 
+wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v2.0.0/kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar 
 ```
 
 ### 3.3. Create a Docker file
@@ -134,13 +134,13 @@ vi connect-worker-image-builder.dockerfile
 Paste this into the file and save - be sure to edit it for bootstrap server list, Kafka API key and Kafka API secrte to reflect yours..
 ```
 FROM confluentinc/cp-kafka-connect:5.5.0
-COPY kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar /usr/share/java
+COPY kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar /usr/share/java
 
 ENV CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
 ENV CONNECT_SASL_MECHANISM=PLAIN
 ENV CONNECT_SECURITY_PROTOCOL=SASL_SSL
 ENV CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
-ENV CONNECT_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\YOUR-KAFKA-API-SECRET"\";"
+ENV CONNECT_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"YOUR-KAFKA-API-KEY\" password=\"YOUR-KAFKA-API-SECRET\";"
 ```
 
 What we are doing above is taking the base Docker image from the ConfluentInc repo, copying the ADX jar to /usr/share/java and setting an environment variable to allow overrides at the consumer level.
@@ -149,7 +149,7 @@ What we are doing above is taking the base Docker image from the ConfluentInc re
 
 Replace akhanolkar with your docker UID and run the below-
 ```
-sudo docker build -t akhanolkar/kafka-connect-kusto-sink:1.0.1v1 -f connect-worker-image-builder.dockerfile .
+sudo docker build -t akhanolkar/kafka-connect-kusto-sink:2.0.0v1 -f connect-worker-image-builder.dockerfile .
 ```
 
 List the images created-
@@ -161,19 +161,19 @@ Author's output:
 ```
 indra:kafka-confluentcloud-hol akhanolk$ docker image list
 REPOSITORY                                    TAG                 IMAGE ID            CREATED             SIZE
-akhanolkar/kafka-connect-kusto-sink           1.0.1v1             1870ace80b29        23 seconds ago      1.24GB
+akhanolkar/kafka-connect-kusto-sink           2.0.0v1             1870ace80b29        23 seconds ago      1.24GB
 ```
 
 ## 4. Push the image to Docker Hub
 
 Run the command below, replacing akhanolkar with your Docker username-
 ```
-docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
+docker push akhanolkar/kafka-connect-kusto-sink:2.0.0v1
 ```
 
 Author's output-
 ```
-indra:kafka-confluentcloud-hol akhanolk$ docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
+indra:kafka-confluentcloud-hol akhanolk$ docker push akhanolkar/kafka-connect-kusto-sink:2.0.0v1
 The push refers to repository [docker.io/akhanolkar/kafka-connect-kusto-sink]
 958960eb74db: Pushed 
 c20428756bff: Layer already exists 
@@ -186,7 +186,7 @@ bc537b2bbfd6: Layer already exists
 0818dd46b53a: Layer already exists 
 19e377f490b1: Layer already exists 
 a8ff4211732a: Layer already exists 
-1.0.1v1: digest: sha256:ae32c964bf277298b1541f52d956c6e6a5dc1263262178f8a9950e3244eacd71 size: 2639
+2.0.0v1: digest: sha256:ae32c964bf277298b1541f52d956c6e6a5dc1263262178f8a9950e3244eacd71 size: 2639
 ```
 
 You should be able to see the image in Docker Hub.
@@ -233,9 +233,19 @@ replicaCount: 6
 Your docker ID, inplace of akhanolkar
 ```
 image: akhanolkar/kafka-connect-kusto-sink
-imageTag: 1.0.1v1
+imageTag: 2.0.0v1
 ```
-3. Kafka bootstrap servers<br>
+
+3. Set prometheous jmx monitoring to false as shown below-
+```
+prometheus:
+  ## JMX Exporter Configuration
+  ## ref: https://github.com/prometheus/jmx_exporter
+  jmx:
+    enabled: false
+```
+
+4. Kafka bootstrap servers<br>
 Replace "yourBootStrapServerList" with your Confluent Cloud bootstrap server loadbalancer FQDN:Port
 ```
 kafka:
@@ -245,15 +255,6 @@ E.g. the author's bootstrap server entry is-
 ```
 kafka:
   bootstrapServers: "PLAINTEXT://nnn-nnnn.eastus2.azure.confluent.cloud:9092"
-```
-
-4. Set prometheous jmx monitoring to false as shown below-
-```
-prometheus:
-  ## JMX Exporter Configuration
-  ## ref: https://github.com/prometheus/jmx_exporter
-  jmx:
-    enabled: false
 ```
 
 5.  Save
@@ -392,7 +393,7 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-jms
 drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-s3
 drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-storage-common
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 kafka-serde-tools
--rw-r--r-- 1 root root 10797367 Aug  4 13:24 kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+-rw-r--r-- 1 root root 10797367 Aug  4 13:24 kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar
 drwxr-xr-x 2 root root     4096 Apr 18 17:23 monitoring-interceptors
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 rest-utils
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
@@ -532,7 +533,7 @@ Controlled By:  ReplicaSet/cp-kafka-connect-1598109267-76465bff44
 Containers:
   cp-kafka-connect-server:
     Container ID:   docker://f574c04da945ef986296a7ff341c277be9799e61d1c8702096d7ed792e8beb30
-    Image:          akhanolkar/kafka-connect-kusto-sink:1.0.1v3
+    Image:          akhanolkar/kafka-connect-kusto-sink:2.0.0v1
     Image ID:       docker-pullable://akhanolkar/kafka-connect-kusto-sink@sha256:65b7c05d5e795c7491d52a5e12636faa1f8f9b4a460a24ec081e6bf4047d405d
     Port:           8083/TCP
     Host Port:      0/TCP
@@ -582,8 +583,8 @@ Events:
   Type    Reason     Age   From                                        Message
   ----    ------     ----  ----                                        -------
   Normal  Scheduled  43m   default-scheduler                           Successfully assigned default/cp-kafka-connect-1598109267-76465bff44-7s9vs to aks-agentpool-23362501-vmss000005
-  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
-  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
+  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:2.0.0v1"
+  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:2.0.0v1"
   Normal  Created    43m   kubelet, aks-agentpool-23362501-vmss000005  Created container cp-kafka-connect-server
   Normal  Started    43m   kubelet, aks-agentpool-23362501-vmss000005  Started container cp-kafka-connect-server
 ```
