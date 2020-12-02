@@ -677,7 +677,8 @@ You will need the following details-
     "config": {
         "connector.class": "com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector",
         "topics": "crimes",
-        "kusto.url":"YOUR-ADX-INGEST-URI",
+        "kusto.ingestion.url":"YOUR-ADX-INGEST-URL",
+        "kusto.query.url":"YOUR-ADX-QUERY-URL",
         "aad.auth.authority": "YOUR-AAD-TENANT-ID",
         "aad.auth.appid":"YOUR-ADD-SPN-APP-ID",
         "aad.auth.appkey":"YOUR-AAD-SPN-SECRET",

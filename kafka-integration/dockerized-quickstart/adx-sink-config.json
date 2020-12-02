@@ -10,7 +10,8 @@
         "aad.auth.authority": "<enter tenant ID>",
         "aad.auth.appid": "<enter application ID>",
         "aad.auth.appkey": "<enter client secret>",
-        "kusto.url": "https://ingest-<name of cluster>.<region>.kusto.windows.net",
+        "kusto.ingestion.url": "https://ingest-<name of cluster>.<region>.kusto.windows.net",
+        "kusto.query.url": "https://<name of cluster>.<region>.kusto.windows.net",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "value.converter": "org.apache.kafka.connect.storage.StringConverter"
     }
