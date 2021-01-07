@@ -131,7 +131,7 @@ Start a file-
 vi connect-worker-image-builder.dockerfile
 ```
 
-Paste this into the file and save - be sure to edit it for bootstrap server list, Kafka API key and Kafka API secrte to reflect yours..
+Paste this into the file and save - be sure to edit it for bootstrap server list, Kafka API key and Kafka API secret to reflect yours.
 ```
 FROM confluentinc/cp-kafka-connect:5.5.0
 COPY kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar /usr/share/java
