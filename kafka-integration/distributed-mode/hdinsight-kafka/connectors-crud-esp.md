@@ -93,7 +93,7 @@ cd kafka-hdi-hol
 
 ## 2.  Download configs you need from HDInsight ESP Kafka cluster
 
-From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka.  For this, we need a user principal that has Ranger policy set to consume from Kafka, and also to create topics (Kafka Connect creates 3 topics per deployment of Kafka Connect cluster).  In this example, we wil use the user **hdiadminjrs**.
+From the connector AKS cluster, we have to consume from kerberized HDInsight Kafka. For this, we need a user principal that has Ranger policy set to consume from Kafka, and also to create topics (Kafka Connect creates 3 topics per deployment of Kafka Connect cluster).  In this example, we wil use the user **hdiadminjrs**.
 
 ### 2.1.  Ranger policy for UPN to be used in the lab
 
@@ -251,7 +251,7 @@ Start a file-
 vi connect-worker-image-builder.dockerfile
 ```
 
-Paste this into the file and save - be sure to edit it your UPN and domain realm..
+Paste this into the file and save - be sure to edit it your UPN and domain realm.
 ```
 FROM confluentinc/cp-kafka-connect:5.5.0
 COPY kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar /usr/share/java
@@ -263,11 +263,15 @@ ENV KAFKA_OPTS="-Djava.security.krb5.conf=/etc/krb5.conf"
 
 ENV CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY=All
 
-ENV CONNECT_SASL_MECHANISM=GSSAPI
-ENV CONNECT_SASL_KERBEROS_SERVICE_NAME=kafka
-ENV CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
 ENV CONNECT_SASL_JAAS_CONFIG="com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/etc/security/keytabs/kafka-client-hdi.keytab\" principal=\"hdiadminjrs@AADDS.JRSMYDOMAIN.COM\";"
+ENV CONNECT_SASL_KERBEROS_SERVICE_NAME=kafka
+ENV CONNECT_SASL_MECHANISM=GSSAPI
+ENV CONNECT_SECURITY_PROTOCOL=SASL_PLAINTEXT
+```
 
+To connect ADX to Kafka via SSL, change the last variable, CONNECT_SECURITY_PROTOCOL, as follows:
+```
+ENV CONNECT_SECURITY_PROTOCOL=SASL_SSL
 ```
 
 What we are doing above is taking the base Docker image from the ConfluentInc repo, copying the ADX jar to /usr/share/java and setting an environment variable to allow overrides at the consumer level, and including security configuration.
@@ -357,7 +361,7 @@ replicaCount: 6
 ```
 
 2. Image<br>
-Your docker ID, inplace of akhanolkar
+Your docker ID, instead of akhanolkar
 ```
 image: akhanolkar/kafka-connect-kusto-sink
 imageTag: 1.0.1v1
@@ -525,10 +529,65 @@ livenessProbe:
   # failureThreshold: 10
 ```
 
+To connect ADX to Kafka via SSL, change:
+1.  The volumeMounts, volumes and secrets sections in values.yaml 
+2.  The data section in secrets.yaml
+3.  The env section in deployment.yaml
+4.  The sink properties sent via REST when provisioning the connector (covered later)
+
+Specifically, in values.yaml (1):
+```
+volumeMounts
+- name: secrets-vol
+  mountPath: /etc/kafka/secrets
+
+volumes
+  - name: secrets-vol
+    secret:
+      secretName: ssl-config
+
+secrets:
+  kafka.connect.truststore.jks: [base64-encoded truststore that includes the public certificate(s) from the worker node(s)' keystore(s)]
+  truststore-creds: [base64 encoded truststore password]
+```
+
+In secrets.yaml (2), remove the base64 encoding to allow the JKS to be kept in the values.yaml already encoded, so that the data section looks as follows:
+```
+data:
+  {{- range $key, $value := .Values.secrets }}
+  {{ $key }}: {{ $value }}
+  {{- end }}
+```
+
+In deployment.yaml (3), add the following environment variables to spec.template.spec.containers.env:
+```
+- name: CONNECT_SECURITY_PROTOCOL
+  value: SASL_SSL
+- name: CONNECT_SSL_TRUSTSTORE_LOCATION
+  value: /etc/kafka/secrets/kafka.connect.truststore.jks
+- name: CONNECT_SSL_TRUSTSTORE_PASSWORD
+  value: [the_truststore_password]
+- name: CONNECT_PRODUCER_SECURITY_PROTOCOL
+  value: SASL_SSL
+- name: CONNECT_PRODUCER_SSL_TRUSTSTORE_LOCATION
+  value: /etc/kafka/secrets/kafka.connect.truststore.jks
+- name: CONNECT_PRODUCER_SSL_TRUSTSTORE_PASSWORD
+  value: [the_truststore_password]
+- name: CONNECT_CONSUMER_SECURITY_PROTOCOL
+  value: SASL_SSL
+- name: CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION
+  value: /etc/kafka/secrets/kafka.connect.truststore.jks
+- name: CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD
+  value: [the_truststore_password]
+```
+These are examples of the [values.yaml](yamls/values.yaml), [secrets.yaml](yamls/secrets.yaml) and [deployment.yaml](yamls/deployment.yaml).
+
+
 ## 8. Provision KafkaConnect workers on our Azure Kubernetes Service cluster
 
 ### 8.1. Login to Azure CLI & set the subscription to use
-[Install the CLI if it does not exist.](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)<br>
+[Install the CLI if it does not exist.](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+<br>
 
 1. Login
 ```
@@ -967,6 +1026,11 @@ You will need the following details-
     }
 }
 ```
+To connect ADX to Kafka via SSL, the final step (4) is to change "consumer.override.security.protocol" from "SASL_PLAINTEXT" to "SASL_SSL", and to add the following:
+```
+"consumer.override.ssl.endpoint.identification.algorithm": "https"
+```
+
 
 Making this REST API call will actually launch copy tasks on your KafkaConnect workers.  We have a 1:1 ratio (1 AKS node = 1 KafkaConnect pod = 1 connector task)
 but depending on resources, you can oversubcribe and add more tasks.

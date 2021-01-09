@@ -49,7 +49,7 @@ Details are [here](update-adx-nsg.md)
 Details are [here](produce-to-kafka.md)
 
 # 10. Install KafkaConnect on AKS and start ADX sink tasks 
-Details are [here](connectors-crud.md)
+Details are [here](connectors-crud.md), or for HDI ESP with Kerberos (with SSL and non-SSL options), [here](connectors-crud-esp.md).
 
 # 11. Verify data delivery to ADX
 
