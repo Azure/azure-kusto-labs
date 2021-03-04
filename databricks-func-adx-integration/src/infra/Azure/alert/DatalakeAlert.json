@@ -1,0 +1,58 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ResourceGroup": {
+            "type": "string"
+        },
+        "ActionGroupName": {
+            "type": "string"
+        },
+        "LandingStorageAccountName": {
+            "type": "string"
+        },
+        "DatalakeLowIngressThreshold": {
+            "type": "int"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[concat(parameters('ResourceGroup'), ' - Low Datalake Ingress Rate - ', parameters('LandingStorageAccountName'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "[concat('Low Ingress Rate to Datalake ', parameters('LandingStorageAccountName'))]",
+                "severity": 1,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Storage/storageAccounts', parameters('LandingStorageAccountName'))]"
+                ],
+                "windowSize": "PT30M",
+                "evaluationFrequency": "PT30M",
+                "targetResourceType": "Microsoft.Storage/storageAccounts",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "criterionType": "StaticThresholdCriterion",
+                            "name" : "Azure landing datalake ingress",
+                            "metricName": "Ingress",
+                            "metricNamespace": "Microsoft.Storage/storageAccounts",
+                            "dimensions":[],
+                            "operator": "LessThanOrEqual",
+                            "threshold" : "[parameters('DatalakeLowIngressThreshold')]",
+                            "timeAggregation": "Total"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        }
+    ]
+}

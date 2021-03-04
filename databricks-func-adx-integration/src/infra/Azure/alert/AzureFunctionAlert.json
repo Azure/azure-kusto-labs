@@ -1,0 +1,138 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "SiteName": {
+            "type": "string"
+        },
+        "ActionGroupName": {
+            "type": "string"
+        },
+        "AzFunctionName1": {
+            "type": "string"
+        },
+        "AzFunctionName2": {
+            "type": "string"
+        },
+        "AzFunctionName3": {
+            "type": "string"
+        },
+        "AzFunctionNotTriggerThreshold": {
+            "type": "int"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[concat('[P1] ', parameters('SiteName'), ' - ', 'Azure function does not trigger - ', parameters('AzFunctionName1'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "Azure Function does not trigger for 30 minutes",
+                "severity": "1",
+                "enabled": "true",
+                "scopes": [
+                    "[resourceId('microsoft.insights/components', parameters('AzFunctionName1'))]"
+                ],
+                "windowSize": "PT30M",
+                "evaluationFrequency": "PT30M",
+                "targetResourceType": "microsoft.insights/components",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "criterionType": "StaticThresholdCriterion",
+                            "name" : "Azure function does not trigger",
+                            "metricName": "dataingest Successes",
+                            "metricNamespace": "Azure.ApplicationInsights",
+                            "dimensions":[],
+                            "operator": "LessThanOrEqual",
+                            "threshold" : "[parameters('AzFunctionNotTriggerThreshold')]",
+                            "timeAggregation": "Count"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[concat('[P1] ', parameters('SiteName'), ' - ', 'Azure function does not trigger - ', parameters('AzFunctionName2'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "Azure Function does not trigger for 30 minutes",
+                "severity": "1",
+                "enabled": "true",
+                "scopes": [
+                    "[resourceId('microsoft.insights/components', parameters('AzFunctionName2'))]"
+                ],
+                "windowSize": "PT30M",
+                "evaluationFrequency": "PT30M",
+                "targetResourceType": "microsoft.insights/components",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "criterionType": "StaticThresholdCriterion",
+                            "name" : "Azure function does not trigger",
+                            "metricName": "dataingest Successes",
+                            "metricNamespace": "Azure.ApplicationInsights",
+                            "dimensions":[],
+                            "operator": "LessThanOrEqual",
+                            "threshold" : "[parameters('AzFunctionNotTriggerThreshold')]",
+                            "timeAggregation": "Count"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[concat('[P1] ', parameters('SiteName'), ' - ', 'Azure function does not trigger - ', parameters('AzFunctionName3'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "Azure Function does not trigger for 30 minutes",
+                "severity": "1",
+                "enabled": "true",
+                "scopes": [
+                    "[resourceId('microsoft.insights/components', parameters('AzFunctionName3'))]"
+                ],
+                "windowSize": "PT30M",
+                "evaluationFrequency": "PT30M",
+                "targetResourceType": "microsoft.insights/components",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "criterionType": "StaticThresholdCriterion",
+                            "name" : "Azure function does not trigger",
+                            "metricName": "dataingest Successes",
+                            "metricNamespace": "Azure.ApplicationInsights",
+                            "dimensions":[],
+                            "operator": "LessThanOrEqual",
+                            "threshold" : "[parameters('AzFunctionNotTriggerThreshold')]",
+                            "timeAggregation": "Count"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        }
+    ]
+}
