@@ -23,6 +23,10 @@ Featuring Fluent-Bit v1.3.11 for log collection and forwarding, Azure Event Hub 
 #### [3.1 Cosmos DB integration with Azure Data Explorer using change feed](cosmosdb-adx-integration)
 This lab covers end to end integration of Cosmos DB with Azure Data Explorer using Cosmos DB change feed for building near real-time analytical solution with a flavor of Azure Data Explorer dashboards.
 
+### 4. Databricks integration with Azure Data Explorer
+#### [4.1 Databricks integration with Azure Data Explorer using Azure Functions](databricks-adx-integration/README.md)
+This lab covers end to end product telemtry architecture from various sources loading terabyes of security logs into Databricks which in turn map it to the Azure Data Explorer service for real time analysis providing moitoring and errors retry mechanisms.
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
