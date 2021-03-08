@@ -1,0 +1,70 @@
+{
+    "$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion":"1.0.0.0",
+    "parameters":{
+        "FunctionName": {
+            "type": "string"
+        },
+        "KeyVaultName": {
+            "type": "string"
+        },
+        "TableStorageAccountName": {
+            "type": "string"
+        },
+        "LogTablePrefix": {
+            "type": "string"
+        },
+        "LogTableRetentionDays": {
+            "type": "int"
+        },
+        "TableSasTokenName": {
+            "type": "string",
+            "defaultValue": "pnametabletoken"
+        },
+        "Runtime": {
+            "type": "string",
+            "defaultValue": "python"
+        }
+    },
+    "variables": {
+      "TenantId": "[subscription().tenantId]"
+    }, 
+    "resources":[
+        {
+            "type": "Microsoft.Web/sites/config",
+            "name": "[concat(parameters('FunctionName'), '/appsettings')]",
+            "apiVersion": "2018-11-01",
+            "properties": {
+                "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('FunctionName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('FunctionName')),'2019-06-01').keys[0].value)]",
+                "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('FunctionName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('FunctionName')),'2019-06-01').keys[0].value)]",
+                "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('microsoft.insights/components/', parameters('FunctionName')), '2015-05-01').InstrumentationKey]",
+                "APPLICATIONINSIGHTS_CONNECTION_STRING": "[concat('InstrumentationKey=', reference(resourceId('microsoft.insights/components/', parameters('FunctionName')), '2015-05-01').InstrumentationKey)]",
+                "FUNCTIONS_EXTENSION_VERSION": "~3",
+                "FUNCTIONS_WORKER_RUNTIME": "[parameters('Runtime')]",
+                "LOG_MESSAGE_HEADER": "LOGCLEANUP",
+                "STORAGE_TABLE_ACCOUNT": "[parameters('TableStorageAccountName')]",
+                "STORAGE_TABLE_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('TableSasTokenName'), '/)')]",
+                "LOG_TABLE_PREFIX": "[parameters('LogTablePrefix')]",
+                "RETENTION_DAYS": "[parameters('LogTableRetentionDays')]"
+            }
+        },
+        {
+            "name": "[concat(parameters('KeyVaultName'), '/add')]",
+            "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "accessPolicies": [
+                    {
+                        "tenantId": "[variables('TenantId')]",
+                        "objectId": "[reference(concat(resourceId('Microsoft.Web/sites', concat(parameters('FunctionName'))), '/providers/Microsoft.ManagedIdentity/Identities/default'), '2015-08-31-PREVIEW').principalId]",
+                        "permissions": {
+                            "secrets": [
+                                "get"
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

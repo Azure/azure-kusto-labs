@@ -1,0 +1,168 @@
+{
+    "AppName":"Your Application or System Name",
+    "DeployClientId":"Your Service Principal ID",
+    "DeploySecret":"Your Service Principal Secret",    
+    "DeployObjectId":"Your Service Principal Object ID",
+    "AzureSubscriptionId":"Your Azure Subscription ID",
+    "AzureTenantId":"Your Azure Tenant ID",
+    "ResourceGroupName": "Your Azure Resource Group Name",
+    "Location": "Your Azure Resource Region (eg.centralus,southeastasia,eastus2,westus2,northeurope,westeurope,japaneast,australiaeast,australiacentralgit)",  
+    "AutoAzLogout": true,
+    "Storage": {
+        "LandingDatalakeName":"landing",
+        "AccessTier":"Hot",
+        "StorageSku":"Standard_LRS",
+        "IngestionDatalakeName":"ingestion",
+        "FileSystemName": "data",
+        "LandingErrorHandleFileSystemName":"final-retry-failed",
+        "IngestionRetryEndInFailContainerName":"adx-ingest-retry-end-in-fail",
+        "LandingBadRecordFolder": "telemetrydata-badrecords",
+        "FinalFailedFolder": "finalretryfailed",
+        "FileSystemNameRootFolder": "telemetry",
+        "AzureStorageTargetFolder":"databricks-out",
+        "TelemetryLogfileRetentionDays":"7",
+        "DatalakeTemplatePath":"../Azure/datalake/EventStorage.json",
+        "TableStorageAccountName":"tables",
+        "InitialLogTableName":"logtable",
+        "TableStorageSku":"Standard_RAGRS",
+        "TableTemplatePath":"../Azure/datalake/StorageTable.json"
+    },
+    "Functions": {
+        "IngestionFunction": {
+            "FunctionName": "ingestionfunc",
+            "IngestionConnectingStringName": "ingestionconnectingstring",
+            "IsFlushImmediately": "True",
+            "Path": "adxingestp2",
+            "FunctionFolder": "dataingest",
+            "Runtime": "Python",
+            "IngestionfuncTemplatePath": "../Azure/function/IngestionFunction.json",
+            "DatabaseIDKey":"companyIdkey=",
+            "TableIDKey":"typekey=",
+            "IsDuplicateCheck":"False"
+        },
+        "dbsErrorHandlerFunction": {
+            "FunctionName": "dbserrorhandler",
+            "Path": "databrickserrorhandler",
+            "DbserrorhandlefuncTemplatePath": "../Azure/function/FunctionApp.json",
+            "DbserrorhandleFuncAppsettingTemplatePath": "../Azure/function/appsettings/DatabricksErrorHandlingFunction.json"
+        },
+        "adxErrorHandlerFunction": {
+            "FunctionName": "adxerrorhandler",
+            "Runtime": "python",
+            "Path": "adxingesterrorhandler",
+            "FunctionFolder": "errorhandler",
+            "AdxerrorhandlefuncTemplatePath": "../Azure/function/ADXIngestErrorHandlingFunction.json"
+        },
+        "dbsMetadataHandlerFunction": {
+            "FunctionName": "dbsmetafunc",
+            "Path": "databricksmetadatahandler",
+            "FunctionFolder": "metadatahandler",
+            "Runtime": "Python",
+            "MetadataHandlerfuncTemplatePath": "../Azure/function/FunctionApp.json",
+            "MetadataHandlerfuncSettingsTemplatePath": "../Azure/function/appsettings/dbsmetafunc.json",
+            "IngestionSasTokenName": "ingestiontoken"
+        }
+        
+    },
+    "EventGrid": {
+        "LandingEventQueueName": "landingeventqueue",
+        "LandingEventQueueCount": "3",
+        "DBSMetadataQueueName": "databricks-output-metadata",
+        "DBSMetadataQueueCount": "1",
+        "DBSMetadataEventFilters": [{"key": "Subject", "operatorType": "StringEndsWith", "values": ["0","1","2","3","4","5","6","7","8","9",".compact"]}, {"key": "Subject", "operatorType": "StringContains", "values": ["_spark_metadata"]}],
+        "DataBricksErrorHandlingQueueName": "databricks-error-handling-queue",
+        "BadRequestsQueueCount": "1",
+        "BadRequestsFilters": [{"key": "Subject", "operatorType": "StringContains", "values": ["part-"]}],
+        "BadRequestsAdvancedFilters": [{ "key": "data.api", "operatorType": "StringIn", "values": [ "FlushWithClose", "PutBlockList" ]}],
+        "IngestionEventQueueName":"adxingest-queue",
+        "IngestionEventQueueCount":"1",
+        "IngestionRetryEventFilters": [{ "key": "Subject", "operatorType": "StringEndsWith", "values": [".c000.json"]}],
+        "IngestionRetryEventAdvancedFilters": [{ "key": "data.api", "operatorType": "StringIn", "values": [ "FlushWithClose", "PutBlockList" ] }, {"key": "Subject", "operatorType": "StringContains", "values": ["retry"]}],
+        "EventTypeCreate": "Microsoft.Storage.BlobCreated",
+        "EventTypeRenamed": "Microsoft.Storage.BlobRenamed",
+        "LandingEventFilters":[{"key": "Subject", "operatorType": "StringEndsWith", "values": ["0.json.gz","1.json.gz","2.json.gz"]},{"key": "Subject", "operatorType": "StringEndsWith", "values": ["3.json.gz","4.json.gz","5.json.gz"]},{"key": "Subject", "operatorType": "StringEndsWith", "values": ["6.json.gz","7.json.gz","8.json.gz","9.json.gz"]}],
+        "IngestionEventFilters": [{"key": "Subject", "operatorType": "StringEndsWith", "values": [".c000.json"]}],
+        "IngestionEventAdvancedFilters": [{ "key": "data.api", "operatorType": "StringIn", "values": [ "FlushWithClose", "PutBlockList" ] }],
+        "EventGridTemplatePath":"../Azure/event-trigger/StorageEventTrigger.json"
+    },
+    "KeyVault": {
+        "KeyVaultName": "keyvault",
+        "DatabricksKeyVaultName": "dbskeyvault",
+        "SoftDelete": false,
+        "KeyVaultTemplatePath":"../Azure/keyvault/KeyVault.json",
+        "KeyVaultSecretTemplatePath": "../Azure/keyvault/KeyVaultSecrets.json",
+        "KeyVaultAccessTemplatePath": "../Azure/keyvault/KeyVaultAccessPolicyUpdate.json"
+    },
+    "ADX": {
+        "ClusterName": "adx",
+        "ClusterSkuName": "Standard_D11_v2",
+        "ClusterSkuTier": "Standard",
+        "ClusterSkuCapacity": 2,
+        "AvaliabilityZones":["1"],
+        "ADXTemplatePath": "../Azure/ADX/ADX.json",
+        "TableRetentionDays": "100",
+        "DatabaseNum":100
+    },
+    "Databricks": {
+        "WorkspaceName": "dbsws",
+        "WorkspaceSku": "standard",
+        "DBSTemplatePath": "../Azure/databricks/Workspace.json",
+        "DBSSecretScopeName": "secretScope"
+    }, 
+    "DatabricksJob": {
+        "DatabricksJobParamPath": "../Azure/databricks/JobSpec.cfg",
+        "DatabricksJobName": "KustoLabJob",
+        "DatabricksSparkVersion": "7.4.x-scala2.12",
+        "DatabricksNodeSpec": "Standard_DS3_v2",
+        "DatabricksMinWorkersCount": 2,
+        "DatabricksMaxWorkersCount": 3,
+        "AzureStorageCheckPointFolder": "checkpoint"
+    }, 
+    "LogAnalytics": {
+        "WorkspaceName": "-dbs-log-analytics",
+        "ServiceTier":"PerGB2018",
+        "SecretScope": "logscope",
+        "SecretScopeKeyWorkspaceId": "databrickslogworkspaceid",
+        "SecretScopeKeyWorkspaceKey": "databrickslogworkspacekey",
+        "ARMTemplatePath": "../Azure/loganalytics/LogAnalytics.json",
+        "SparkMonitoringScript": "../Azure/databricks-monitoring/spark-monitoring.sh"
+    },
+    "AzureMonitor":{
+        "ActionGroup":{
+            "Name":"-kusto-lab-action-group",
+            "ShortName":"kusto-lab",
+            "EmailGroupName":"email_alert_team",
+            "EmailRecipients":"abc@microsoft.com",
+            "AzureOpsGenieAPIUrl":"https://api.opsgenie.com/v1/json/azure",
+            "AzureOpsGenieAPIKey":"None",
+            "ActionGroupTemplatePath": "../Azure/alert/ActionGroups.json"
+        },
+        "FunctionAlert":{
+            "ErrorHandlingAlertTriggerThreshold":1, 
+            "ErrorHandlingFuncAlertTemplatePath": "../Azure/alert/ErrorHandlingFuncAlert.json",
+            "IngestionFuncNotTriggerThreshold": 1,     
+            "IngestionFuncAlertTemplatePath": "../Azure/alert/IngestionFuncAlert.json"            
+        },
+        "ADXAlert":{
+            "ADXClusterHighCPUThreshold":70,       
+            "ADXClusterHighIngestionLatencyThreshold":180,             
+            "ADXClusterHighIngestionUtilThreshold":70,
+            "ADXAlertTemplatePath": "../Azure/alert/ADXAlert.json"
+        },
+        "DatalakeAlert":{
+            "DatalakeLowIngressThreshold":1048576,
+            "DatalakeAlertTemplatePath": "../Azure/alert/DatalakeAlert.json"
+        },
+        "EventGridAlert":{       
+            "EventGridLowPublishedThreshold":0,
+            "EventGridHighDroppedThreshold":1,
+            "EventGridAlertTemplatePath": "../Azure/alert/EventGridAlert.json"
+        },
+        "Dashboard":{
+            "MainDashboardName":"-ingestion-dashboard",
+            "MainDashboardTemplatePath": "../Azure/dashboard/main_dashboard.json",
+            "DBSDashboardName":"-dbs-dashboard",
+            "DBSDashboardTemplatePath": "../Azure/dashboard/dbs_dashboard.json"
+        }
+    }
+}

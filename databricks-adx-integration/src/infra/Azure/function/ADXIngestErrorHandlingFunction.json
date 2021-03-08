@@ -1,0 +1,163 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "FunctionName": {
+            "type": "string"
+        },
+        "StorageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [ "Standard_LRS", "Standard_GRS", "Standard_RAGRS" ],
+            "metadata": {
+                "description": "Storage Account type"
+            }
+        },
+        "KeyVaultName": {
+            "type": "string"
+        },
+        "IngestionEventQueueCount": {
+            "type": "int"
+        },
+        "FunctionLocation": {
+            "type": "string"
+        },
+        "FinalFailedContainer": {
+            "type": "string"
+        },
+        "Runtime": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[concat(parameters('FunctionName'), copyIndex())]",
+            "apiVersion": "2019-06-01",
+            "location": "[parameters('FunctionLocation')]",
+            "copy": {
+                "name": "QueueCopy",
+                "count": "[parameters('IngestionEventQueueCount')]"
+            },
+            "kind": "StorageV2",
+            "sku": {
+                "name": "[parameters('StorageAccountType')]"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('FunctionName'), copyIndex(), '/default')]",
+            "copy": {
+                "name": "QueueCopy",
+                "count": "[parameters('IngestionEventQueueCount')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('FunctionName'), copyIndex()))]"
+            ],
+            "sku": {
+                "name": "[parameters('StorageAccountType')]",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "name": "[concat(parameters('FunctionName'),copyIndex())]",
+            "location": "[parameters('FunctionLocation')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('FunctionName'), copyIndex()))]"
+            ],
+            "copy": {
+                "name": "QueueCopy",
+                "count": "[parameters('IngestionEventQueueCount')]"
+            },
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic"
+            },
+            "properties": {
+                "name": "[concat(parameters('FunctionName'),copyIndex())]",
+                "computeMode": "Dynamic",
+                "reserved": true
+            }
+        },
+        {
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[concat(parameters('FunctionName'),copyIndex())]",
+            "copy": {
+                "name": "QueueCopy",
+                "count": "[parameters('IngestionEventQueueCount')]"
+            },
+            "location": "[parameters('FunctionLocation')]",
+            "kind": "functionapp,linux",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', concat(parameters('FunctionName'),copyIndex()))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('FunctionName'), copyIndex()))]",
+                "reserved": true,
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', concat(parameters('FunctionName'), copyIndex()), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', concat(parameters('FunctionName'), copyIndex())),'2019-06-01').keys[0].value, ';EndpointSuffix=core.windows.net')]"
+                        },
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(resourceId('microsoft.insights/components/', concat(parameters('FunctionName'),copyIndex())), '2015-05-01').InstrumentationKey]"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "[parameters('Runtime')]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3",
+                            "slotSetting": false
+                        },
+                        {
+                            "name": "RETRY_END_IN_FAIL_CONTAINER_NAME",
+                            "value": "[parameters('FinalFailedContainer')]",
+                            "slotSetting": false
+                        },
+                        {
+                            "name": "AZURE_STORAGE_CONNECTION_STRING",
+                            "value": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/ingestionconnectingstring/)')]"
+                        },
+                        {
+                            "name": "AzureStorageQueuesConnectionString",
+                            "value": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/ingestionconnectingstring/)')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('FunctionName'), copyIndex())]",
+            "type": "microsoft.insights/components",
+            "copy": {
+                "name": "QueueCopy",
+                "count": "[parameters('IngestionEventQueueCount')]"
+            },
+            "location": "[parameters('FunctionLocation')]",
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', concat(parameters('FunctionName'),copyIndex()))]": "Resource"
+            },
+            "properties": {
+                "ApplicationId": "[concat(parameters('FunctionName'), copyIndex())]",
+                "Request_Source": "IbizaWebAppExtensionCreate"
+            }
+        }
+    ]
+}

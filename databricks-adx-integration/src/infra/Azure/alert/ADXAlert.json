@@ -1,0 +1,159 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ResourceGroup": {
+            "type": "string"
+        },
+        "Cluster": {
+            "type": "string"
+        },
+        "ActionGroupName": {
+            "type": "string"
+        },
+        "ADXClusterHighCPUThreshold": {
+            "type": "int"
+        },
+        "ADXClusterHighIngestionLatencyThreshold": {
+            "type": "int"
+        },
+        "ADXClusterHighIngestionUtilThreshold": {
+            "type": "int"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[concat(parameters('ResourceGroup'),' - ADX Database is Down - ', parameters('Cluster'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "Database Keeps Alive Alert. When the value is 1 means the DB is still alive, and when the value is 0, the DB is down.",
+                "severity": 0,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Kusto/Clusters', parameters('Cluster'))]"
+                ],
+                "evaluationFrequency": "PT5M",
+                "windowSize": "PT5M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name": "Database Keep Alive",
+                            "metricName": "KeepAlive",
+                            "operator": "LessThan",
+                            "threshold": 0.5,
+                            "timeAggregation": "Average"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[concat(parameters('ResourceGroup'),' - High CPU Usage for ADX Cluster - ', parameters('Cluster'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "High CPU usage for ADX Cluster",
+                "severity": 2,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Kusto/Clusters', parameters('Cluster'))]"
+                ],
+                "evaluationFrequency": "PT15M",
+                "windowSize": "PT15M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name": "High CPU Usage",
+                            "metricName": "CPU",
+                            "operator": "GreaterThan",
+                            "threshold": "[parameters('ADXClusterHighCPUThreshold')]",
+                            "timeAggregation": "Average"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        },        
+        {
+            "name": "[concat(parameters('ResourceGroup'),' - High Ingestion Latency for ADX Cluster - ', parameters('Cluster'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "High Ingestion Latency for ADX Cluster.",
+                "severity": 2,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Kusto/Clusters', parameters('Cluster'))]"
+                ],
+                "evaluationFrequency": "PT15M",
+                "windowSize": "PT15M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name": "Ingestion Latency",
+                            "metricName": "IngestionLatencyInSeconds",
+                            "operator": "GreaterThanOrEqual",
+                            "threshold": "[parameters('ADXClusterHighIngestionLatencyThreshold')]",
+                            "timeAggregation": "Maximum"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[concat(parameters('ResourceGroup'),' - High Ingestion Utilization for ADX Cluster - ', parameters('Cluster'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "High Ingestion Utilization for ADX Cluster",
+                "severity": 2,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Kusto/Clusters', parameters('Cluster'))]"
+                ],
+                "evaluationFrequency": "PT15M",
+                "windowSize": "PT15M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name": "Ingestion Utilization",
+                            "metricName": "IngestionUtilization",
+                            "operator": "GreaterThan",
+                            "threshold": "[parameters('ADXClusterHighIngestionUtilThreshold')]",
+                            "timeAggregation": "Average"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        }
+    ]
+}

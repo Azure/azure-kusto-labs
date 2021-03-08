@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ResourceGroup": {
+            "type": "string"
+        },
+        "ActionGroupName": {
+            "type": "string"
+        },
+        "AzFunctionName1": {
+            "type": "string"
+        },
+        "AzFunctionName2": {
+            "type": "string"
+        },
+        "ErrorHandlingAlertTriggerThreshold": {
+            "type": "int"
+        },
+        "IngestionEventQueueCount":{
+            "type":"int"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+           "name": "[concat(parameters('ResourceGroup'), ' - ADX Ingest Retry Failed Count - ', parameters('AzFunctionName1'), copyIndex())]",
+           "type": "Microsoft.Insights/metricAlerts",
+             "copy":{
+                "name":"QueueCopy",
+                "count":"[parameters('IngestionEventQueueCount')]"
+            },          
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "[concat(parameters('ResourceGroup'), ' - ADX Ingest Retry Failed Count - ', parameters('AzFunctionName1'), copyIndex())]",
+                "severity": 3,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('microsoft.insights/components',concat(parameters('AzFunctionName1'), copyIndex()))]"
+                ],
+                "windowSize": "PT1M",
+                "evaluationFrequency": "PT1M",
+                "targetResourceType": "microsoft.insights/components",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "threshold" : "[parameters('ErrorHandlingAlertTriggerThreshold')]",
+                            "name": "Metric1",
+                            "metricNamespace": "Azure.ApplicationInsights",
+                            "metricName": "ADX_INGEST_RETRY_END_IN_FAIL_COUNT",
+                            "dimensions": [],
+                            "operator": "GreaterThanOrEqual",
+                            "timeAggregation": "Total",
+                            "criterionType": "StaticThresholdCriterion",
+                            "skipMetricValidation": true
+
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+
+        },
+
+        {
+            "name": "[concat(parameters('ResourceGroup'), ' - Data Bricks Retry Failed Count - ', parameters('AzFunctionName2'))]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "[concat(parameters('ResourceGroup'), ' - Data Bricks Retry Failed Count - ', parameters('AzFunctionName2'))]",
+                "severity": 3,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('microsoft.insights/components',concat(parameters('AzFunctionName2')))]"
+                ],
+                "windowSize": "PT1M",
+                "evaluationFrequency": "PT1M",
+                "targetResourceType": "microsoft.insights/components",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "threshold" : "[parameters('ErrorHandlingAlertTriggerThreshold')]",
+                            "name": "Metric1",
+                            "metricNamespace": "Azure.ApplicationInsights",
+                            "metricName": "DATABRICKS_SPLIT_RETRY_COUNT",
+                            "dimensions": [],
+                            "operator": "GreaterThanOrEqual",
+                            "timeAggregation": "Total",
+                            "criterionType": "StaticThresholdCriterion",
+                            "skipMetricValidation": true
+
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        }
+        
+    ]
+}

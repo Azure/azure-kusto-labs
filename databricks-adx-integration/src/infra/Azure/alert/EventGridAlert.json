@@ -1,0 +1,98 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "ResourceGroup": {
+          "type": "string"
+      },
+      "ActionGroupName": {
+          "type": "string"
+      },
+      "EventGridSystemTopicName": {
+          "type": "string"
+      },
+      "EventGridLowPublishedThreshold": {
+          "type": "int"
+      },
+      "EventGridHighDroppedThreshold": {
+          "type": "int"
+      }
+  },
+  "variables": {},
+  "resources": [
+      {
+          "name": "[concat(parameters('ResourceGroup'), ' - Low Event Grid Published Count - ', parameters('EventGridSystemTopicName'))]",
+          "type": "Microsoft.Insights/metricAlerts",
+          "location": "global",
+          "apiVersion": "2018-03-01",
+          "properties": {
+              "description": "[concat('Low Event Grid Published Count on ', parameters('EventGridSystemTopicName'))]",
+              "severity": 2,
+              "enabled": true,
+              "scopes": [
+                  "[resourceId('Microsoft.EventGrid/systemTopics', parameters('EventGridSystemTopicName'))]"
+              ],
+              "windowSize": "PT15M",
+              "evaluationFrequency": "PT15M",
+              "targetResourceType": "Microsoft.EventGrid/systemTopics",
+              "criteria": {
+                  "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                  "allOf": [
+                      {
+                          "criterionType": "StaticThresholdCriterion",
+                          "name" : "Azure low event grid pulished events",
+                          "metricName": "PublishSuccessCount",
+                          "metricNamespace": "Microsoft.EventGrid/systemTopics",
+                          "dimensions":[],
+                          "operator": "LessThanOrEqual",
+                          "threshold" : "[parameters('EventGridLowPublishedThreshold')]",
+                          "timeAggregation": "Average"
+                      }
+                  ]
+              },
+              "actions": [
+                  {
+                      "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                  }
+              ]
+          }
+      },
+      {
+        "name": "[concat(parameters('ResourceGroup'), ' - High Event Grid Dropped Count - ', parameters('EventGridSystemTopicName'))]",
+        "type": "Microsoft.Insights/metricAlerts",
+        "location": "global",
+        "apiVersion": "2018-03-01",
+        "properties": {
+            "description": "[concat('Low event grid dropped count on ', parameters('EventGridSystemTopicName'))]",
+            "severity": 2,
+            "enabled": true,
+            "scopes": [
+                "[resourceId('Microsoft.EventGrid/systemTopics', parameters('EventGridSystemTopicName'))]"
+            ],
+            "windowSize": "PT15M",
+            "evaluationFrequency": "PT15M",
+            "targetResourceType": "Microsoft.EventGrid/systemTopics",
+            "criteria": {
+                "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                "allOf": [
+                    {
+                        "criterionType": "StaticThresholdCriterion",
+                        "name" : "Azure high event grid dropped events",
+                        "metricName": "DroppedEventCount",
+                        "metricNamespace": "Microsoft.EventGrid/systemTopics",
+                        "dimensions":[],
+                        "operator": "GreaterThanOrEqual",
+                        "threshold" : "[parameters('EventGridHighDroppedThreshold')]",
+                        "timeAggregation": "Total"
+                    }
+                ]
+            },
+            "actions": [
+                {
+                    "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                }
+            ]
+        }
+    }
+  ]
+}

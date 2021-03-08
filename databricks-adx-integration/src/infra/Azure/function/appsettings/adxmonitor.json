@@ -1,0 +1,96 @@
+{
+    "$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion":"1.0.0.0",
+    "parameters":{
+        "FunctionName": {
+            "type": "string"
+        },
+        "KeyVaultName": {
+            "type": "string"
+        },
+        "IngestionStorageAccountName": {
+            "type": "string"
+        },
+        "IngestionContainerName": {
+            "type": "string"
+        },
+        "LeadClusterName":{
+            "type": "string"
+        },
+        "ClusterRegion":{
+            "type": "string"
+        },
+        "IngestionSasTokenName": {
+            "type": "string",
+            "defaultValue": "ingestiontoken"
+        },
+        "Runtime": {
+            "type": "string",
+            "defaultValue": "python"
+        },
+        "ADXMonitorIsBackOff": {
+            "type": "string",
+            "defaultValue": "true"
+        },
+        "ADXMonitorMaxBackOff": {
+            "type": "string",
+            "defaultValue": "8"
+        },
+        "ADXMonitorFunctionsWorkerProcessCnt": {
+            "type": "string",
+            "defaultValue": "10"
+        },
+        "ADXMonitorWebSiteMaxDynamicApplicationScaleOut": {
+            "type": "string",
+            "defaultValue": "20"
+        }
+    },
+    "variables": {
+      "TenantId": "[subscription().tenantId]"
+    }, 
+    "resources":[
+        {
+            "type": "Microsoft.Web/sites/config",
+            "name": "[concat(parameters('FunctionName'), '/appsettings')]",
+            "apiVersion": "2018-11-01",
+            "properties": {
+                "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('FunctionName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('FunctionName')),'2019-06-01').keys[0].value)]",
+                "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('FunctionName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('FunctionName')),'2019-06-01').keys[0].value)]",
+                "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('microsoft.insights/components/', parameters('FunctionName')), '2015-05-01').InstrumentationKey]",
+                "APPLICATIONINSIGHTS_CONNECTION_STRING": "[concat('InstrumentationKey=', reference(resourceId('microsoft.insights/components/', parameters('FunctionName')), '2015-05-01').InstrumentationKey)]",
+                "FUNCTIONS_EXTENSION_VERSION": "~3",
+                "FUNCTIONS_WORKER_RUNTIME": "[parameters('Runtime')]",
+                "APP_AAD_TENANT_ID": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/aadtenantid/)')]",
+                "APP_CLIENT_ID": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/adxclientid/)')]",
+                "APP_CLIENT_SECRETS": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/adxclientsecret/)')]",
+                "BLOB_ACCOUNT": "[parameters('IngestionStorageAccountName')]",
+                "BLOB_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('IngestionSasTokenName'),'/)')]",
+                "INGESTION_SERVER_URI": "[concat('https://ingest-', parameters('LeadClusterName'), '.', parameters('ClusterRegion'), '.kusto.windows.net:443')]",
+                "BLOB_CONTAINER_NAME": "[parameters('IngestionContainerName')]",
+                "AzureStorageQueuesConnectionString": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/ingestionconnectingstring/)')]",
+                "IS_BACK_OFF": "[parameters('ADXMonitorIsBackOff')]",
+                "MAX_BACKOFF": "[parameters('ADXMonitorMaxBackOff')]",
+                "FUNCTIONS_WORKER_PROCESS_COUNT": "[parameters('ADXMonitorFunctionsWorkerProcessCnt')]",
+                "WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT": "[parameters('ADXMonitorWebSiteMaxDynamicApplicationScaleOut')]"
+            }
+        },
+        {
+            "name": "[concat(parameters('KeyVaultName'), '/add')]",
+            "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "accessPolicies": [
+                    {
+                        "tenantId": "[variables('TenantId')]",
+                        "objectId": "[reference(concat(resourceId('Microsoft.Web/sites', concat(parameters('FunctionName'))), '/providers/Microsoft.ManagedIdentity/Identities/default'), '2015-08-31-PREVIEW').principalId]",
+                        "permissions": {
+                            "secrets": [
+                                "get"
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
