@@ -1,0 +1,66 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ResourceGroup": {
+            "type": "string"
+        },
+        "ActionGroupName": {
+            "type": "string"
+        },
+        "AzFunctionName": {
+            "type": "string"
+        },
+        "IngestionFuncNotTriggerThreshold": {
+            "type": "int"
+        },
+        "IngestionEventQueueCount":{
+            "type":"int"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[concat(parameters('ResourceGroup'), ' - ', 'Ingestion Function Does Not Trigger - ', parameters('AzFunctionName'), copyIndex())]",
+            "type": "Microsoft.Insights/metricAlerts",
+            "copy":{
+                "name":"QueueCopy",
+                "count":"[parameters('IngestionEventQueueCount')]"
+            }, 
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "Azure Function does not trigger for 30 minutes",
+                "severity": 1,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('microsoft.insights/components', concat(parameters('AzFunctionName'), copyIndex()))]"
+                ],
+                "windowSize": "PT30M",
+                "evaluationFrequency": "PT30M",
+                "targetResourceType": "microsoft.insights/components",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "criterionType": "StaticThresholdCriterion",
+                            "name" : "Azure function does not trigger",
+                            "metricName": "dataingest Successes",
+                            "metricNamespace": "Azure.ApplicationInsights",
+                            "dimensions":[],
+                            "operator": "LessThanOrEqual",
+                            "threshold" : "[parameters('IngestionFuncNotTriggerThreshold')]",
+                            "timeAggregation": "Total",
+                            "skipMetricValidation": true
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('ActionGroupName'))]"
+                    }
+                ]
+            }
+        }
+    ]
+}

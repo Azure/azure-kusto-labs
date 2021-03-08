@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "ActionGroupName": {
+          "type": "string"
+      },
+      "ActionGroupShortName": {
+         "type": "string"
+      },
+      "EmailGroupName": {
+          "type": "string"
+      },
+      "EmailRecipients": {
+          "type": "string"
+      },
+      "AzureOpsGenieAPIUrl": {
+          "type": "string"
+      },
+      "AzureOpsGenieAPIKey": {
+          "type": "string"
+      }
+  },
+  "variables": {},
+  "resources": [
+      {
+          "type": "Microsoft.Insights/actionGroups",
+          "apiVersion": "2018-03-01",
+          "name": "[parameters('ActionGroupName')]",
+          "location": "Global",
+          "properties": {
+              "groupShortName": "[parameters('ActionGroupShortName')]",
+              "enabled": true,
+              "emailReceivers": [
+                  {
+                      "name": "[parameters('EmailGroupName')]",
+                      "emailAddress": "[parameters('EmailRecipients')]"
+                  }
+              ],
+              "webhookReceivers": [
+                {
+                  "name": "opsgenie",
+                  "serviceUri": "[concat(parameters('AzureOpsGenieAPIUrl'), '?apiKey=', parameters('AzureOpsGenieAPIKey'))]"
+                }
+              ]
+          }
+      }
+  ]
+}

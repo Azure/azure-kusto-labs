@@ -1,0 +1,111 @@
+{
+    "$schema":"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion":"1.0.0.0",
+    "parameters":{
+        "FunctionName": {
+            "type": "string"
+        },
+        "KeyVaultName": {
+            "type": "string"
+        },
+        "LeadClusterName": {
+            "type": "string"
+        },
+        "AzureRegion": {
+            "type": "string"
+        },
+        "AdxClientId": {
+            "type": "string",
+            "defaultValue": "adxclientid"
+        },
+        "AdxSecret": {
+            "type": "string",
+            "defaultValue": "adxclientsecret"
+        },
+        "AzureTenantId": {
+            "type": "string",
+            "defaultValue": "aadtenantid"
+        },
+        "AzureSubscriptionId": {
+            "type": "string"
+        },
+        "TableStorageAccountName": {
+            "type": "string"
+        },
+        "TableSasTokenName": {
+            "type": "string",
+            "defaultValue": "pnametabletoken"
+        },
+        "CustomerTableName": {
+            "type": "string"
+        },
+        "ValidateStatus": {
+            "type": "string"
+        },
+        "TimeInterval": {
+            "type": "int"
+        },
+        "BackOff": {
+            "type": "int"
+        },
+        "AzureRG": {
+            "type": "string"
+        },
+        "Runtime": {
+            "type": "string",
+            "defaultValue": "python"
+        }
+    },
+    "variables": {
+      "TenantId": "[subscription().tenantId]"
+    }, 
+    "resources":[
+        {
+            "type": "Microsoft.Web/sites/config",
+            "name": "[concat(parameters('FunctionName'), '/appsettings')]",
+            "apiVersion": "2018-11-01",
+            "properties": {
+                "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('FunctionName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('FunctionName')),'2019-06-01').keys[0].value)]",
+                "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('FunctionName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('FunctionName')),'2019-06-01').keys[0].value)]",
+                "APPINSIGHTS_INSTRUMENTATIONKEY": "[concat('InstrumentationKey=', reference(resourceId('microsoft.insights/components/', parameters('FunctionName')), '2015-05-01').InstrumentationKey)]",
+                "APPLICATIONINSIGHTS_CONNECTION_STRING": "[concat('InstrumentationKey=', reference(resourceId('microsoft.insights/components/', parameters('FunctionName')), '2015-05-01').InstrumentationKey)]",
+                "FUNCTIONS_EXTENSION_VERSION": "~3",
+                "FUNCTIONS_WORKER_RUNTIME": "[parameters('Runtime')]",
+                "LOG_MESSAGE_HEADER": "GETCUSTOMER-METADATA",
+                "CLUSTER_NAME": "[parameters('LeadClusterName')]",
+                "CLUSTER": "[concat('https://', parameters('LeadClusterName'), '.', parameters('AzureRegion'), '.kusto.windows.net:443')]",
+                "CLIENT_ID": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('AdxClientId'), '/)')]",
+                "CLIENT_SECRET": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('AdxSecret'), '/)')]",
+                "TENANT_ID": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('AzureTenantId'), '/)')]",
+                "SUBSCRIPTION_ID": "[parameters('AzureSubscriptionId')]",
+                "STORAGE_TABLE_ACCOUNT": "[parameters('TableStorageAccountName')]",
+                "STORAGE_TABLE_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('TableSasTokenName'), '/)')]",
+                "CUSTOMER_TABLE_NAME": "[parameters('CustomerTableName')]",
+                "TABLE_QUERY": ".show tables",
+                "CLEANUP_QUERY_FORMAT_STR": "ingest_time lt datetime'{}'",
+                "VALIDATE_STATUS": "[parameters('ValidateStatus')]",
+                "TIME_INTERVAL": "[parameters('TimeInterval')]",
+                "BACK_OFF": "[parameters('BackOff')]",
+                "RESOURCE_GROUP": "[parameters('AzureRG')]"
+            }
+        },
+        {
+            "name": "[concat(parameters('KeyVaultName'), '/add')]",
+            "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "apiVersion": "2019-09-01",
+            "properties": {
+                "accessPolicies": [
+                    {
+                        "tenantId": "[variables('TenantId')]",
+                        "objectId": "[reference(concat(resourceId('Microsoft.Web/sites', concat(parameters('FunctionName'))), '/providers/Microsoft.ManagedIdentity/Identities/default'), '2015-08-31-PREVIEW').principalId]",
+                        "permissions": {
+                            "secrets": [
+                                "get"
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
