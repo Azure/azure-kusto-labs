@@ -25,7 +25,7 @@ This lab covers end to end integration of Cosmos DB with Azure Data Explorer usi
 
 ### 4. Databricks integration with Azure Data Explorer
 #### [4.1 Databricks integration with Azure Data Explorer using Azure Functions](databricks-adx-integration/README.md)
-This lab covers end to end product telemtry architecture from various sources loading terabyes of security logs into Databricks which in turn map it to the Azure Data Explorer service for real time analysis providing moitoring and errors retry mechanisms.
+This lab covers massive telemetry analytics architecture for ingestion, processing and analytics over 100s of TBs of data leveraging Azure Data Explorer, Databricks and Azure functions for real time analytics, and provides mechanisms for monitoring and errors retries. This is a proven architecture as its been recently implemented with one of our large enterprise customer.
 
 ## Contributing
 
