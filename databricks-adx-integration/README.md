@@ -1,9 +1,9 @@
 # Big data analytics using Azure Data Explorer and Azure Databricks 
 
-### _A production-proven architecture for analyzing dozens of terabytes logs every day_ 
+### _A production-proven architecture for analyzing hundreds of terabytes of logs every day_ 
 
 
-_This Lab will work through an architecture designed to analyze dozens of terabytes of security logs in production every day. We combine Azure Databricks and Azure Data Explorer; both have good names for efficiently processing and analyzing a massive amount of data; to implement the solution. You will learn about how to implement the architecture using provided scripts and sample codes. The solution also includes these production features: Status monitor, Exactly-once ingestion checks, Custom error-retry, and  Performance metrics alerts. After finishing the Lab, users will be able to build systems that can handle up to hundreds of terabytes of data with a slight configuration change. This Lab is based on a real-world example of live production systems customers are using today._ 
+_This Lab will work through an architecture designed to analyze hundreds of terabytes of security logs in production every day. It is a combination of Azure Databricks and Azure Data Explorer; both products well-known for efficiently processing and analyzing massive amounts of data; to implement the solution. You will learn about how to implement the architecture using provided scripts and sample codes. The solution also includes these production features: Status monitor, Exactly-once ingestion checks, Custom error-retry, and  Performance metrics alerts. After finishing the Lab, users will be able to build systems that can handle up to hundreds of terabytes of data with a slight configuration change. This Lab is based on a real-world example of live production systems customers are using today._ 
 
 
 
