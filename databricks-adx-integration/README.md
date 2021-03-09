@@ -103,6 +103,6 @@ az extension add --name databricks
 
 ---
 
-_Thanks go to many people who help review and refine the content, also thinks to the following wonderful people who contribute to the code and scripts: [Bo Wang](https://github.com/Nick287), [Hong Bo](https://github.com/buhongw7583c), [Ching Chen](https://github.com/chingzchen), 
+_Thanks go to many people who help review and refine the content, also thanks to the following wonderful people who contribute to the code and scripts: [Bo Wang](https://github.com/Nick287), [Hong Bo](https://github.com/buhongw7583c), [Ching Chen](https://github.com/chingzchen), 
 [Sinny Pan](https://github.com/sinnypan), 
 [Yuheng Ding](https://github.com/andrewdyhhub)_
