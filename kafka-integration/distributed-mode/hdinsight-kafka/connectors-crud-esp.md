@@ -280,7 +280,7 @@ What we are doing above is taking the base Docker image from the ConfluentInc re
 
 Replace akhanolkar with your docker UID and run the below-
 ```
-sudo docker build -t akhanolkar/kafka-connect-kusto-sink:1.0.1v1 -f connect-worker-image-builder.dockerfile .
+sudo docker build -t akhanolkar/kafka-connect-kusto-sink:2.0.0v1 -f connect-worker-image-builder.dockerfile .
 ```
 
 List the images created-
@@ -292,19 +292,19 @@ Author's output:
 ```
 indra:kafka-confluentcloud-hol akhanolk$ docker image list
 REPOSITORY                                    TAG                 IMAGE ID            CREATED             SIZE
-akhanolkar/kafka-connect-kusto-sink           1.0.1v1             1870ace80b29        23 seconds ago      1.24GB
+akhanolkar/kafka-connect-kusto-sink           2.0.0v1             1870ace80b29        23 seconds ago      1.24GB
 ```
 
 ## 6. Push the image to Docker Hub
 
 Run the command below, replacing akhanolkar with your Docker username-
 ```
-docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
+docker push akhanolkar/kafka-connect-kusto-sink:2.0.0v1
 ```
 
 Author's output-
 ```
-indra:kafka-confluentcloud-hol akhanolk$ docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
+indra:kafka-confluentcloud-hol akhanolk$ docker push akhanolkar/kafka-connect-kusto-sink:2.0.0v1
 The push refers to repository [docker.io/akhanolkar/kafka-connect-kusto-sink]
 958960eb74db: Pushed 
 c20428756bff: Layer already exists 
@@ -858,7 +858,7 @@ Controlled By:  ReplicaSet/cp-kafka-connect-1598109267-76465bff44
 Containers:
   cp-kafka-connect-server:
     Container ID:   docker://f574c04da945ef986296a7ff341c277be9799e61d1c8702096d7ed792e8beb30
-    Image:          akhanolkar/kafka-connect-kusto-sink:1.0.1v3
+    Image:          akhanolkar/kafka-connect-kusto-sink:2.0.0v3
     Image ID:       docker-pullable://akhanolkar/kafka-connect-kusto-sink@sha256:65b7c05d5e795c7491d52a5e12636faa1f8f9b4a460a24ec081e6bf4047d405d
     Port:           8083/TCP
     Host Port:      0/TCP
@@ -908,8 +908,8 @@ Events:
   Type    Reason     Age   From                                        Message
   ----    ------     ----  ----                                        -------
   Normal  Scheduled  43m   default-scheduler                           Successfully assigned default/cp-kafka-connect-1598109267-76465bff44-7s9vs to aks-agentpool-23362501-vmss000005
-  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
-  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
+  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:2.0.0v3"
+  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:2.0.0v3"
   Normal  Created    43m   kubelet, aks-agentpool-23362501-vmss000005  Created container cp-kafka-connect-server
   Normal  Started    43m   kubelet, aks-agentpool-23362501-vmss000005  Started container cp-kafka-connect-server
 ```
@@ -931,7 +931,7 @@ These are specific to the service ID from "kubectl get svc".  If you uninstall a
 You will need the service ID from the command "kubectl get svc".  Substitute it in the below command.
 
 ```
-sudo kubectl port-forward svc/YOIUR_SERVICE_ID 803:8083
+sudo kubectl port-forward svc/YOUR_SERVICE_ID 803:8083
 ```
 
 Author's output-
@@ -1094,7 +1094,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br>
 
 <br><br><hr>
-This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
+This concludes this module. You can now proceed to the [next and last module](../../confluent-cloud/6-run-e2e.md), where we will run an end to end test.
 
 ## 12. Validate data delivery in Azure Data Explorer
 
