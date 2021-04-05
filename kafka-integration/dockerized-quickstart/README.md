@@ -184,7 +184,7 @@ services:
     build:
       context: ./connector
       args:
-        KUSTO_KAFKA_SINK_VERSION: 1.0.1
+        KUSTO_KAFKA_SINK_VERSION: 2.0.0
     ports:
       - 8083:8083
     links:

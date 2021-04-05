@@ -189,7 +189,7 @@ cd ~/kafka-hdi-hol
 ```
 2.  Download the jar
 ```
-wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v1.0.1/kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar 
+wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v2.0.0/kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar 
 ```
 
 ### 5.2. Review directory contents so far
@@ -201,7 +201,7 @@ tree
 
 ├── hdi-esp-jaas.conf
 ├── kafka-client-hdi.keytab
-├── kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+├── kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar
 └── krb5.conf
 ```
 
@@ -254,7 +254,7 @@ vi connect-worker-image-builder.dockerfile
 Paste this into the file and save - be sure to edit it your UPN and domain realm.
 ```
 FROM confluentinc/cp-kafka-connect:5.5.0
-COPY kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar /usr/share/java
+COPY kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar /usr/share/java
 COPY krb5.conf /etc/krb5.conf
 COPY hdi-esp-jaas.conf /etc/hdi-esp-jaas.conf 
 COPY kafka-client-hdi.keytab /etc/security/keytabs/kafka-client-hdi.keytab
@@ -317,7 +317,7 @@ bc537b2bbfd6: Layer already exists
 0818dd46b53a: Layer already exists 
 19e377f490b1: Layer already exists 
 a8ff4211732a: Layer already exists 
-1.0.1v1: digest: sha256:ae32c964bf277298b1541f52d956c6e6a5dc1263262178f8a9950e3244eacd71 size: 2639
+2.0.0v1: digest: sha256:ae32c964bf277298b1541f52d956c6e6a5dc1263262178f8a9950e3244eacd71 size: 2639
 ```
 
 You should be able to see the image in Docker Hub.
@@ -364,7 +364,7 @@ replicaCount: 6
 Your docker ID, instead of akhanolkar
 ```
 image: akhanolkar/kafka-connect-kusto-sink
-imageTag: 1.0.1v1
+imageTag: 2.0.0v1
 ```
 3. Kafka bootstrap servers<br>
 Replace "yourBootStrapServerList" with your HDInsight Kafka bootstrap server loadbalancer FQDN:Port
@@ -404,7 +404,7 @@ replicaCount: 6
 #imageTag: 5.5.0
 
 image: akhanolkar/kafka-connect-kusto-sink-hdi-esp
-imageTag: 1.0.1v10
+imageTag: 2.0.0v10
 
 
 ## Specify a imagePullPolicy
@@ -718,7 +718,7 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-jms
 drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-s3
 drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-storage-common
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 kafka-serde-tools
--rw-r--r-- 1 root root 10797367 Aug  4 13:24 kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+-rw-r--r-- 1 root root 10797367 Aug  4 13:24 kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar
 drwxr-xr-x 2 root root     4096 Apr 18 17:23 monitoring-interceptors
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 rest-utils
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
