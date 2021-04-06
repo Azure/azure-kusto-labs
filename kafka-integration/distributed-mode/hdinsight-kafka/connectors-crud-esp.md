@@ -189,7 +189,7 @@ cd ~/kafka-hdi-hol
 ```
 2.  Download the jar
 ```
-wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v1.0.1/kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar 
+wget https://github.com/Azure/kafka-sink-azure-kusto/releases/download/v2.0.0/kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar 
 ```
 
 ### 5.2. Review directory contents so far
@@ -201,7 +201,7 @@ tree
 
 ├── hdi-esp-jaas.conf
 ├── kafka-client-hdi.keytab
-├── kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+├── kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar
 └── krb5.conf
 ```
 
@@ -254,7 +254,7 @@ vi connect-worker-image-builder.dockerfile
 Paste this into the file and save - be sure to edit it your UPN and domain realm.
 ```
 FROM confluentinc/cp-kafka-connect:5.5.0
-COPY kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar /usr/share/java
+COPY kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar /usr/share/java
 COPY krb5.conf /etc/krb5.conf
 COPY hdi-esp-jaas.conf /etc/hdi-esp-jaas.conf 
 COPY kafka-client-hdi.keytab /etc/security/keytabs/kafka-client-hdi.keytab
@@ -280,7 +280,7 @@ What we are doing above is taking the base Docker image from the ConfluentInc re
 
 Replace akhanolkar with your docker UID and run the below-
 ```
-sudo docker build -t akhanolkar/kafka-connect-kusto-sink:1.0.1v1 -f connect-worker-image-builder.dockerfile .
+sudo docker build -t akhanolkar/kafka-connect-kusto-sink:2.0.0v1 -f connect-worker-image-builder.dockerfile .
 ```
 
 List the images created-
@@ -292,19 +292,19 @@ Author's output:
 ```
 indra:kafka-confluentcloud-hol akhanolk$ docker image list
 REPOSITORY                                    TAG                 IMAGE ID            CREATED             SIZE
-akhanolkar/kafka-connect-kusto-sink           1.0.1v1             1870ace80b29        23 seconds ago      1.24GB
+akhanolkar/kafka-connect-kusto-sink           2.0.0v1             1870ace80b29        23 seconds ago      1.24GB
 ```
 
 ## 6. Push the image to Docker Hub
 
 Run the command below, replacing akhanolkar with your Docker username-
 ```
-docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
+docker push akhanolkar/kafka-connect-kusto-sink:2.0.0v1
 ```
 
 Author's output-
 ```
-indra:kafka-confluentcloud-hol akhanolk$ docker push akhanolkar/kafka-connect-kusto-sink:1.0.1v1
+indra:kafka-confluentcloud-hol akhanolk$ docker push akhanolkar/kafka-connect-kusto-sink:2.0.0v1
 The push refers to repository [docker.io/akhanolkar/kafka-connect-kusto-sink]
 958960eb74db: Pushed 
 c20428756bff: Layer already exists 
@@ -317,7 +317,7 @@ bc537b2bbfd6: Layer already exists
 0818dd46b53a: Layer already exists 
 19e377f490b1: Layer already exists 
 a8ff4211732a: Layer already exists 
-1.0.1v1: digest: sha256:ae32c964bf277298b1541f52d956c6e6a5dc1263262178f8a9950e3244eacd71 size: 2639
+2.0.0v1: digest: sha256:ae32c964bf277298b1541f52d956c6e6a5dc1263262178f8a9950e3244eacd71 size: 2639
 ```
 
 You should be able to see the image in Docker Hub.
@@ -364,7 +364,7 @@ replicaCount: 6
 Your docker ID, instead of akhanolkar
 ```
 image: akhanolkar/kafka-connect-kusto-sink
-imageTag: 1.0.1v1
+imageTag: 2.0.0v1
 ```
 3. Kafka bootstrap servers<br>
 Replace "yourBootStrapServerList" with your HDInsight Kafka bootstrap server loadbalancer FQDN:Port
@@ -404,7 +404,7 @@ replicaCount: 6
 #imageTag: 5.5.0
 
 image: akhanolkar/kafka-connect-kusto-sink-hdi-esp
-imageTag: 1.0.1v10
+imageTag: 2.0.0v10
 
 
 ## Specify a imagePullPolicy
@@ -718,7 +718,7 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-jms
 drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-s3
 drwxr-xr-x 2 root root     4096 Apr 18 17:24 kafka-connect-storage-common
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 kafka-serde-tools
--rw-r--r-- 1 root root 10797367 Aug  4 13:24 kafka-sink-azure-kusto-1.0.1-jar-with-dependencies.jar
+-rw-r--r-- 1 root root 10797367 Aug  4 13:24 kafka-sink-azure-kusto-2.0.0-jar-with-dependencies.jar
 drwxr-xr-x 2 root root     4096 Apr 18 17:23 monitoring-interceptors
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 rest-utils
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
@@ -858,7 +858,7 @@ Controlled By:  ReplicaSet/cp-kafka-connect-1598109267-76465bff44
 Containers:
   cp-kafka-connect-server:
     Container ID:   docker://f574c04da945ef986296a7ff341c277be9799e61d1c8702096d7ed792e8beb30
-    Image:          akhanolkar/kafka-connect-kusto-sink:1.0.1v3
+    Image:          akhanolkar/kafka-connect-kusto-sink:2.0.0v3
     Image ID:       docker-pullable://akhanolkar/kafka-connect-kusto-sink@sha256:65b7c05d5e795c7491d52a5e12636faa1f8f9b4a460a24ec081e6bf4047d405d
     Port:           8083/TCP
     Host Port:      0/TCP
@@ -908,8 +908,8 @@ Events:
   Type    Reason     Age   From                                        Message
   ----    ------     ----  ----                                        -------
   Normal  Scheduled  43m   default-scheduler                           Successfully assigned default/cp-kafka-connect-1598109267-76465bff44-7s9vs to aks-agentpool-23362501-vmss000005
-  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
-  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:1.0.1v3"
+  Normal  Pulling    43m   kubelet, aks-agentpool-23362501-vmss000005  Pulling image "akhanolkar/kafka-connect-kusto-sink:2.0.0v3"
+  Normal  Pulled     43m   kubelet, aks-agentpool-23362501-vmss000005  Successfully pulled image "akhanolkar/kafka-connect-kusto-sink:2.0.0v3"
   Normal  Created    43m   kubelet, aks-agentpool-23362501-vmss000005  Created container cp-kafka-connect-server
   Normal  Started    43m   kubelet, aks-agentpool-23362501-vmss000005  Started container cp-kafka-connect-server
 ```
@@ -931,7 +931,7 @@ These are specific to the service ID from "kubectl get svc".  If you uninstall a
 You will need the service ID from the command "kubectl get svc".  Substitute it in the below command.
 
 ```
-sudo kubectl port-forward svc/YOIUR_SERVICE_ID 803:8083
+sudo kubectl port-forward svc/YOUR_SERVICE_ID 803:8083
 ```
 
 Author's output-
@@ -1094,7 +1094,7 @@ IDEALLY, you want as many tasks as Kafka topic partitions.
 <br>
 
 <br><br><hr>
-This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
+This concludes this module. You can now proceed to the [next and last module](../../confluent-cloud/6-run-e2e.md), where we will run an end to end test.
 
 ## 12. Validate data delivery in Azure Data Explorer
 
