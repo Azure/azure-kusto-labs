@@ -301,6 +301,11 @@ az kusto cluster delete -n <cluster name> -g <resource group name>
 az kusto database delete -n <database name> --cluster-name <cluster name> -g <resource group name>
 ```
 
+If you want to only delete the connector
+```azurecli
+Curl - X DELETE http://localhost:8083/connectors/connector
+```
+
 <hr>
 
 This concludes the hands-on lab.  
