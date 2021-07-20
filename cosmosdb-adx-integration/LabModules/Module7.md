@@ -40,27 +40,24 @@ You can also use Kusto explorer which is a desktop edition similar to the Web UI
 ### Glimpse of advanced native features like time series analysis, forecasting and anomaly detection
 - This query forecasts the next week sales using time series decomposition on historical data
     ```
-    let min_t = datetime(2020-06-01);
-    let max_t = datetime(2020-07-01);
-    let dt = 1d;
-    let horizon=7d;
-    NrtaLabTable
-    | project Timestamp, Action 
-    | where Timestamp between(min_t .. max_t)
-    | where Action == "Purchased"
-    | make-series Purchases=count() on Timestamp from min_t to max_t+horizon step dt  
-    | extend forecast = series_decompose_forecast(Purchases, toint(horizon/dt))
-    | render timechart with(title='forecasting the next week sales by Time Series Decmposition')
+   let min_t = datetime(2020-06-01);
+   let max_t = datetime(2020-07-01);
+   let dt = 1d;
+   let horizon=7d;
+   NrtaLabTable
+   | project Timestamp, Action 
+   | where Action == "Purchased"
+   | make-series Purchases=count() on Timestamp from min_t to max_t+horizon step dt  
+   | extend forecast = series_decompose_forecast(Purchases, toint(horizon/dt))
+   | render timechart with(title='forecasting the next week sales by Time Series Decmposition')
     ```
 - This query finds anomalies in the purchase of jackets for a specific duration
     ```
-    NrtaLabTable
-    | where Timestamp between(datetime(2020-05-01) .. datetime(2020-06-15))
-    | where Action == "Purchased"
-    | where Item has 'Jacket'
-    | make-series Purchases=count() on Timestamp in range(datetime(2020-05-01), datetime(2020-06-15),7d)  
-    | extend anomalies = series_decompose_anomalies(Purchases, 2)
-    | render anomalychart with(anomalycolumns=anomalies, title='Anomalies in purchase of jackets')
+   NrtaLabTable
+   | make-series Purchases=avg(Price) on Timestamp from datetime(2020-05-01) to datetime(2020-06-15) step 1d by Action
+   | where Action == "Purchased"
+   | extend anomalies = series_decompose_anomalies(Purchases, 2)
+   | render anomalychart with(anomalycolumns=anomalies, title='Anomalies in purchase of items')
     ```
   
   ### Build a dashboard using ADX Dashboards with above mentioned queries
