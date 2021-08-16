@@ -54,7 +54,7 @@ For more details on ADX, refer to this [documentation](https://azure.microsoft.c
 
 [Module 4 - Create and Host Azure function to be triggered by Cosmos DB Change feed](LabModules/Module4.md)
 
-[Module 5 - Create and Configure Azure Data Explorer cluster](LabModules/Module5.md)
+[Module 5 - Create Azure Data Explorer cluster, ingest and transform data](LabModules/Module5.md)
 
 [Module 6 - Set up data simulator to feed data into Cosmos DB](LabModules/Module6.md)
 
