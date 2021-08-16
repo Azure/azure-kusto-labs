@@ -13,55 +13,43 @@ You can also use Kusto explorer which is a desktop edition similar to the Web UI
 3. Sample KQL queries 
    - This query will select top 5 records in descending order by Timestamp 
      ```
-     NrtaLabTable
+     TransformedNrtaLabTable
      | take 5 
      | order by Timestamp desc  
      ```
      You can also write queries using T-SQL e.g. above query is same as following T-SQL query -
      ```
-     select top(5) * from NrtaLabTable order by Timestamp desc
+     select top(5) * from TransformedNrtaLabTable order by Timestamp desc
      ```
      
    - Aggregations on fly work at a lightning speed in ADX e.g. 
      ```
-      NrtaLabTable 
-      | where Item has 'Jacket' and Action == 'Purchased'
-      | summarize TotalJacketSales = count() by Item
+      TransformedNrtaLabTable 
+      | where Action == 'Purchased'
+      | summarize TotalSales = count() by Category
       | render piechart 
      ```
      
-    - Above example with different view to find best selling product 
+    - Aggregate price by 5mins resolution for each brand
       ```
-      NrtaLabTable 
-      | where Action == 'Purchased'
-      | summarize TotalSales = count() by Item
-      | render columnchart  
+      TransformedNrtaLabTable
+      | summarize TotalPrice=sum(Price) by bin(Timestamp,5m), Brand
+      | render timechart  
       ```
-### Glimpse of advanced native features like time series analysis, forecasting and anomaly detection
+### Glimpse of advanced native features like time series analysis and forecasting 
 - This query forecasts the next week sales using time series decomposition on historical data
     ```
-    let min_t = datetime(2020-06-01);
-    let max_t = datetime(2020-07-01);
-    let dt = 1d;
-    let horizon=7d;
-    NrtaLabTable
-    | project Timestamp, Action 
-    | where Timestamp between(min_t .. max_t)
-    | where Action == "Purchased"
-    | make-series Purchases=count() on Timestamp from min_t to max_t+horizon step dt  
-    | extend forecast = series_decompose_forecast(Purchases, toint(horizon/dt))
-    | render timechart with(title='forecasting the next week sales by Time Series Decmposition')
+      //Forecasting next week sales 
+      let starttime = datetime(2021-08-08);
+      let dt = 2h;
+      let horizon=7d;
+      TransformedNrtaLabTable
+      | where Action == "Purchased"
+      | make-series cnt=count() on Timestamp from starttime to now()+horizon step dt by Brand
+      | extend forecast = series_decompose_forecast(cnt, toint(horizon/dt), tolong(24h/dt))
+      | render timechart 
     ```
-- This query finds anomalies in the purchase of jackets for a specific duration
-    ```
-    NrtaLabTable
-    | where Timestamp between(datetime(2020-05-01) .. datetime(2020-06-15))
-    | where Action == "Purchased"
-    | where Item has 'Jacket'
-    | make-series Purchases=count() on Timestamp in range(datetime(2020-05-01), datetime(2020-06-15),7d)  
-    | extend anomalies = series_decompose_anomalies(Purchases, 2)
-    | render anomalychart with(anomalycolumns=anomalies, title='Anomalies in purchase of jackets')
-    ```
+
   
   ### Build a dashboard using ADX Dashboards with above mentioned queries
   1. Click on 'Share' option on right menu of ADX Web UI, select 'Pin to Dashboard' option
