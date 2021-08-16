@@ -1,12 +1,24 @@
 ## Run data simulator to insert data into Cosmos DB
 In this module, you will download the data simulator console app and run it to simulate e-commerce website data e.g. user viewing items, user adding items to their shopping cart etc. Here is an example of one record of sample data -
   ```
-  {      
-    "ShoppingCartID": 2956,
-    "Action": "Purchased",
-    "Item": "Unisex Puffy Jacket",
-    "Price": 81.99
-  }
+  "ShoppingCartID": 6495,
+  "Action": Purchased,
+  "Item": [
+    {
+      "Category": "Shorts",
+      "Brand": "Nike",
+      "Price": "29",
+      "Item": "Sports shorts"
+    },
+    {
+      "Category": "Shorts",
+      "Brand": "Nike",
+      "Price": "25",
+      "Item": "Running shorts"
+    }
+  ],
+  "UniqueID": f3db38da-be32-425d-8ab6-fd3e37ca3915,
+  "Timestamp": 2021-08-11T08:43:25Z,
   ```
 
 1. Download the data simulator console app from [here](../src/NrtaDataGenerator.zip)
