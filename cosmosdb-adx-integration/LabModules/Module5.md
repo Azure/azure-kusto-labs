@@ -60,13 +60,13 @@ Alternatively, you can use [one-click ingestion](https://docs.microsoft.com/en-u
 .alter table NrtaLabTable policy streamingingestion enable
 ```
 
-12. Now create data connection with the ingestion service, which is event hub in this case
+13. Now create data connection with the ingestion service, which is event hub in this case
 ![](../images/ADX8.png)
 <br/>
 
-13. Select Event Hub
+14. Select Event Hub
 ![](../images/ADX9.png)
 <br/>
 
-14. Fill in the details as shown below and thats all about ADX cluster configurations.
+15. Fill in the details as shown below and thats all about ADX cluster configurations.
 ![](../images/ADX10.png)
