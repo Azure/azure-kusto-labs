@@ -15,6 +15,7 @@ services:
     environment:
       - ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+
   kusto-connect:
     build:
       context: ./connector
@@ -27,11 +28,18 @@ services:
     depends_on:
       - kafka
     environment:
-      - BOOTSTRAP_SERVERS=kafka:9092
-      - GROUP_ID=adx
-      - CONFIG_STORAGE_TOPIC=my_connect_configs
-      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-      - STATUS_STORAGE_TOPIC=my_connect_statuses
+      - CONNECT_BOOTSTRAP_SERVERS=kafka:9092
+      - CONNECT_GROUP_ID=adx
+      - CONNECT_CONFIG_STORAGE_TOPIC=my_connect_configs
+      - CONNECT_OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - CONNECT_STATUS_STORAGE_TOPIC=my_connect_statuses
+      - CONNECT_KEY_CONVERTER=org.apache.kafka.connect.storage.StringConverter
+      - CONNECT_VALUE_CONVERTER=org.apache.kafka.connect.storage.StringConverter
+      - CONNECT_REST_ADVERTISED_HOST_NAME=localhost
+      - CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=1
+      - CONNECT_OFFSET_FLUSH_INTERVAL_MS=10000
+      - CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=1
+      - CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=1
   events-producer:
     build:
       context: ./storm-events-producer
@@ -41,5 +49,5 @@ services:
       - kafka
     environment:
       - KAFKA_BOOTSTRAP_SERVER=kafka:9092
-      - KAFKA_TOPIC=storm-events
+      - KAFKA_TOPIC=multijson-events
       - SOURCE_FILE=StormEvents.csv
