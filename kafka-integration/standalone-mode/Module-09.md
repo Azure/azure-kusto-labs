@@ -260,25 +260,25 @@ Paste the following and replace with your details.
 ```
 name=KustoSinkConnector 
 connector.class=com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector
-kusto.sink.flush_interval_ms=300000
+flush.interval.ms=300000
+flush.size.bytes=1000
 tasks.max=2
 topics=crimes_topic
-kusto.tables.topics_mapping=[{'topic': 'crimes_topic','db': 'crimes_db', 'table': 'crimes_curated_kafka','format': 'json', 'mapping':'crimes_curated_kafka_mapping'}]
-kusto.auth.authority=<yourAADTenantID>
+kusto.tables.topics.mapping=[{'topic': 'crimes_topic','db': 'crimes_db', 'table': 'crimes_curated_kafka','format': 'json', 'mapping':'crimes_curated_kafka_mapping'}]
 kusto.ingestion.url=<yourADXClusterIngestURL>
 kusto.query.url=<yourADXClusterQueryURL>
-kusto.auth.appid=<yourAADSPNApplicationID>
-kusto.auth.appkey=<yourAADSPNSecret>
-kusto.sink.tempdir=/var/tmp/
-kusto.sink.flush_size=1000
+aad.auth.authority=<yourAADTenantID>
+aad.auth.appid=<yourAADSPNApplicationID>
+aad.auth.appkey=<yourAADSPNSecret>
+tempdir.path=/var/tmp/
 value.converter=org.apache.kafka.connect.storage.StringConverter
 key.converter=org.apache.kafka.connect.storage.StringConverter
 ```
 
 **Knobs for performance tuning are:**
-- kusto.sink.flush_interval_ms
+- flush.interval.ms
 - tasks.max
-- kusto.sink.flush_size
+- flush.size.bytes
 - Proper sizing of your ADX cluster
 - And you need to set the streaming ingestion policy on (we did this already)
 
