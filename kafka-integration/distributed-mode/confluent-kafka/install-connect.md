@@ -163,17 +163,17 @@ We will use Postman instead.
 ```
 name=KustoSinkConnector 
 connector.class=com.microsoft.azure.kusto.kafka.connect.sink.KustoSinkConnector
-kusto.sink.flush_interval_ms=300000
+flush.interval.ms=300000
+flush.size.bytes=1000
 tasks.max=6
 topics=crimes-topic
-kusto.tables.topics_mapping=[{'topic': 'crimes_topic','db': 'crimes_db', 'table': 'crimes_curated_kafka_confluent','format': 'json', 'mapping':'crimes_curated_kafka_confluent_mapping'}]
-kusto.auth.authority=<yourTenantID>
+kusto.tables.topics.mapping=[{'topic': 'crimes_topic','db': 'crimes_db', 'table': 'crimes_curated_kafka_confluent','format': 'json', 'mapping':'crimes_curated_kafka_confluent_mapping'}]
 kusto.ingestion.url=<yourADXIngestURL>
 kusto.query.url=<yourADXQueryURL>
-kusto.auth.appid=<yourAADServicePrincipalAppID>
-kusto.auth.appkey=<yourAADServicePrincipalSecret>
-kusto.sink.tempdir=/var/tmp/
-kusto.sink.flush_size=1000
+aad.auth.authority=<yourTenantID>
+aad.auth.appid=<yourAADServicePrincipalAppID>
+aad.auth.appkey=<yourAADServicePrincipalSecret>
+tempdir.path=/var/tmp/
 value.converter=org.apache.kafka.connect.storage.StringConverter
 key.converter=org.apache.kafka.connect.storage.StringConverter
 ```
