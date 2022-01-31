@@ -49,5 +49,5 @@ services:
       - kafka
     environment:
       - KAFKA_BOOTSTRAP_SERVER=kafka:9092
-      - KAFKA_TOPIC=multijson-events
+      - KAFKA_TOPIC=storm-events
       - SOURCE_FILE=StormEvents.csv
