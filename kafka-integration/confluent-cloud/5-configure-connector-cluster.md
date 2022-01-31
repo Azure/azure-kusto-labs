@@ -36,7 +36,7 @@ The following section strives to explain further, pictorially, what we are doing
 
 1.  Create a Docker Hub account if it does not exist
 2.  Install Docker desktop on your machine
-3.  Build a docker image for the KafkaConnect worker that include any connect worker level configurations, and the ADX connector jar
+3.  Build a docker image for the KafkaConnect worker that includes any connect worker level configurations, and the ADX connector jar
 4.  Push the image to the Docker hub
 <br>
 
@@ -94,7 +94,7 @@ This is what we have at the end of this module, a Kusto sink connector cluster w
 
 ## 1.  Create a Docker Hub account
 
-Follow the instructions [here](https://hub.docker.com/signup) and create an account.  Note down your user ID and password.
+Follow the instructions [here](https://hub.docker.com/signup) and create an account. Note down your user ID and password.
 
 ## 2.  Install Docker desktop on your machine and launch it
 
@@ -230,7 +230,7 @@ replicaCount: 6
 ```
 
 2. Image<br>
-Your docker ID, inplace of akhanolkar
+Your docker ID, instead of akhanolkar
 ```
 image: akhanolkar/kafka-connect-kusto-sink
 imageTag: 2.0.0v1
@@ -276,7 +276,7 @@ This will launch the Azure portal, sign-in dialog.  Sign-in.<br>
 az account set --subscription YOUR_SUBSCRIPTION_GUID
 ```
 
-3.  Get the AKS cluster admin acccess with this command<br>
+3.  Get the AKS cluster admin access with this command<br>
 If you have named your cluster differently, be sure to replace accordingly-
 ```
 az aks get-credentials --resource-group kafka-confluentcloud-lab-rg --name connector-k8s-cluster --admin
@@ -368,7 +368,7 @@ root        186      0  0 15:15 pts/0    00:00:00 bash
 root        220    186  0 15:40 pts/0    00:00:00 ps -ef
 ```
 
-#### 6.5.2.  Check /usr/share/jave to see if the ADX/Kusto jar is there
+#### 6.5.2.  Check /usr/share/java to see if the ADX/Kusto jar is there
 
 Command-
 ```
@@ -399,7 +399,7 @@ drwxr-xr-x 2 root root     4096 Apr 18 17:22 rest-utils
 drwxr-xr-x 2 root root     4096 Apr 18 17:22 schema-registry
 ```
 
-### 6.5.3.  Check if the environment conigs we applied in the docker file are available..
+### 6.5.3.  Check if the environment configs we applied in the docker file are available.
 Run the command-
 ```
 printenv | sort
@@ -481,12 +481,12 @@ CONNECT_SECURITY_PROTOCOL=SASL_SSL
 CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https
 ```
 
-Now - exit root..
+Now - exit root.
 ```
 exit
 ```
-### 6.5.4.  Lets check logs to see if there are any errors
-Lets review the logs of one of the pods from 6.3
+### 6.5.4.  Check logs to see if there are any errors
+Let's review the logs of one of the pods from 6.3
 
 ```
 kubectl logs <podName>
@@ -620,14 +620,14 @@ Keep this session alive when you need to manipulate the ADX connectors.
 
 ## 8. Download & install Postman
 
-[Install Postman](https://www.postman.com/downloads/) if you dont already have it.
+[Install Postman](https://www.postman.com/downloads/) if you don't already have it.
 
 ## 9. Import the Postman JSON collection with KafkaConnect REST API call samples
 
 ### 9.1. Download the Postman collection for the lab 
 
 Download [this](https://github.com/Azure/azure-kusto-labs/blob/confluent-clound-hol/kafka-integration/confluent-cloud/rest-calls/Confluent-Cloud-ADX-HoL-1-STUB.postman_collection.json) to you local machine.<br>
-We will import this into Postman.  Its a stub with all the REST calls pre-created.
+We will import this into Postman. It's a stub with all the REST calls pre-created.
 
 
 ### 9.2. Launch Postman and click on the import button
@@ -638,7 +638,7 @@ We will import this into Postman.  Its a stub with all the REST calls pre-create
 <hr>
 <br>
 
-Click on the import button and import from the file dowloaded in 9.1.
+Click on the import button and import from the file downloaded in 9.1.
 
 ![POSTMAN](images/05-CONNECTOR-01-2.png)
 <br>
@@ -703,7 +703,7 @@ You will need the following details-
 ```
 
 Making this REST API call will actually launch copy tasks on your KafkaConnect workers.  We have a 1:1 ratio (1 AKS node = 1 KafkaConnect pod = 1 connector task)
-but depending on resources, you can oversubcribe and add more tasks.
+but depending on resources, you can oversubscribe and add more tasks.
 
 IDEALLY, you want as many tasks as Kafka topic partitions.
 
@@ -781,7 +781,7 @@ cp-kafka-connect-1598109267   ClusterIP   10.0.146.166   <none>        8083/TCP 
 kubernetes                    ClusterIP   10.0.0.1       <none>        443/TCP    18d
 ```
 
-Now uninstal referencing the service name-
+Now uninstall referencing the service name-
 ```
 # 2. Uninstall
 helm uninstall <serviceName>
@@ -796,7 +796,7 @@ gaia:~ akhanolk$ kubectl get pods
 No resources found in default namespace.
 ```
 
-This concludes this module.  You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end to end test.
+This concludes this module. You can now proceed to the [next and last module](6-run-e2e.md), where we will run an end-to-end test.
 
 #### Main menu
 [Home page](README.md)<br>
