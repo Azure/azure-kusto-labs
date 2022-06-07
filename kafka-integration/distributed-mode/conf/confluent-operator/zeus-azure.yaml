@@ -81,7 +81,7 @@ connect:
   replicas: 6
   image:
     repository: akhanolkar/cp-server-connect-operator-kusto
-    tag: 0.3.2v2
+    tag: 0.3.4v1
   tls:
     enabled: false
     ## "" for none, "tls" for mutual auth
