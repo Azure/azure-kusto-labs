@@ -40,6 +40,7 @@ services:
       - CONNECT_OFFSET_FLUSH_INTERVAL_MS=10000
       - CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=1
       - CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=1
+      ## If using version from github - with debezium/connect:1.2, remove CONNECT prefix of environment variables 
   events-producer:
     build:
       context: ./storm-events-producer
