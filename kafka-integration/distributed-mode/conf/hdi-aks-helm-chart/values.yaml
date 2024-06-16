@@ -118,7 +118,7 @@ volumes:
 ## ref: https://kubernetes.io/docs/concepts/configuration/secret/
 secrets:
   # username: kafka123
-  # password: connect321
+  # password: <password of your choice>
 
 ## These values are used only when "customEnv.CUSTOM_SCRIPT_PATH" is defined.
 ## "livenessProbe" is required only for the edge cases where the custom script to be ran takes too much time
