@@ -64,4 +64,5 @@ func main() {
 		kafka.Send(stormEvent)
 		time.Sleep(3 * time.Second) //on purpose
 	}
+
 }

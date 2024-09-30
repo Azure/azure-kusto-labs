@@ -6,4 +6,5 @@
 # If from Confluent Hub
 FROM confluentinc/cp-kafka-connect-base:6.2.0
 ARG KUSTO_KAFKA_SINK_VERSION
+COPY *.jks /opt/cert/
 RUN confluent-hub install --no-prompt microsoftcorporation/kafka-sink-azure-kusto:$KUSTO_KAFKA_SINK_VERSION

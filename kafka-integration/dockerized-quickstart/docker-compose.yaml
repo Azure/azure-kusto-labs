@@ -1,54 +1,135 @@
-version: "2"
+---
 services:
   zookeeper:
-    image: debezium/zookeeper:1.2
+    image: confluentinc/cp-zookeeper:latest
+    container_name: ${ZK_HOST}
+    hostname: ${ZK_HOST}
     ports:
-      - 2181:2181
-  kafka:
-    image: debezium/kafka:1.2
-    ports:
-      - 9092:9092
-    links:
-      - zookeeper
-    depends_on:
-      - zookeeper
+      - "${ZK_PORT}:${ZK_PORT}"
+    networks:
+      - test      
     environment:
-      - ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: ${ZK_PORT}
 
+  broker:
+    image: confluentinc/cp-kafka:latest
+    container_name: ${BROKER_HOST}
+    hostname: ${BROKER_HOST}
+    ports:
+      - "${BROKER_PORT}:${BROKER_PORT}"
+    depends_on:
+      - ${ZK_HOST}
+    networks:
+      - test      
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: '${ZK_HOST}:${ZK_PORT}'
+      KAFKA_ADVERTISED_LISTENERS: 'SSL://${BROKER_HOST}:${BROKER_PORT}'
+      KAFKA_SSL_KEYSTORE_FILENAME: broker.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: cert_creds
+      KAFKA_SSL_KEY_CREDENTIALS: cert_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: broker.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: cert_creds
+      KAFKA_SSL_CLIENT_AUTH: 'required'
+      KAFKA_SECURITY_PROTOCOL: SSL
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - ./secrets:/etc/kafka/secrets
+
+  # schemaregistry:
+  #   image: confluentinc/cp-schema-registry
+  #   container_name: ${SR_HOST}
+  #   hostname: ${SR_HOST}
+  #   depends_on:
+  #     - ${ZK_HOST}
+  #     - ${BROKER_HOST}
+  #   ports:
+  #     - "${SR_PORT}:${SR_PORT}"
+  #   networks:
+  #     - test      
+  #   environment:
+  #     SCHEMA_REGISTRY_HOST_NAME: ${SR_HOST}
+  #     SCHEMA_REGISTRY_LISTENERS: 'https://0.0.0.0:${SR_PORT}'
+  #     SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: '${ZK_HOST}:${ZK_PORT}'
+  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'SSL://${BROKER_HOST}:${BROKER_PORT}'
+  #     SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SSL
+  #     SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_LOCATION: schema-registry.keystore.jks
+  #     SCHEMA_REGISTRY_SSL_KEYSTORE_LOCATION: schema-registry.keystore.jks
+  #     SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_PASSWORD: ${SSL_SECRET}
+  #     SCHEMA_REGISTRY_SSL_KEYSTORE_PASSWORD: ${SSL_SECRET}
+  #     SCHEMA_REGISTRY_KAFKASTORE_SSL_KEY_PASSWORD: ${SSL_SECRET}
+  #     SCHEMA_REGISTRY_SSL_KEY_PASSWORD: ${SSL_SECRET}
+  #     SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_LOCATION: schema-registry.truststore.jks
+  #     SCHEMA_REGISTRY_SSL_TRUSTSTORE_LOCATION: schema-registry.truststore.jks
+  #     SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_PASSWORD: ${SSL_SECRET}
+  #     SCHEMA_REGISTRY_SSL_TRUSTSTORE_PASSWORD: ${SSL_SECRET}
+  #     SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: https
+  #     SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+  #     SCHEMA_REGISTRY_SSL_CLIENT_AUTH: 'true'
+  #   volumes:
+  #     - ./secrets:/etc/schema-registry/secrets
+  
+  
   kusto-connect:
     build:
       context: ./connector
       args:
-        KUSTO_KAFKA_SINK_VERSION: 2.0.0
+        KUSTO_KAFKA_SINK_VERSION: 4.1.2
     ports:
       - 8083:8083
     links:
-      - kafka
+      - ${BROKER_HOST}
     depends_on:
-      - kafka
+      - ${ZK_HOST}
+      - ${BROKER_HOST}
+    networks:
+      - test      
     environment:
-      - CONNECT_BOOTSTRAP_SERVERS=kafka:9092
-      - CONNECT_GROUP_ID=adx
-      - CONNECT_CONFIG_STORAGE_TOPIC=my_connect_configs
-      - CONNECT_OFFSET_STORAGE_TOPIC=my_connect_offsets
-      - CONNECT_STATUS_STORAGE_TOPIC=my_connect_statuses
-      - CONNECT_KEY_CONVERTER=org.apache.kafka.connect.storage.StringConverter
-      - CONNECT_VALUE_CONVERTER=org.apache.kafka.connect.storage.StringConverter
-      - CONNECT_REST_ADVERTISED_HOST_NAME=localhost
-      - CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=1
-      - CONNECT_OFFSET_FLUSH_INTERVAL_MS=10000
-      - CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=1
-      - CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=1
-      ## If using version from github - with debezium/connect:1.2, remove CONNECT prefix of environment variables 
+      CONNECT_BOOTSTRAP_SERVERS: '${BROKER_HOST}:${BROKER_PORT}'
+      CONNECT_GROUP_ID: adx
+      CONNECT_CONFIG_STORAGE_TOPIC: my_connect_configs
+      CONNECT_OFFSET_STORAGE_TOPIC: my_connect_offsets
+      CONNECT_STATUS_STORAGE_TOPIC: my_connect_statuses
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_REST_ADVERTISED_HOST_NAME: localhost
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      # CONNECT_KAFKASTORE_SECURITY_PROTOCOL: SSL
+      CONNECT_SECURITY_PROTOCOL: SSL
+      CONNECT_SSL_KEYSTORE_LOCATION: /opt/cert/consumer.keystore.jks
+      CONNECT_SSL_KEYSTORE_PASSWORD: ${SSL_SECRET}
+      CONNECT_SSL_KEY_PASSWORD: ${SSL_SECRET}
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /opt/cert/consumer.truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: ${SSL_SECRET}
+      CONNECT_SSL_CLIENT_AUTH: 'true'
+      CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
+      CONNECT_LOG4J_LOGGERS: 'org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR'
+      CONNECT_KAFKA_LOG4J_ROOT_LOGLEVEL: 'INFO'
+      CONNECT_ENABLE_SSL_CERTIFICATE_VERIFICATION: 'false'
+    volumes:
+      - ./secrets:/etc/kafka/secrets
+
   events-producer:
     build:
       context: ./storm-events-producer
     links:
-      - kafka
+      - ${BROKER_HOST}
     depends_on:
-      - kafka
+      - ${BROKER_HOST}
+    networks:
+      - test         
     environment:
-      - KAFKA_BOOTSTRAP_SERVER=kafka:9092
-      - KAFKA_TOPIC=storm-events
-      - SOURCE_FILE=StormEvents.csv
+      KAFKA_BOOTSTRAP_SERVER: '${BROKER_HOST}:${BROKER_PORT}'
+      KAFKA_TOPIC: 'storm-events'
+      SOURCE_FILE: 'StormEvents.csv'
+
+networks:
+  test:
+    driver: bridge    
+    
+      ## If using version from github - with debezium/connect:1.2, remove CONNECT prefix of environment variables 

@@ -1,7 +1,10 @@
 package kafka
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -23,7 +26,21 @@ func init() {
 
 	var err error
 
-	producer, err = sarama.NewSyncProducer(brokerList, getAuthConfig())
+	tlsConfig, err := NewTLSConfig("/client.cer.pem",
+		"/client.key.pem",
+		"/server.cer.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// This can be used on test server if domain does not match cert:
+	tlsConfig.InsecureSkipVerify = true
+
+	consumerConfig := sarama.NewConfig()
+	consumerConfig.Net.TLS.Enable = true
+	consumerConfig.Net.TLS.Config = tlsConfig
+	consumerConfig.Producer.Return.Successes = true
+
+	producer, err = sarama.NewSyncProducer(brokerList, consumerConfig)
 	if err != nil {
 		log.Fatalf("Failed to start Sarama producer %v", err)
 	}
@@ -43,11 +60,37 @@ func Send(event string) {
 	fmt.Printf("sent message to partition %d offset %d\n", p, o)
 }
 
-func getAuthConfig() *sarama.Config {
-	config := sarama.NewConfig()
-	config.Net.DialTimeout = 10 * time.Second
+// func getAuthConfig() *sarama.Config {
+// 	config := sarama.NewConfig()
+// 	config.Net.DialTimeout = 10 * time.Second
 
-	config.Version = sarama.V1_0_0_0
-	config.Producer.Return.Successes = true
-	return config
+// 	config.Version = sarama.V1_0_0_0
+// 	config.Producer.Return.Successes = true
+// 	return config
+// }
+
+// NewTLSConfig generates a TLS configuration used to authenticate on server with
+// certificates.
+// Parameters are the three pem files path we need to authenticate: client cert, client key and CA cert.
+func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string) (*tls.Config, error) {
+	tlsConfig := tls.Config{}
+
+	// Load client cert
+	cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+	if err != nil {
+		return &tlsConfig, err
+	}
+	tlsConfig.Certificates = []tls.Certificate{cert}
+
+	// Load CA cert
+	caCert, err := ioutil.ReadFile(caCertFile)
+	if err != nil {
+		return &tlsConfig, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig.RootCAs = caCertPool
+
+	tlsConfig.BuildNameToCertificate()
+	return &tlsConfig, err
 }
