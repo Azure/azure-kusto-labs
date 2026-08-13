@@ -7,8 +7,12 @@ import __app__.errorhandler as errorhandler
 
 # The function derives the storage account it is allowed to act on from its own
 # connection string, so the tests must supply one just as the deployment does.
+# The key is a placeholder; only AccountName and EndpointSuffix are read. The
+# trailing '==' is kept so the parser is exercised against a value that itself
+# contains the separator character.
 FAKE_CONNECTION_STRING = ('DefaultEndpointsProtocol=https;AccountName=test;'
-                          'AccountKey=Zm9vYmFyYmF6Cg==;EndpointSuffix=core.windows.net')
+                          'AccountKey=PLACEHOLDER-NOT-A-REAL-KEY==;'
+                          'EndpointSuffix=core.windows.net')
 
 class TestUtAdxIngestErrorHandler():
     @pytest.fixture(autouse=True)
