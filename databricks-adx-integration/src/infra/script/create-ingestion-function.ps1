@@ -38,6 +38,8 @@ $ingestion_func_strParamValues = @{
     FunctionName=$resourceName
     KeyVaultName=(Get-Resource-Prefix $config.ResourceGroupName)+$config.KeyVault.KeyVaultName
     IngestionStorageAccountName=(Get-Resource-Prefix $config.ResourceGroupName)+$config.Storage.IngestionDatalakeName
+    IngestionContainerName=$config.Storage.FileSystemName
+    IngestionRootPath=$config.Storage.AzureStorageTargetFolder
     IngestionEventQueueName=$config.EventGrid.IngestionEventQueueName
     IngestionConnectingStringName=$config.Functions.IngestionFunction.IngestionConnectingStringName
     LeadClusterName=(Get-Resource-Prefix $config.ResourceGroupName)+$config.ADX.ClusterName
@@ -45,11 +47,14 @@ $ingestion_func_strParamValues = @{
     Runtime=$config.Functions.IngestionFunction.Runtime
     DatabaseIDKey=$config.Functions.IngestionFunction.DatabaseIDKey
     TableIDKey=$config.Functions.IngestionFunction.TableIDKey
+    DatabaseNameFormat=$config.ADX.DatabaseNameFormat
+    AllowedTableNames=$config.ADX.TableNames
     IsFlushImmediately=$config.Functions.IngestionFunction.IsFlushImmediately
     IsDuplicateCheck=$config.Functions.IngestionFunction.IsDuplicateCheck
  }
 $ingestion_func_objParamValues = @{
     IngestionEventQueueCount=$config.EventGrid.IngestionEventQueueCount
+    DatabaseCount=$config.ADX.DatabaseNum
  }
 $ingestion_func_parameters = ConvertTo-ARM-Parameters-JSON $ingestion_func_strParamValues  $ingestion_func_objParamValues  
 

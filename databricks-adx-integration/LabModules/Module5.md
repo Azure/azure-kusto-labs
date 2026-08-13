@@ -87,6 +87,10 @@ Modify the following configuration of the two functions in the **_provision-conf
     },
 ```
 
+The ADX poison-queue handler is restricted to `.c000.json` ingestion files in the configured
+ingestion storage account and `Storage.FileSystemName` container. The final-failure container
+remains the only permitted cross-container destination.
+
  Run *create-custom-error-handling-functions.ps1* Powershell script to create the two Azure Functions. After running the script,  You can check the 2 Functions in Azure Portal. 
 
 ![functionName](assets/Module5/functionName.png)  
@@ -106,4 +110,3 @@ After the Powershell scripts finish,  you can check the deployed Function code i
 ![function_code](assets/Module5/function_code.png)  
 
 ![function_code_adx](assets/Module5/function_code_adx.png)  
-

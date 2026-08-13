@@ -19,6 +19,12 @@
         "IngestionStorageAccountName":{
             "type": "string"
         },
+        "IngestionContainerName":{
+            "type":"string"
+        },
+        "IngestionRootPath":{
+            "type":"string"
+        },
         "IngestionEventQueueName": {
             "type": "string"
         },
@@ -51,6 +57,15 @@
             "type": "string"
         },      
         "TableIDKey": {
+            "type": "string"
+        },
+        "DatabaseNameFormat": {
+            "type": "string"
+        },
+        "DatabaseCount": {
+            "type": "int"
+        },
+        "AllowedTableNames": {
             "type": "string"
         },
         "IsDuplicateCheck": {
@@ -244,6 +259,21 @@
                             "slotSetting":false
                         },
                         {
+                            "name":"INGESTION_STORAGE_ACCOUNT_URL",
+                            "value":"[concat('https://', parameters('IngestionStorageAccountName'), '.blob.core.windows.net/')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"INGESTION_CONTAINER_NAME",
+                            "value":"[parameters('IngestionContainerName')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"INGESTION_ROOT_PATH",
+                            "value":"[parameters('IngestionRootPath')]",
+                            "slotSetting":false
+                        },
+                        {
                             "name":"DATABASEID_KEY",
                             "value":"[parameters('DatabaseIDKey')]",
                             "slotSetting":false
@@ -252,7 +282,22 @@
                             "name":"TABLEID_KEY",
                             "value":"[parameters('TableIdkey')]",
                             "slotSetting":false
-                        }, 
+                        },
+                        {
+                            "name":"DATABASE_NAME_FORMAT",
+                            "value":"[parameters('DatabaseNameFormat')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"DATABASE_COUNT",
+                            "value":"[string(parameters('DatabaseCount'))]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"ALLOWED_TABLE_NAMES",
+                            "value":"[parameters('AllowedTableNames')]",
+                            "slotSetting":false
+                        },
                         {
                             "name":"IS_DUPLICATE_CHECK",
                             "value":"[parameters('IsDuplicateCheck')]",

@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import json
+import re
 from datetime import timedelta
 
 from azure.kusto.data import KustoClient, KustoConnectionStringBuilder
@@ -34,6 +35,7 @@ HOTCACHEPERIOD = "3650"
 DATABASE_NAME_FORMAT = "company-id-{INDEX}"
 TABLE_LIST_STR = "CO2,TEMP"
 TABLE_LIST = ["CO2", "TEMP"]
+SAFE_ADX_NAME_REGEX = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 BATCH_INGESTION_POLICY = """
 {{
     "MaximumBatchingTimeSpan":"{MAX_BATCHTIME}",
@@ -49,7 +51,7 @@ def init_config():
     global REGION, CLUSTER, CLIENT_ID, CLIENT_SECRET, TENANT_ID, SUBSCRIPTION_ID
     global MAX_BATCHTIME, MAX_ITEMS, MAX_RAWSIZE
     global SOFTDELETEPERIOD, HOTCACHEPERIOD
-    global TABLE_LIST_STR, TABLE_LIST
+    global DATABASE_NAME_FORMAT, TABLE_LIST_STR, TABLE_LIST
     RETENTION_DAYS = os.getenv('RETENTION_DAYS', RETENTION_DAYS)
     RESOURCE_GROUP = os.getenv('RESOURCE_GROUP')
     REGION = os.getenv('REGION')
@@ -64,8 +66,23 @@ def init_config():
     SOFTDELETEPERIOD = int(os.getenv('SOFTDELETEPERIOD', SOFTDELETEPERIOD))
     HOTCACHEPERIOD = int(os.getenv('HOTCACHEPERIOD', HOTCACHEPERIOD))
     CLUSTER = f"https://{CLUSTER_NAME}.{REGION}.kusto.windows.net"
-    TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
-    TABLE_LIST = TABLE_LIST_STR.split(',')
+    DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
+    TABLE_LIST_STR = os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
+    configured_tables = [
+        table_name.strip().upper()
+        for table_name in TABLE_LIST_STR.split(',')
+        if table_name.strip()
+    ]
+    remaining_format = DATABASE_NAME_FORMAT.replace("{INDEX}", "", 1)
+    if (DATABASE_NAME_FORMAT.count("{INDEX}") != 1
+            or "{" in remaining_format or "}" in remaining_format):
+        raise ValueError("DATABASE_NAME_FORMAT must contain exactly one {INDEX} placeholder.")
+    if (not configured_tables
+            or len(set(configured_tables)) != len(configured_tables)
+            or any(not SAFE_ADX_NAME_REGEX.fullmatch(table_name)
+                   for table_name in configured_tables)):
+        raise ValueError("TABLE_LIST_STR must contain valid comma-separated table names.")
+    TABLE_LIST = configured_tables
     print(TABLE_LIST)
 
 def initialize_kusto_client():

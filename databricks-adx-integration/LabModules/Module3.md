@@ -59,6 +59,10 @@ We need to setup the following additional parameters in the _provision-config.js
 }
 ```
 
+The deployment also scopes ingestion to the configured ingestion storage account and
+`Storage.FileSystemName` container. Queue messages selecting a different account, container,
+database, or table are rejected.
+
 Then run _create-ingestion-function.ps1_ script to create and setup Azure Function.
 
 After the creation is done, you can verify the creation result in Azure Portal.

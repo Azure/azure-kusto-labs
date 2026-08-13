@@ -16,6 +16,15 @@
         "KeyVaultName": {
             "type": "string"
         },
+        "IngestionStorageAccountName": {
+            "type": "string"
+        },
+        "IngestionContainerName": {
+            "type": "string"
+        },
+        "IngestionRootPath": {
+            "type": "string"
+        },
         "IngestionEventQueueCount": {
             "type": "int"
         },
@@ -129,6 +138,18 @@
                             "name": "RETRY_END_IN_FAIL_CONTAINER_NAME",
                             "value": "[parameters('FinalFailedContainer')]",
                             "slotSetting": false
+                        },
+                        {
+                            "name": "INGESTION_STORAGE_ACCOUNT_URL",
+                            "value": "[concat('https://', parameters('IngestionStorageAccountName'), '.blob.core.windows.net/')]"
+                        },
+                        {
+                            "name": "INGESTION_CONTAINER_NAME",
+                            "value": "[parameters('IngestionContainerName')]"
+                        },
+                        {
+                            "name": "INGESTION_ROOT_PATH",
+                            "value": "[parameters('IngestionRootPath')]"
                         },
                         {
                             "name": "AZURE_STORAGE_CONNECTION_STRING",

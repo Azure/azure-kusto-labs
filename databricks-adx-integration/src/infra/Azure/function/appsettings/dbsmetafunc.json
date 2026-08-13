@@ -11,6 +11,12 @@
         "IngestionStorageAccountName": {
             "type": "string"
         },
+        "IngestionContainerName": {
+            "type": "string"
+        },
+        "IngestionRootPath": {
+            "type": "string"
+        },
         "IngestionEventQueueName": {
             "type": "string"
         },
@@ -47,6 +53,8 @@
                 "ADX_INGEST_QUEUE_SAS_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('IngestionSasTokenName'), '/)')]",
                 "ADX_INGEST_QUEUE_URL_LIST": "[concat('https://', parameters('IngestionStorageAccountName'), '.queue.core.windows.net/', parameters('IngestionEventQueueName'))]",
                 "DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL": "[concat('https://', parameters('IngestionStorageAccountName'), '.blob.core.windows.net/')]",
+                "DATABRICKS_OUTPUT_CONTAINER_NAME": "[parameters('IngestionContainerName')]",
+                "INGESTION_ROOT_PATH": "[parameters('IngestionRootPath')]",
                 "DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('IngestionSasTokenName'), '/)')]"
             }
         },

@@ -133,6 +133,9 @@ APPINSIGHTS_INSTRUMENT_KEY| Instrument key for Application Insight |6cf44a28-96c
 APPLICATIONINSIGHTS_CONNECTION_STRING|  Instrument connection string for Application Insight  |InstrumentationKey=6cf44a28-96c2-4b96-???
 SOURCE_TELEMETRY_BLOB_ACCOUNT| Azure Data Lake storage that stores the gz files from Data Importer |xdrsdladxeval
 SOURCE_TELEMETRY_FILE_TOKEN| the SAS key to access Azure Data Lake storage |?sv=2019-02-02&ss=b&srt=sco&sp=rl&se=2040-04-16T16|49|51Z&st=2020-04-16T08|49|51Z&spr=https&sig=????
+INGESTION_STORAGE_ACCOUNT_URL| HTTPS account URL authorized as the ingestion source |https://example.blob.core.windows.net/
+INGESTION_CONTAINER_NAME| Blob container authorized as the ingestion source |data
+INGESTION_ROOT_PATH| Blob path prefix authorized as the Databricks output root |databricks-out
 PROCESSED_TELEMETRY_FOLDER| folder in Azure data lake where gz files from data importor stored |
 APP_AAD_TENANT_ID| the service principal tenant ID that can access Azure Data Explorer |3e04753a-ae5b-???
 APP_CLIENT_ID| the service principal ID that can access Azure Data Explorer |dfdd4a10-c47f-???
@@ -141,6 +144,9 @@ INGESTION_SERVER_URI| The ADX Ingestion Server URL |https://ingest-XXXX.eastus2.
 DATABASE| the ADX database to ingest telemetries data |XDR-SDL
 DESTINATION_TABLE| the ADX table to ingest telemetries data |sdltelemetry_raw
 INGESTION_MAPPING|the ADX ingestion mapping when ingesting data  into ADX table  |sdl_json_mapping_01
+DATABASE_NAME_FORMAT| Provisioned ADX database naming format with one `{INDEX}` placeholder |company-id-{INDEX}
+DATABASE_COUNT| Number of provisioned databases authorized for ingestion |100
+ALLOWED_TABLE_NAMES| Comma-separated provisioned ADX tables authorized for ingestion |CO2,TEMP
 APP_INSIGHT_MAIN_ERROR_EVENT_NAME| Error Log event name in Application Insights |SDL_ADX_INGEST_ERROR
 APP_INSIGHT_INGEST_SUCCESS_COUNT_NAME|Success Count Metric name in Application Insights |SDL_ADX_INGEST_SUCCESS_COUNT
 APP_INSIGHT_INGEST_FAILURE_COUNT_NAME| Failure Count Metric name in Application Insights  |SDL_ADX_INGEST_FAILURE_COUNT

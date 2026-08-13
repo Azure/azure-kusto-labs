@@ -20,16 +20,19 @@ import re
 import time
 import uuid
 import tempfile
+from urllib.parse import unquote, urlparse
 
 import azure.functions as func
 from applicationinsights import TelemetryClient
 from azure.storage.queue.aio import QueueClient
-from azure.storage.blob import BlobServiceClient, BlobClient
+from azure.storage.blob import BlobServiceClient
 
 # Required func app configuration
 APPINSIGHTS_INSTRUMENTATIONKEY = None
 DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL = None
 DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN = None
+DATABRICKS_OUTPUT_CONTAINER_NAME = None
+INGESTION_ROOT_PATH = None
 ADX_INGEST_QUEUE_URL_LIST = ''
 ADX_INGEST_QUEUE_SAS_TOKEN = None
 METADATA_HANDLE_EVENT_NAME = 'METADATA_HANDLE'
@@ -41,6 +44,11 @@ HEADER = "[Databricks Meatadata Handler]"
 PROCESS_PROGRAM_NAME = "KUSTO_LAB_METADATA_HANDLER_SAMPLE"
 
 BLOB_SERVICE_CLIENT = None
+STORAGE_SERVICE_NAMES = ("blob", "dfs")
+CONTAINER_NAME_REGEX = re.compile(
+    r"^(?!.*--)[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$")
+CONTROL_CHARACTER_REGEX = re.compile(r"[\x00-\x1f\x7f]")
+ENCODED_PATH_SEPARATOR_REGEX = re.compile(r"%(?:2f|5c)", re.IGNORECASE)
 
 INGEST_QUEUE_MSG_TEMPLATE = """
 {{
@@ -70,6 +78,7 @@ def init_config_values():
     global HEADER, PROCESS_PROGRAM_NAME, METADATA_HANDLE_EVENT_NAME
     global APPINSIGHTS_INSTRUMENTATIONKEY
     global DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL, DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN
+    global DATABRICKS_OUTPUT_CONTAINER_NAME, INGESTION_ROOT_PATH
     global ADX_INGEST_QUEUE_URL_LIST, ADX_INGEST_QUEUE_SAS_TOKEN
     global CONCURRENT_ENQUEUE_TASKS
     global MAX_COMPACT_FILE_RECORDS
@@ -79,10 +88,19 @@ def init_config_values():
                                                       DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL)
     DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN = os.getenv("DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN",
                                                     DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN)
-    ADX_INGEST_QUEUE_URL_LIST = os.getenv("ADX_INGEST_QUEUE_URL_LIST", ADX_INGEST_QUEUE_URL_LIST)
+    DATABRICKS_OUTPUT_CONTAINER_NAME = os.getenv(
+        "DATABRICKS_OUTPUT_CONTAINER_NAME", DATABRICKS_OUTPUT_CONTAINER_NAME)
+    INGESTION_ROOT_PATH = os.getenv("INGESTION_ROOT_PATH", INGESTION_ROOT_PATH)
+    configured_queue_urls = os.getenv("ADX_INGEST_QUEUE_URL_LIST", ADX_INGEST_QUEUE_URL_LIST)
     ADX_INGEST_QUEUE_SAS_TOKEN = os.getenv("ADX_INGEST_QUEUE_SAS_TOKEN", ADX_INGEST_QUEUE_SAS_TOKEN)
     CONCURRENT_ENQUEUE_TASKS = int(os.getenv("CONCURRENT_ENQUEUE_TASKS", CONCURRENT_ENQUEUE_TASKS))
-    ADX_INGEST_QUEUE_URL_LIST = ADX_INGEST_QUEUE_URL_LIST.replace(' ', '').split(',')
+    if isinstance(configured_queue_urls, str):
+        ADX_INGEST_QUEUE_URL_LIST = [
+            queue_url for queue_url in configured_queue_urls.replace(' ', '').split(',')
+            if queue_url
+        ]
+    else:
+        ADX_INGEST_QUEUE_URL_LIST = configured_queue_urls
     logging.info(f"ADX_INGEST_QUEUE_URL_LIST: {ADX_INGEST_QUEUE_URL_LIST}")
 
 
@@ -91,10 +109,149 @@ def init_config_values():
     METADATA_HANDLE_EVENT_NAME = os.getenv("METADATA_HANDLE_EVENT_NAME", METADATA_HANDLE_EVENT_NAME)
     MAX_COMPACT_FILE_RECORDS = int(os.getenv("MAX_COMPACT_FILE_RECORDS", str(MAX_COMPACT_FILE_RECORDS)))
 
+    required_settings = {
+        "DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL": DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL,
+        "DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN": DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN,
+        "DATABRICKS_OUTPUT_CONTAINER_NAME": DATABRICKS_OUTPUT_CONTAINER_NAME,
+        "INGESTION_ROOT_PATH": INGESTION_ROOT_PATH,
+        "ADX_INGEST_QUEUE_URL_LIST": ADX_INGEST_QUEUE_URL_LIST,
+        "ADX_INGEST_QUEUE_SAS_TOKEN": ADX_INGEST_QUEUE_SAS_TOKEN,
+    }
+    missing_settings = [name for name, value in required_settings.items() if not value]
+    if missing_settings:
+        raise EnvironmentError(
+            "Missing required application settings: {}".format(", ".join(missing_settings)))
+    if not CONTAINER_NAME_REGEX.fullmatch(DATABRICKS_OUTPUT_CONTAINER_NAME):
+        raise EnvironmentError(
+            "DATABRICKS_OUTPUT_CONTAINER_NAME is not a valid Azure Blob container name.")
+    get_configured_root_parts()
+
+
+def get_allowed_storage_hosts(account_url: str):
+    """ Return the blob and DFS hosts for a configured Azure Storage account URL. """
+    parsed_url = urlparse(account_url)
+    try:
+        port = parsed_url.port
+    except ValueError as error:
+        raise EnvironmentError(
+            "DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL has an invalid port.") from error
+
+    if (parsed_url.scheme.lower() != "https" or parsed_url.username or parsed_url.password
+            or port is not None):
+        raise EnvironmentError(
+            "DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL must be an HTTPS account URL.")
+    if parsed_url.query or parsed_url.fragment or parsed_url.path not in ("", "/"):
+        raise EnvironmentError(
+            "DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL must not include a path, query, or fragment.")
+
+    host_parts = (parsed_url.hostname or "").lower().split(".")
+    if len(host_parts) < 3 or host_parts[1] not in STORAGE_SERVICE_NAMES:
+        raise EnvironmentError(
+            "DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL must use a blob or DFS endpoint.")
+
+    account_name = host_parts[0]
+    endpoint_suffix = ".".join(host_parts[2:])
+    return frozenset(
+        f"{account_name}.{service_name}.{endpoint_suffix}"
+        for service_name in STORAGE_SERVICE_NAMES)
+
+
+def get_configured_root_parts():
+    """ Return the validated configured root path segments. """
+    if not isinstance(INGESTION_ROOT_PATH, str) or not INGESTION_ROOT_PATH:
+        raise EnvironmentError("INGESTION_ROOT_PATH must be a non-empty relative blob path.")
+    root_parts = INGESTION_ROOT_PATH.split("/")
+    if any(
+            not part or part in (".", "..") or "\\" in part or CONTROL_CHARACTER_REGEX.search(part)
+            for part in root_parts):
+        raise EnvironmentError("INGESTION_ROOT_PATH contains an invalid path segment.")
+    return tuple(root_parts)
+
+
+def validate_blob_location(container_name: str, blob_path: str) -> None:
+    """ Validate a blob location before using the privileged storage client. """
+    if container_name != DATABRICKS_OUTPUT_CONTAINER_NAME:
+        raise PermissionError(
+            "Blob container is outside the configured Databricks output scope.")
+    path_parts = blob_path.split("/")
+    if any(
+            not part or part in (".", "..") or "\\" in part or CONTROL_CHARACTER_REGEX.search(part)
+            for part in path_parts):
+        raise ValueError("Blob path contains an invalid path segment.")
+    root_parts = get_configured_root_parts()
+    if tuple(path_parts[:len(root_parts)]) != root_parts:
+        raise PermissionError("Blob path is outside the configured ingestion root path.")
+
+
+def validate_metadata_blob_location(container_name: str, blob_path: str) -> None:
+    """ Validate that a location identifies a documented Spark metadata file. """
+    validate_blob_location(container_name, blob_path)
+    path_parts = blob_path.split("/")
+    metadata_indexes = [
+        index for index, path_part in enumerate(path_parts)
+        if path_part == "_spark_metadata"
+    ]
+    if len(metadata_indexes) != 1 or metadata_indexes[0] != len(path_parts) - 2:
+        raise PermissionError("Blob path is not scoped to a Spark metadata directory.")
+
+    metadata_file_name = path_parts[-1]
+    if not (metadata_file_name.isdigit() or metadata_file_name.endswith(".compact")):
+        raise PermissionError("Blob path does not identify a supported Spark metadata file.")
+
+
+def get_blob_info_from_url(url: str) -> Tuple[str, str]:
+    """ Validate a queue-provided URL and return its authorized container and blob path. """
+    parsed_url = urlparse(url)
+    try:
+        port = parsed_url.port
+    except ValueError as error:
+        raise ValueError("Blob URL has an invalid port.") from error
+
+    if (parsed_url.scheme.lower() != "https" or parsed_url.username or parsed_url.password
+            or port is not None):
+        raise ValueError("Blob URL must use HTTPS without credentials or an explicit port.")
+    if parsed_url.query or parsed_url.fragment:
+        raise ValueError("Blob URL must not include a query string or fragment.")
+    if (parsed_url.hostname or "").lower() not in get_allowed_storage_hosts(
+            DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL):
+        raise PermissionError(
+            "Blob URL does not belong to the configured Databricks output storage account.")
+    if ENCODED_PATH_SEPARATOR_REGEX.search(parsed_url.path):
+        raise ValueError("Blob URL contains an encoded path separator.")
+
+    try:
+        decoded_path = unquote(parsed_url.path, errors="strict")
+    except UnicodeDecodeError as error:
+        raise ValueError("Blob URL path is not valid UTF-8.") from error
+
+    if not decoded_path.startswith("/") or decoded_path.startswith("//"):
+        raise ValueError("Blob URL path is malformed.")
+    path_parts = decoded_path[1:].split("/")
+    if len(path_parts) < 2 or path_parts[0] != DATABRICKS_OUTPUT_CONTAINER_NAME:
+        raise PermissionError(
+            "Blob URL does not belong to the configured Databricks output container.")
+    if any(
+            not part or part in (".", "..") or "\\" in part or CONTROL_CHARACTER_REGEX.search(part)
+            for part in path_parts):
+        raise ValueError("Blob URL contains an invalid path segment.")
+
+    blob_path = "/".join(path_parts[1:])
+    validate_blob_location(path_parts[0], blob_path)
+    return path_parts[0], blob_path
+
+
+def get_metadata_blob_info(url: str) -> Tuple[str, str]:
+    """ Validate that a blob URL identifies a documented Spark metadata file. """
+    container_name, blob_path = get_blob_info_from_url(url)
+    validate_metadata_blob_location(container_name, blob_path)
+    return container_name, blob_path
+
+
 def get_blob_content(container_name: str, blob_path: str) -> str:
     """ download blob file content as string
     """
     global BLOB_SERVICE_CLIENT
+    validate_metadata_blob_location(container_name, blob_path)
     # TODO: Should add retry policy here
     if not BLOB_SERVICE_CLIENT:
         logging.info(
@@ -127,6 +284,9 @@ def update_blob_content(container_name: str, blob_path: str, content: str):
     """ update blob file by replace existing file     """
 
     global BLOB_SERVICE_CLIENT
+    validate_metadata_blob_location(container_name, blob_path)
+    if not blob_path.endswith(".compact"):
+        raise PermissionError("Only Spark compact metadata files may be overwritten.")
 
     if not BLOB_SERVICE_CLIENT:
         logging.info(
@@ -161,15 +321,27 @@ def get_queue_client(url: str) -> QueueClient:
 
 def convert_abfss_path_to_https(abfss_path: str) -> str:
     """ Convert the abfss path to https path style """
-    pattern = r'abfss:\/\/([^@]+)@([^.]+)[^\/]+\/(.+)'
-    regex = re.compile(pattern)
-    match = regex.search(abfss_path)
-    if not match:
+    parsed_path = urlparse(abfss_path)
+    try:
+        port = parsed_path.port
+    except ValueError as error:
+        raise ValueError(f"Invalid abfss path {abfss_path}") from error
+    if (parsed_path.scheme.lower() != "abfss" or not parsed_path.username
+            or parsed_path.password or port is not None or parsed_path.query
+            or parsed_path.fragment or not parsed_path.path.startswith("/")):
         raise ValueError(f"Invalid abfss path {abfss_path}")
-    container = match.group(1)
-    storage_account = match.group(2)
-    filepath = match.group(3)
-    https_path = f"https://{storage_account}.blob.core.windows.net/{container}/{filepath}"
+
+    host_parts = (parsed_path.hostname or "").lower().split(".")
+    if len(host_parts) < 3 or host_parts[1] != "dfs":
+        raise ValueError(f"Invalid abfss path {abfss_path}")
+    container = parsed_path.username
+    storage_account = host_parts[0]
+    endpoint_suffix = ".".join(host_parts[2:])
+    filepath = parsed_path.path[1:]
+    if not filepath:
+        raise ValueError(f"Invalid abfss path {abfss_path}")
+    https_path = (
+        f"https://{storage_account}.blob.{endpoint_suffix}/{container}/{filepath}")
     return https_path
 
 
@@ -211,6 +383,7 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
         except Exception: # pylint: disable=bare-except
             logging.warning(f"{HEADER} Skip invalid abfss path {output_abfss_path}", exc_info=True)
             continue
+        get_blob_info_from_url(https_url)
 
         queue_msg = INGEST_QUEUE_MSG_TEMPLATE.format(blob_size=output_file_size,
                                                      blob_url=https_url,
@@ -290,8 +463,7 @@ def main(msg: func.QueueMessage) -> None:
     :return: None
     """
     code_start_time = time.time()
-    logging.info('Python queue trigger function processed a queue item: %s',
-                 msg.get_body().decode('utf-8'))
+    logging.info('Python queue trigger function processed a queue item')
     # modify the log level of azure sdk requests
     logging.getLogger('azure').setLevel(logging.WARNING)
     init_config_values()
@@ -304,16 +476,12 @@ def main(msg: func.QueueMessage) -> None:
     # 1. Get trigger file content (rename event)
     content_json = json.loads(msg.get_body().decode('utf-8'))
 
-    logging.info("meta-data event content: {}".format(msg.get_body().decode('utf-8')))
     file_url = content_json['data']['destinationUrl']
-    logging.info(f"file_url: {file_url}")
     event_time = content_json['eventTime']
 
     # 2. Download metadata blob content
-    logging.info(f"{HEADER} Download blob file from {file_url}")
-    temp_blob_client = BlobClient.from_blob_url(blob_url=file_url, logging_enable=False)
-    blob_path = temp_blob_client.blob_name
-    container_name = temp_blob_client.container_name
+    container_name, blob_path = get_metadata_blob_info(file_url)
+    logging.info(f"{HEADER} Download metadata blob {container_name}/{blob_path}")
 
     try:
         metadata_file_content = get_blob_content(container_name, blob_path)
@@ -341,7 +509,7 @@ def main(msg: func.QueueMessage) -> None:
 
     logging.info(f"{HEADER} Done queuing up messages to Ingestion queue")
 
-    if file_url.endswith(".compact"): # reduce compact file size
+    if blob_path.endswith(".compact"): # reduce compact file size
         update_blob_content(container_name,
                             blob_path,
                             get_shrinked_checkpoint_content(

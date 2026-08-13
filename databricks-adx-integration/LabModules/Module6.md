@@ -95,6 +95,10 @@ In this step we will deploy the new Databricks metadata handler Azure functions.
 }
 ```
 
+The metadata handler accepts events only for the configured ingestion storage account,
+`Storage.FileSystemName` container, and `_spark_metadata` directory. Metadata output paths are
+validated against the same account and container before they are sent to ingestion queues.
+
 Run **_create-dbsmetadatahandler-function.ps1_** to create  Azure Functions resource for Databricks meta-data handling functions.  
 
 Then run **_deploy-dbsmetadatahandler-function.ps1_** to deploy the Azure function code to the created Azure Function resources. 
@@ -120,7 +124,6 @@ Follow the steps listed in Module 4, you can test if the updated data ingestion 
 You can also use Azure Storage Explorer to check if the file name check table in table storage has logged all the ingested files. 
 
 ![table-storage-data](../LabModules/assets/module6/table-storage-data.png)
-
 
 
 

@@ -99,6 +99,8 @@
         "AvaliabilityZones":["1"],
         "ADXTemplatePath": "Azure Data Explorer ARM Template File Path",
         "TableRetentionDays": "ADX Table Retention Days",
+        "DatabaseNameFormat":"ADX database name format containing one {INDEX} placeholder",
+        "TableNames":"Comma-separated ADX table names",
         "DatabaseNum":"ADX Database number"
     },
     "Databricks": {
@@ -165,4 +167,3 @@
 
     }
 }
-

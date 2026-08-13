@@ -68,6 +68,9 @@ $adxerrorhandle_func_parameters_str = @{
     KeyVaultName = (Get-Resource-Prefix $config.ResourceGroupName)+$config.KeyVault.KeyVaultName
     FunctionLocation = $config.Location
     Runtime = $config.Functions.adxErrorHandlerFunction.Runtime
+    IngestionStorageAccountName = (Get-Resource-Prefix $config.ResourceGroupName)+$config.Storage.IngestionDatalakeName
+    IngestionContainerName = $config.Storage.FileSystemName
+    IngestionRootPath = $config.Storage.AzureStorageTargetFolder
     FinalFailedContainer = $config.Storage.IngestionRetryEndInFailContainerName
     IngestionFunctionName = (Get-Resource-Prefix $config.ResourceGroupName)+$config.Functions.IngestionFunction.FunctionName
 }

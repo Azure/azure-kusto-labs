@@ -48,10 +48,16 @@ We need to setup the following additional parameters in the _provision-config.js
         "AvaliabilityZones":["1"],
         "ADXTemplatePath": "../Azure/ADX/ADX.json",
         "TableRetentionDays": "100",
+        "DatabaseNameFormat": "company-id-{INDEX}",
+        "TableNames": "CO2,TEMP",
         "DatabaseNum":100
     },
 }
 ```
+
+`DatabaseNameFormat`, `DatabaseNum`, and `TableNames` are also deployed to the ingestion
+function as its ADX destination allow-list. Keep these values aligned with the databases and
+tables provisioned by this module.
 
 Then run _create-adx-and-db-tables.ps1_ script to create Azure Data Explorer and database/tables.
 
@@ -115,5 +121,4 @@ In the next step, we will practice how to query data in ADX.
     ```
 
 ![table record](../LabModules/assets/module2/query_table.png)
-
 
