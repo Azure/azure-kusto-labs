@@ -10,8 +10,8 @@
   blob taken from the message are validated here before they are used.
 """
 import re
-from typing import Optional, Set
-from urllib.parse import urlsplit
+from typing import Optional, Set, Tuple
+from urllib.parse import unquote, urlsplit
 
 # Azure Storage naming limits. See
 # https://learn.microsoft.com/rest/api/storageservices/naming-and-referencing-containers--blobs--and-metadata
@@ -26,7 +26,13 @@ _CONTAINER_NAME_REGEX = re.compile(r'^[a-z0-9](?:[a-z0-9]|-(?!-)){1,61}[a-z0-9]$
 # C0/C1 control characters and whitespace. These are the characters typically used
 # to smuggle values past URL parsers, so they are rejected before parsing.
 _FORBIDDEN_CHARS_REGEX = re.compile(r'[\x00-\x20\x7f-\x9f]')
+# Control characters only. A blob name may legitimately contain a space, so the
+# stricter url rule above is not applied to the name the sdk resolves.
+_CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
 
+# Spark's structured streaming file sink names each checkpoint log entry after its
+# batch number, and periodically rolls them up into "<batch>.compact".
+_SPARK_METADATA_FILE_REGEX = re.compile(r'^\d{1,19}(\.compact)?$')
 
 class ValidationError(ValueError):
     """Raised when untrusted input fails validation."""
@@ -118,42 +124,47 @@ def validate_blob_url_host(url: str, allowed_hosts: Set[str]) -> None:
         raise ValidationError('Blob url host {!r} is not an allowed storage host.'.format(hostname))
 
 
-def validate_container_name(container_name: str, allowed_containers: Optional[Set[str]] = None) -> str:
-    """Validate a container name and optionally check it against an allow-list.
+def validate_container_name(container_name: str, allowed_containers: Set[str]) -> str:
+    """Validate a container name and check it against the containers this app serves.
 
     :param container_name: container name resolved from the untrusted url
-    :param allowed_containers: optional explicit allow-list; no check when empty
+    :param allowed_containers: containers this function is permitted to touch
     :return: the validated container name
-    :raises ValidationError: when the name is malformed or not allowed
+    :raises ValidationError: when the name is malformed, or is not one this app serves
     """
+    if not allowed_containers:
+        # Fail closed. An empty set means configuration is missing, and continuing
+        # would let a queue message name any container in the account.
+        raise ValidationError('No allowed containers are configured for this function app.')
     if not container_name or not isinstance(container_name, str):
         raise ValidationError('Container name is missing or not a string.')
     if not _CONTAINER_NAME_REGEX.match(container_name):
         raise ValidationError('Container name {!r} is not a valid Azure container name.'.format(container_name))
-    if allowed_containers and container_name not in allowed_containers:
-        raise ValidationError('Container {!r} is not in the configured allow-list.'.format(container_name))
+    if container_name not in allowed_containers:
+        raise ValidationError('Container {!r} is not one this function app serves.'.format(container_name))
     return container_name
 
 
-def validate_blob_path(blob_path: str, required_segment: Optional[str] = None) -> str:
+def validate_blob_path(blob_path: str, required_root: Optional[str] = None,
+                       required_parent: Optional[str] = None) -> str:
     """Validate a blob path resolved from an untrusted url.
 
     The path is validated *after* the storage sdk has resolved and percent-decoded
     it, so encoded traversal sequences such as ``%2e%2e%2f`` are caught here.
 
     :param blob_path: blob name resolved by the storage sdk
-    :param required_segment: optional path segment the blob must live under, for
-        example ``_spark_metadata``. Matched as a whole segment so that it cannot
-        be satisfied by a lookalike such as ``_spark_metadata_evil``.
+    :param required_root: first path segment the blob must live under
+    :param required_parent: directory that must contain the file directly, for
+        example ``_spark_metadata``
     :return: the validated blob path
-    :raises ValidationError: when the path is malformed or outside the segment
+    :raises ValidationError: when the path is malformed or outside the pipeline
     """
     if not blob_path or not isinstance(blob_path, str):
         raise ValidationError('Blob path is missing or not a string.')
     if len(blob_path) > MAX_BLOB_PATH_LENGTH:
         raise ValidationError('Blob path exceeds {} characters.'.format(MAX_BLOB_PATH_LENGTH))
-    if _FORBIDDEN_CHARS_REGEX.search(blob_path):
-        raise ValidationError('Blob path contains control or whitespace characters.')
+    if _CONTROL_CHARS_REGEX.search(blob_path):
+        raise ValidationError('Blob path contains control characters.')
     if '\\' in blob_path:
         raise ValidationError('Blob path must not contain backslashes.')
     if blob_path.startswith('/'):
@@ -163,10 +174,49 @@ def validate_blob_path(blob_path: str, required_segment: Optional[str] = None) -
     if any(segment in ('', '.', '..') for segment in segments):
         raise ValidationError('Blob path {!r} contains empty or traversal segments.'.format(blob_path))
 
-    # Spark's structured streaming file sink always writes its checkpoint log to a
-    # directory named "_spark_metadata", so requiring that segment confines this
-    # function to the only files it is ever meant to read or rewrite.
-    if required_segment and required_segment not in segments:
-        raise ValidationError(
-            'Blob path {!r} does not live under a {!r} directory.'.format(blob_path, required_segment))
+    if required_root:
+        # Compare whole segments. A prefix comparison would also accept a sibling
+        # directory whose name merely starts with the expected one.
+        if segments[0] != required_root:
+            raise ValidationError(
+                'Blob path {!r} is outside the {!r} directory.'.format(blob_path, required_root))
+
+    if required_parent:
+        # The checkpoint log lives directly inside this directory. Accepting it
+        # anywhere in the path would also accept an unrelated file that merely has
+        # such a directory somewhere above it.
+        if len(segments) < 2 or segments[-2] != required_parent:
+            raise ValidationError(
+                'Blob path {!r} is not directly inside a {!r} directory.'.format(
+                    blob_path, required_parent))
+        if not _SPARK_METADATA_FILE_REGEX.match(segments[-1]):
+            raise ValidationError(
+                'Blob path {!r} is not a checkpoint log file name.'.format(blob_path))
     return blob_path
+
+
+def split_blob_url(url: str) -> Tuple[str, str]:
+    """Split a blob url into its container and blob path.
+
+    Used for references derived from checkpoint file content, which name a blob
+    but are never handed to the storage sdk here, so they have no client object to
+    read the container and path from.
+
+    :param url: an https blob url that has already passed host validation
+    :return: (container, blob path); either may be empty when the url has no path
+    """
+    path = unquote(urlsplit(url or '').path).lstrip('/')
+    container, _, blob_path = path.partition('/')
+    return container, blob_path
+
+
+def is_compact_checkpoint(blob_path: str) -> bool:
+    """Report whether a validated path names a rolled up checkpoint file.
+
+    The decision is taken from the path the storage sdk resolved rather than from
+    the raw url, so a query string or fragment cannot change the answer.
+
+    :param blob_path: blob path that has already passed validation
+    :return: True when the file is a Spark ``.compact`` checkpoint log
+    """
+    return blob_path.rsplit('/', 1)[-1].endswith('.compact')

@@ -95,11 +95,13 @@ Connection string is protected using Azure Key Vault created in Module 0.
 ![function_setting](assets/Module5/function_setting.png)  
 
 ***Note!** _A poison-queue message tells this function which blob to copy and then
-delete. The function therefore accepts only blobs on the storage account named in its
-own `AZURE_STORAGE_CONNECTION_STRING`, and rejects container or path values that try
-to escape it. No extra configuration is needed for this; it is derived from the
-connection string the script already sets. If you point the function at a different
-storage account, update that connection string rather than the queue message._
+delete, so the script pins it to the blobs this deployment actually ingests: the
+storage account named in its own `AZURE_STORAGE_CONNECTION_STRING`, the container in
+`Storage.FileSystemName`, the directory in `Storage.AzureStorageTargetFolder`, and the
+`.c000.json` files the Databricks job writes. A message naming any other blob in the
+account is rejected before the copy or delete is attempted. If you change the
+container or output folder in `provision-config.json`, re-run this script so the
+function is updated to match._
 
 
 

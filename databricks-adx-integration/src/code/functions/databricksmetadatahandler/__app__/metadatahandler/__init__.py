@@ -28,8 +28,10 @@ from azure.storage.blob import BlobServiceClient, BlobClient
 
 from .validation import (
     ValidationError,
+    is_compact_checkpoint,
     parse_allow_list,
     redact_url,
+    split_blob_url,
     storage_hosts_from_account_url,
     validate_blob_path,
     validate_blob_url_host,
@@ -46,11 +48,12 @@ METADATA_HANDLE_EVENT_NAME = 'METADATA_HANDLE'
 CONCURRENT_ENQUEUE_TASKS = '20'
 MAX_COMPACT_FILE_RECORDS = 0  # The max file records number in compact file
 
-# Storage hosts, containers and directory this function is entitled to act on.
-# Populated by init_config_values() from configuration the function already has,
-# so that a queue message cannot steer the privileged blob client elsewhere.
+# The blobs this function is entitled to read and rewrite. A queue message names
+# the checkpoint file to process, so the account, container, Databricks output
+# directory and file name grammar are all pinned to what this deployment writes.
 ALLOWED_STORAGE_HOSTS = set()
 ALLOWED_METADATA_CONTAINERS = set()
+METADATA_PATH_ROOT = ''
 # Spark's structured streaming file sink always writes its checkpoint log to a
 # directory of this name, so it is a safe default rather than a lab specific one.
 METADATA_REQUIRED_SEGMENT = '_spark_metadata'
@@ -93,6 +96,7 @@ def init_config_values():
     global CONCURRENT_ENQUEUE_TASKS
     global MAX_COMPACT_FILE_RECORDS
     global ALLOWED_STORAGE_HOSTS, ALLOWED_METADATA_CONTAINERS, METADATA_REQUIRED_SEGMENT
+    global METADATA_PATH_ROOT
     APPINSIGHTS_INSTRUMENTATIONKEY = os.getenv("APPINSIGHTS_INSTRUMENTATIONKEY",
                                                APPINSIGHTS_INSTRUMENTATIONKEY)
     DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL = os.getenv("DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL",
@@ -114,11 +118,14 @@ def init_config_values():
 
     # Bind this function to the storage account it is already configured against.
     # ALLOWED_STORAGE_HOSTS only needs setting for sovereign clouds, custom domains
-    # or the local storage emulator; ALLOWED_METADATA_CONTAINERS is an optional
-    # additional restriction and is not applied when left unset.
+    # or the local storage emulator.
     ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL)
     ALLOWED_STORAGE_HOSTS |= {host.lower() for host in parse_allow_list(os.getenv("ALLOWED_STORAGE_HOSTS"))}
+    # The container and directory the Databricks job writes its output to. Naming
+    # the account alone is not enough: without these, a queue message could still
+    # select any other blob in the same account.
     ALLOWED_METADATA_CONTAINERS = parse_allow_list(os.getenv("ALLOWED_METADATA_CONTAINERS"))
+    METADATA_PATH_ROOT = os.getenv("METADATA_PATH_ROOT", METADATA_PATH_ROOT)
     METADATA_REQUIRED_SEGMENT = os.getenv("METADATA_REQUIRED_SEGMENT", METADATA_REQUIRED_SEGMENT)
 
 def get_blob_content(container_name: str, blob_path: str) -> str:
@@ -191,9 +198,11 @@ def get_queue_client(url: str) -> QueueClient:
 
 def convert_abfss_path_to_https(abfss_path: str) -> str:
     """ Convert the abfss path to https path style """
-    pattern = r'abfss:\/\/([^@]+)@([^.]+)[^\/]+\/(.+)'
+    # Anchored at both ends, so a crafted value cannot carry an accepted abfss
+    # reference in the middle of some longer string.
+    pattern = r'^abfss://([^@/]+)@([^./]+)\.dfs\.core\.windows\.net/(.+)$'
     regex = re.compile(pattern)
-    match = regex.search(abfss_path)
+    match = regex.match(abfss_path)
     if not match:
         raise ValueError(f"Invalid abfss path {abfss_path}")
     container = match.group(1)
@@ -239,9 +248,12 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
         try:
             https_url = convert_abfss_path_to_https(output_abfss_path)
             # The metadata file content also selects a destination, for the ingest
-            # function downstream. Confine those urls to the same storage account
-            # rather than forwarding whatever the file happens to contain.
+            # function downstream. Confine those urls to the same account, container
+            # and output directory rather than forwarding whatever the file contains.
             validate_blob_url_host(https_url, ALLOWED_STORAGE_HOSTS)
+            referenced_container, referenced_path = split_blob_url(https_url)
+            validate_container_name(referenced_container, ALLOWED_METADATA_CONTAINERS)
+            validate_blob_path(referenced_path, METADATA_PATH_ROOT)
         except Exception: # pylint: disable=bare-except
             logging.warning(f"{HEADER} Skip invalid abfss path {output_abfss_path}", exc_info=True)
             continue
@@ -263,7 +275,10 @@ async def send_queue_messages(queue_client, base64_message, queue_msg):
     try:
         await queue_client.send_message(base64_message)
     except Exception: # pylint: disable=bare-except
-        logging.exception(f"{HEADER} Failed to send message {queue_msg} to queue")
+        # The message body embeds a blob url, which can carry a SAS token, so the
+        # blob is identified by path only.
+        failed_url = json.loads(queue_msg).get('data', {}).get('url')
+        logging.exception(f"{HEADER} Failed to send message for {redact_url(failed_url)} to queue")
         # Raise exception to let azure function retry whole batch again
         raise
 
@@ -278,7 +293,8 @@ def gen_metadata_msg_enqueue_tasks(queue_msg_list: List[str],
 
         queue_index = idx % len(queue_client_list)
         logging.debug(
-            f"{HEADER} Try to send message to ingest queue {queue_index}, queue_msg: {queue_msg}")
+            f"{HEADER} Try to send message to ingest queue {queue_index}, "
+            f"blob: {redact_url(output_obj['data']['url'])}")
 
         base64_message = base64.b64encode(queue_msg.encode('ascii')).decode('ascii')
 
@@ -286,7 +302,7 @@ def gen_metadata_msg_enqueue_tasks(queue_msg_list: List[str],
         size = int(output_obj['data']['contentLength'])
 
         tc.track_event(METADATA_HANDLE_EVENT_NAME,
-                       {'FILE_URL': file_url},
+                       {'FILE_URL': redact_url(file_url)},
                        {METADATA_HANDLE_EVENT_NAME + '_SIZE': size,
                         METADATA_HANDLE_EVENT_NAME + '_COUNT': 1})
 
@@ -351,7 +367,8 @@ def main(msg: func.QueueMessage) -> None:
         # blob client built from DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL.
         validate_blob_url_host(file_url, ALLOWED_STORAGE_HOSTS)
         temp_blob_client = BlobClient.from_blob_url(blob_url=file_url, logging_enable=False)
-        blob_path = validate_blob_path(temp_blob_client.blob_name, METADATA_REQUIRED_SEGMENT)
+        blob_path = validate_blob_path(temp_blob_client.blob_name, METADATA_PATH_ROOT,
+                                       METADATA_REQUIRED_SEGMENT)
         container_name = validate_container_name(temp_blob_client.container_name,
                                                  ALLOWED_METADATA_CONTAINERS)
     except ValidationError:
@@ -387,7 +404,7 @@ def main(msg: func.QueueMessage) -> None:
 
     logging.info(f"{HEADER} Done queuing up messages to Ingestion queue")
 
-    if file_url.endswith(".compact"): # reduce compact file size
+    if is_compact_checkpoint(blob_path): # reduce compact file size
         update_blob_content(container_name,
                             blob_path,
                             get_shrinked_checkpoint_content(

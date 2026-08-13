@@ -22,6 +22,18 @@
             "type": "string",
             "defaultValue": "ingestiontoken"
         },
+        "MetadataContainerName": {
+            "type": "string",
+            "metadata": {
+                "description": "Container holding the Databricks output, i.e. Storage.FileSystemName."
+            }
+        },
+        "MetadataPathRoot": {
+            "type": "string",
+            "metadata": {
+                "description": "Directory within the container that the Databricks job writes to, i.e. Storage.AzureStorageTargetFolder."
+            }
+        },
         "Runtime": {
             "type": "string",
             "defaultValue": "python"
@@ -47,6 +59,8 @@
                 "ADX_INGEST_QUEUE_SAS_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('IngestionSasTokenName'), '/)')]",
                 "ADX_INGEST_QUEUE_URL_LIST": "[concat('https://', parameters('IngestionStorageAccountName'), '.queue.core.windows.net/', parameters('IngestionEventQueueName'))]",
                 "DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL": "[concat('https://', parameters('IngestionStorageAccountName'), '.blob.core.windows.net/')]",
+                "ALLOWED_METADATA_CONTAINERS": "[parameters('MetadataContainerName')]",
+                "METADATA_PATH_ROOT": "[parameters('MetadataPathRoot')]",
                 "DATABRICKS_OUTPUT_STORAGE_SAS_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=https://', parameters('KeyVaultName'), '.vault.azure.net/secrets/', parameters('IngestionSasTokenName'), '/)')]"
             }
         },

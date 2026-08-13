@@ -28,6 +28,14 @@ _CONTAINER_NAME_REGEX = re.compile(r'^[a-z0-9](?:[a-z0-9]|-(?!-)){1,61}[a-z0-9]$
 # to smuggle values past URL parsers, so they are rejected before parsing.
 _FORBIDDEN_CHARS_REGEX = re.compile(r'[\x00-\x20\x7f-\x9f]')
 
+# Control characters only. A blob name may legitimately contain a space, so the
+# stricter URL rule above is not applied to the name the SDK resolves.
+_CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
+
+# A retry generation is written by this function as a whole path segment, for
+# example "databricks-out/.../retry1/part-0.c000.json".
+_RETRY_SEGMENT_REGEX = re.compile(r'^retry(\d{1,3})$')
+
 
 class ValidationError(ValueError):
     """Raised when untrusted input fails validation."""
@@ -146,40 +154,46 @@ def validate_blob_url_host(url: str, allowed_hosts: Set[str]) -> None:
         raise ValidationError('Blob URL host {!r} is not an allowed storage host.'.format(hostname))
 
 
-def validate_container_name(container_name: str, allowed_containers: Optional[Set[str]] = None) -> str:
-    """Validate a container name and optionally check it against an allow-list.
+def validate_container_name(container_name: str, allowed_containers: Set[str]) -> str:
+    """Validate a container name and check it against the containers this app serves.
 
     :param container_name: container name resolved from the untrusted URL
-    :param allowed_containers: optional explicit allow-list; no check when empty
+    :param allowed_containers: containers this function is permitted to touch
     :return: the validated container name
-    :raises ValidationError: when the name is malformed or not allowed
+    :raises ValidationError: when the name is malformed, or is not one this app serves
     """
+    if not allowed_containers:
+        # Fail closed. An empty set means configuration is missing, and continuing
+        # would let a queue message name any container in the account.
+        raise ValidationError('No allowed containers are configured for this function app.')
     if not container_name or not isinstance(container_name, str):
         raise ValidationError('Container name is missing or not a string.')
     if not _CONTAINER_NAME_REGEX.match(container_name):
         raise ValidationError('Container name {!r} is not a valid Azure container name.'.format(container_name))
-    if allowed_containers and container_name not in allowed_containers:
-        raise ValidationError('Container {!r} is not in the configured allow-list.'.format(container_name))
+    if container_name not in allowed_containers:
+        raise ValidationError('Container {!r} is not one this function app serves.'.format(container_name))
     return container_name
 
 
-def validate_blob_path(blob_path: str, required_prefix: Optional[str] = None) -> str:
+def validate_blob_path(blob_path: str, required_root: Optional[str] = None,
+                       required_suffix: Optional[str] = None) -> str:
     """Validate a blob path resolved from an untrusted URL.
 
     The path is validated *after* the storage SDK has resolved and percent-decoded
     it, so encoded traversal sequences such as ``%2e%2e%2f`` are caught here.
 
     :param blob_path: blob name resolved by the storage SDK
-    :param required_prefix: optional prefix the blob must live under
+    :param required_root: first path segment the blob must live under
+    :param required_suffix: file name suffix the blob must carry
     :return: the validated blob path
-    :raises ValidationError: when the path is malformed or outside the prefix
+    :raises ValidationError: when the path is malformed or outside the pipeline
     """
     if not blob_path or not isinstance(blob_path, str):
         raise ValidationError('Blob path is missing or not a string.')
     if len(blob_path) > MAX_BLOB_PATH_LENGTH:
         raise ValidationError('Blob path exceeds {} characters.'.format(MAX_BLOB_PATH_LENGTH))
-    if _FORBIDDEN_CHARS_REGEX.search(blob_path):
-        raise ValidationError('Blob path contains control or whitespace characters.')
+    if _CONTROL_CHARS_REGEX.search(blob_path):
+        raise ValidationError('Blob path contains control characters.')
     if '\\' in blob_path:
         raise ValidationError('Blob path must not contain backslashes.')
     if blob_path.startswith('/'):
@@ -189,6 +203,46 @@ def validate_blob_path(blob_path: str, required_prefix: Optional[str] = None) ->
     if any(segment in ('', '.', '..') for segment in segments):
         raise ValidationError('Blob path {!r} contains empty or traversal segments.'.format(blob_path))
 
-    if required_prefix and not blob_path.startswith(required_prefix):
-        raise ValidationError('Blob path {!r} is outside the required prefix {!r}.'.format(blob_path, required_prefix))
+    if required_root:
+        # Compare whole segments. A prefix comparison would also accept a sibling
+        # directory whose name merely starts with the expected one.
+        if segments[0] != required_root:
+            raise ValidationError(
+                'Blob path {!r} is outside the {!r} directory.'.format(blob_path, required_root))
+        if len(segments) < 2:
+            raise ValidationError('Blob path {!r} does not name a file.'.format(blob_path))
+    if required_suffix and not segments[-1].endswith(required_suffix):
+        raise ValidationError(
+            'Blob path {!r} is not a {} file.'.format(blob_path, required_suffix))
     return blob_path
+
+
+def retry_generation(blob_path: str, max_retry_times: int) -> int:
+    """Return the retry generation encoded in a blob path.
+
+    The generation is written as its own path segment. Matching the segment rather
+    than searching the whole string keeps an unrelated file name such as
+    "notaretry999folder/part-0.c000.json" from being read as generation 999, which
+    would send the blob straight to the final failure container and delete it.
+
+    :param blob_path: validated blob path
+    :param max_retry_times: highest generation this deployment allows
+    :return: the generation, or 0 when the path carries none
+    :raises ValidationError: when more than one generation is present, or the
+        generation is outside the configured range
+    """
+    generations = [int(match.group(1))
+                   for match in (_RETRY_SEGMENT_REGEX.match(segment)
+                                 for segment in blob_path.split('/'))
+                   if match]
+    if not generations:
+        return 0
+    if len(generations) > 1:
+        raise ValidationError(
+            'Blob path {!r} carries more than one retry generation.'.format(blob_path))
+    generation = generations[0]
+    if generation < 1 or generation > max_retry_times:
+        raise ValidationError(
+            'Retry generation {} in {!r} is outside the configured range 1..{}.'.format(
+                generation, blob_path, max_retry_times))
+    return generation

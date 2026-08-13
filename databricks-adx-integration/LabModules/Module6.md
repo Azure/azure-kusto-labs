@@ -97,6 +97,15 @@ In this step we will deploy the new Databricks metadata handler Azure functions.
 
 Run **_create-dbsmetadatahandler-function.ps1_** to create  Azure Functions resource for Databricks meta-data handling functions.  
 
+***Note!** _A queue message tells this function which checkpoint file to read and, for
+rolled up `.compact` files, to rewrite in place. The script therefore pins it to the
+files the Databricks job actually produces: the configured storage account, the
+container in `Storage.FileSystemName`, the directory in
+`Storage.AzureStorageTargetFolder`, and a checkpoint log file sitting directly inside
+a `_spark_metadata` directory. A message naming any other blob in the account is
+rejected before it is read or rewritten. If you change the container or output folder
+in `provision-config.json`, re-run this script so the function is updated to match._
+
 Then run **_deploy-dbsmetadatahandler-function.ps1_** to deploy the Azure function code to the created Azure Function resources. 
 
  When the script is finished, you can verify the resource creation result in Azure Portal. 

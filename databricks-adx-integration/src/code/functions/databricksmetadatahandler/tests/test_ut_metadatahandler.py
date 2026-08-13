@@ -16,6 +16,18 @@ FAKE_QUEUE_URLS = ('https://account.queue.core.windows.net/q1, '
                    'https://account.queue.core.windows.net/q2, '
                    'https://account.queue.core.windows.net/q3')
 
+# The container and directory the Databricks job writes to, matching
+# Storage.FileSystemName and Storage.AzureStorageTargetFolder in provision-config.
+METADATA_CONTAINER = 'data'
+PATH_ROOT = 'databricks-out'
+CHECKPOINT_BLOB = PATH_ROOT + '/splitdata/output_0/_spark_metadata/0'
+CHECKPOINT_URL = 'https://account.dfs.core.windows.net/{}/{}'.format(
+    METADATA_CONTAINER, CHECKPOINT_BLOB)
+OUTPUT_ABFSS = ('abfss://' + METADATA_CONTAINER + '@account.dfs.core.windows.net/'
+                + PATH_ROOT + '/companyIdkey=company-id-0/typekey=TEMP/fake{}.json')
+OUTPUT_HTTPS = ('https://account.blob.core.windows.net/' + METADATA_CONTAINER + '/'
+                + PATH_ROOT + '/companyIdkey=company-id-0/typekey=TEMP/fake{}.json')
+
 class TestUtDatabricksMetadataHandler():
     @pytest.fixture(autouse=True)
     def configure_function(self, mocker, monkeypatch):
@@ -23,6 +35,8 @@ class TestUtDatabricksMetadataHandler():
         monkeypatch.setenv('DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL', FAKE_ACCOUNT_URL)
         monkeypatch.setenv('ADX_INGEST_QUEUE_URL_LIST', FAKE_QUEUE_URLS)
         monkeypatch.setenv('ADX_INGEST_QUEUE_SAS_TOKEN', 'fake_token')
+        monkeypatch.setenv('ALLOWED_METADATA_CONTAINERS', METADATA_CONTAINER)
+        monkeypatch.setenv('METADATA_PATH_ROOT', PATH_ROOT)
         # main() builds a telemetry client before it reaches any validation, and a
         # real one opens a sender thread, so every test gets a mocked one.
         mocker.patch('__app__.metadatahandler.TelemetryClient')
@@ -41,18 +55,25 @@ class TestUtDatabricksMetadataHandler():
         with pytest.raises(ValueError):
             metadatahandler.convert_abfss_path_to_https(fake_abfss_path)
 
+    @pytest.mark.parametrize('abfss_path', [
+        # An accepted reference buried inside a longer string.
+        'prefix abfss://container@account.dfs.core.windows.net/folder/fake.json',
+        # A host that only looks like the storage endpoint.
+        'abfss://container@account.dfs.core.windows.net.attacker.example/folder/fake.json',
+    ])
+    def test_convert_abfss_path_to_https_is_anchored(self, abfss_path):
+        with pytest.raises(ValueError):
+            metadatahandler.convert_abfss_path_to_https(abfss_path)
+
     def test_generate_metadata_queue_messages(self):
         event_time = '2020-09-07T06:43:03.2126947Z'
-        metadata_file_content = """
-        v1\n
-        {"path":"abfss://container@account.dfs.core.windows.net/folder/fake3.json","size":1014200,"modificationTime":1599182552000}\n
-        {"path":"abfss://container@account.dfs.core.windows.net/folder/fake2.json","size":1014200,"modificationTime":1599182552000}\n
-        {"path":"abfss://container@account.dfs.core.windows.net/folder/fake1.json","size":1014200,"modificationTime":1599182552000}
-        """
+        metadata_file_content = "\n".join(
+            ['v1'] + ['{{"path":"{}","size":1014200,"modificationTime":1599182552000}}'.format(
+                OUTPUT_ABFSS.format(i + 1)) for i in (2, 1, 0)])
         expected_result = []
         for i in range(3):
             msg = metadatahandler.INGEST_QUEUE_MSG_TEMPLATE.format(blob_size='1014200',
-                                                                   blob_url=f"https://account.blob.core.windows.net/container/folder/fake{i+1}.json",
+                                                                   blob_url=OUTPUT_HTTPS.format(i + 1),
                                                                    event_time=event_time,
                                                                    modification_time=1599182552000)
             msg = json.dumps(json.loads(msg))
@@ -71,18 +92,15 @@ class TestUtDatabricksMetadataHandler():
                 "api": "PutBlockList",
                 "contentLength": 4194349,
                 "blobType": "BlockBlob",
-                "destinationUrl": "https://account.dfs.core.windows.net/container/_spark_metadata/0"
+                "destinationUrl": CHECKPOINT_URL
             }
         }
         req = func.QueueMessage(body=json.dumps(msg_body))
 
         mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
-        fake_metadata_file_content = """
-        v1\n
-        {"path":"abfss://container@account.dfs.core.windows.net/folder/fake1.json","size":1014200,"modificationTime":1599182552000}\n
-        {"path":"abfss://container@account.dfs.core.windows.net/folder/fake2.json","size":1014200,"modificationTime":1599182552000}\n
-        {"path":"abfss://container@account.dfs.core.windows.net/folder/fake3.json","size":1014200,"modificationTime":1599182552000}
-        """
+        fake_metadata_file_content = "\n".join(
+            ['v1'] + ['{{"path":"{}","size":1014200,"modificationTime":1599182552000}}'.format(
+                OUTPUT_ABFSS.format(i + 1)) for i in range(3)])
         mock_get_blob_content.return_value = fake_metadata_file_content
 
         async def fake_send_message(*args, **kwargs):
@@ -104,39 +122,73 @@ class TestUtDatabricksMetadataHandler():
             "data": {"destinationUrl": destination_url}
         }))
 
-    @pytest.mark.parametrize('bad_url', [
+    @pytest.mark.parametrize('bad_host', [
         # A different storage account. The privileged client is built from the
         # configured account, so this would read our own storage, not theirs.
-        'https://attacker.blob.core.windows.net/container/_spark_metadata/0',
+        'attacker.blob.core.windows.net',
         # Lookalike host that only shares a prefix with the allowed host.
-        'https://account.blob.core.windows.net.attacker.example/container/_spark_metadata/0',
+        'account.blob.core.windows.net.attacker.example',
         # Credentials embedded to confuse naive host parsing.
-        'https://account.blob.core.windows.net:pwd@attacker.example/container/_spark_metadata/0',
-        'http://account.blob.core.windows.net/container/_spark_metadata/0',
+        'account.blob.core.windows.net:pwd@attacker.example',
     ])
-    def test_main_rejects_off_account_url(self, mocker, bad_url):
+    def test_main_rejects_off_account_url(self, mocker, bad_host):
         mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
+        bad_url = 'https://{}/{}/{}'.format(bad_host, METADATA_CONTAINER, CHECKPOINT_BLOB)
+        with pytest.raises(metadatahandler.ValidationError):
+            metadatahandler.main(self._metadata_message(bad_url))
+        assert mock_get_blob_content.call_count == 0
+
+    def test_main_rejects_a_non_https_url(self, mocker):
+        mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
+        bad_url = 'http://account.blob.core.windows.net/{}/{}'.format(
+            METADATA_CONTAINER, CHECKPOINT_BLOB)
         with pytest.raises(metadatahandler.ValidationError):
             metadatahandler.main(self._metadata_message(bad_url))
         assert mock_get_blob_content.call_count == 0
 
     @pytest.mark.parametrize('bad_path', [
         # Traversal out of the metadata directory.
-        'container/_spark_metadata/../../secret.compact',
+        PATH_ROOT + '/_spark_metadata/../../secret.compact',
         # Percent encoded traversal, decoded by the storage sdk before it reaches
         # the sink, so it must be validated after the sdk has resolved it.
-        'container/%2e%2e%2f%2e%2e%2fsecret.compact',
+        '%2e%2e%2f%2e%2e%2fsecret.compact',
         # Any blob outside a _spark_metadata directory, which is the only place
         # this function has a legitimate reason to read or rewrite.
-        'container/production/customer-data.compact',
-        # Lookalike directory that must not satisfy the required segment.
-        'container/_spark_metadata_evil/0',
+        PATH_ROOT + '/production/customer-data.compact',
+        # Lookalike directory that must not satisfy the required directory.
+        PATH_ROOT + '/_spark_metadata_evil/0',
+        # The directory somewhere above the file rather than directly containing
+        # it, which would still reach an unrelated blob.
+        PATH_ROOT + '/_spark_metadata/nested/evil.compact',
+        # A file name Spark never writes.
+        PATH_ROOT + '/output_0/_spark_metadata/not-a-spark-file.compact',
+        # Outside the directory the Databricks job writes to.
+        'unrelated/output_0/_spark_metadata/0',
+        # A sibling directory whose name merely starts with the expected one.
+        PATH_ROOT + 'X/output_0/_spark_metadata/0',
     ])
     def test_main_rejects_paths_outside_the_metadata_directory(self, mocker, bad_path):
         mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
-        url = 'https://account.blob.core.windows.net/{}'.format(bad_path)
+        url = 'https://account.blob.core.windows.net/{}/{}'.format(METADATA_CONTAINER, bad_path)
         with pytest.raises(metadatahandler.ValidationError):
             metadatahandler.main(self._metadata_message(url))
+        assert mock_get_blob_content.call_count == 0
+
+    def test_main_rejects_another_container_in_the_same_account(self, mocker):
+        mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
+        url = 'https://account.blob.core.windows.net/private/{}'.format(CHECKPOINT_BLOB)
+        with pytest.raises(metadatahandler.ValidationError):
+            metadatahandler.main(self._metadata_message(url))
+        assert mock_get_blob_content.call_count == 0
+
+    def test_main_fails_closed_without_a_container(self, mocker, monkeypatch):
+        # Naming the account is not enough on its own; without a container the
+        # function would accept any blob in the account.
+        monkeypatch.setenv('ALLOWED_METADATA_CONTAINERS', '')
+        metadatahandler.init_config_values()
+        mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
+        with pytest.raises(metadatahandler.ValidationError):
+            metadatahandler.main(self._metadata_message(CHECKPOINT_URL))
         assert mock_get_blob_content.call_count == 0
 
     def test_main_fails_closed_without_configuration(self, mocker, monkeypatch):
@@ -146,8 +198,7 @@ class TestUtDatabricksMetadataHandler():
 
         mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
         with pytest.raises(metadatahandler.ValidationError):
-            metadatahandler.main(self._metadata_message(
-                'https://account.blob.core.windows.net/container/_spark_metadata/0'))
+            metadatahandler.main(self._metadata_message(CHECKPOINT_URL))
         assert mock_get_blob_content.call_count == 0
 
     def test_allowed_hosts_cover_both_blob_and_dfs_endpoints(self):
@@ -156,18 +207,27 @@ class TestUtDatabricksMetadataHandler():
         assert metadatahandler.ALLOWED_STORAGE_HOSTS == {
             'account.blob.core.windows.net', 'account.dfs.core.windows.net'}
 
-    def test_generate_metadata_queue_messages_skips_off_account_paths(self):
+    def test_generate_metadata_queue_messages_skips_references_outside_the_pipeline(self):
         # The metadata file content also selects destinations for the downstream
-        # ingest function, so off-account entries must not be forwarded.
+        # ingest function, so entries outside this account, container or output
+        # directory must not be forwarded.
         event_time = '2020-09-07T06:43:03.2126947Z'
-        metadata_file_content = (
-            'v1\n'
-            '{"path":"abfss://container@account.dfs.core.windows.net/folder/good.json",'
-            '"size":1,"modificationTime":1599182552000}\n'
-            '{"path":"abfss://container@attacker.dfs.core.windows.net/folder/bad.json",'
-            '"size":1,"modificationTime":1599182552000}\n'
-        )
+        entry = ('{{"path":"{}","size":1,"modificationTime":1599182552000}}')
+        metadata_file_content = "\n".join([
+            'v1',
+            entry.format(OUTPUT_ABFSS.format(1)),
+            # Another storage account.
+            entry.format('abfss://data@attacker.dfs.core.windows.net/'
+                         + PATH_ROOT + '/bad.json'),
+            # Another container in the same account.
+            entry.format('abfss://private@account.dfs.core.windows.net/'
+                         + PATH_ROOT + '/bad.json'),
+            # The right container, but outside the Databricks output directory.
+            entry.format('abfss://data@account.dfs.core.windows.net/unrelated/bad.json'),
+        ])
         actual = metadatahandler.generate_metadata_queue_messages(event_time, metadata_file_content)
         assert len(actual) == 1
-        assert 'account.blob.core.windows.net' in actual[0]
+        assert OUTPUT_HTTPS.format(1) in actual[0]
         assert 'attacker' not in actual[0]
+        assert 'private' not in actual[0]
+        assert 'unrelated' not in actual[0]

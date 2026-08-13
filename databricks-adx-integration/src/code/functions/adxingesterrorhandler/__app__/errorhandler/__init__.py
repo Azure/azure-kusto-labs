@@ -12,7 +12,6 @@ from typing import Tuple
 import json
 import logging
 import os
-import re
 import sys
 import time
 import requests
@@ -26,6 +25,7 @@ from .validation import (
     ValidationError,
     parse_allow_list,
     redact_url,
+    retry_generation,
     storage_hosts_from_connection_string,
     validate_blob_path,
     validate_blob_url_host,
@@ -46,11 +46,13 @@ BLOB_REQ_MAX_ATTEMPT = 3
 BLOB_REQ_MAX_RETRY_DELAY_SEC = 60
 APP_INSIGHT_QUERY_URL = 'https://api.applicationinsights.io/v1/apps/{app_id}/query'
 
-# Storage hosts and containers this function is entitled to act on. Populated by
-# get_config_values() from the credential the function already holds, so that a
-# queue message cannot steer the privileged copy/delete at another account.
+# The blobs this function is entitled to move. A poison queue message names the
+# blob to copy and then delete, so the account, container, pipeline directory and
+# file type are all pinned to what this deployment actually ingests.
 ALLOWED_STORAGE_HOSTS = set()
 ALLOWED_SOURCE_CONTAINERS = set()
+SOURCE_PATH_ROOT = ''
+SOURCE_FILE_SUFFIX = '.c000.json'
 
 # # uncomment this for local debugging
 # logging.basicConfig(
@@ -68,6 +70,7 @@ def get_config_values() -> None:
     global BLOB_REQ_MAX_ATTEMPT, BLOB_REQ_MAX_RETRY_DELAY_SEC
     global APP_INSIGHT_APP_ID, APP_INSIGHT_APP_KEY, APP_INSIGHT_QUERY_URL
     global ALLOWED_STORAGE_HOSTS, ALLOWED_SOURCE_CONTAINERS
+    global SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX
 
     RETRY_END_IN_FAIL_EVENT_NAME = os.getenv("RETRY_END_IN_FAIL_EVENT_NAME", RETRY_END_IN_FAIL_EVENT_NAME)
     RETRY_EVENT_NAME = os.getenv("RETRY_EVENT_NAME", RETRY_EVENT_NAME)
@@ -83,19 +86,19 @@ def get_config_values() -> None:
 
     # Bind this function to the storage account its own connection string points at.
     # ALLOWED_STORAGE_HOSTS only needs setting for sovereign clouds, custom domains
-    # or the local storage emulator; ALLOWED_SOURCE_CONTAINERS is an optional
-    # additional restriction and is not applied when left unset.
+    # or the local storage emulator.
     ALLOWED_STORAGE_HOSTS = storage_hosts_from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
     ALLOWED_STORAGE_HOSTS |= {host.lower() for host in parse_allow_list(os.getenv("ALLOWED_STORAGE_HOSTS"))}
+    # The container, directory and file type this deployment ingests. Naming the
+    # account alone is not enough: without these, a queue message could still
+    # select any other blob in the same account.
     ALLOWED_SOURCE_CONTAINERS = parse_allow_list(os.getenv("ALLOWED_SOURCE_CONTAINERS"))
+    SOURCE_PATH_ROOT = os.getenv("SOURCE_PATH_ROOT", SOURCE_PATH_ROOT)
+    SOURCE_FILE_SUFFIX = os.getenv("SOURCE_FILE_SUFFIX", SOURCE_FILE_SUFFIX)
 
 def get_blob_retry_times(blob_path: str) -> int:
     """ Get the ingest trial count for a given blob path """
-    retry_times = 0
-    pattern = r'retry(\d+)'
-    match = re.compile(pattern).search(blob_path)
-    retry_times = int(match.group(1)) if match else retry_times
-    return retry_times
+    return retry_generation(blob_path, MAX_INGEST_RETRIES_TIMES)
 
 def move_blob_file(connect_str: str, source_container: str, target_container: str,
                    source_path: str, target_path: str) -> None:
@@ -112,11 +115,15 @@ def retry_blob_ingest_to_adx(container_name: str, blob_file_path: str,
                              new_container_name: str, new_blob_file_path: str) -> None:
     """ Re-trigger the ingest pipeline by moving blob to retry folder """
 
-    # The destination is derived from the queue supplied source path, and
-    # move_blob_file() deletes the source once the copy is started, so validate
-    # the destination at the sink as well as the source at the entry point.
-    validate_container_name(new_container_name)
-    validate_blob_path(new_blob_file_path)
+    # move_blob_file() deletes the source once the copy is started, so both ends are
+    # re-checked here rather than trusting the values that arrived from main().
+    # The destination may be the final failure container, which is not a container
+    # this function reads from.
+    validate_container_name(container_name, ALLOWED_SOURCE_CONTAINERS)
+    validate_blob_path(blob_file_path, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
+    validate_container_name(new_container_name,
+                            ALLOWED_SOURCE_CONTAINERS | {RETRY_END_IN_FAIL_CONTAINER_NAME})
+    validate_blob_path(new_blob_file_path, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
 
     # Add a random retry delay plus exponential backoff to mitigate the concurrent access to Azure
     retryer = Retrying(stop=stop_after_attempt(BLOB_REQ_MAX_ATTEMPT),
@@ -159,7 +166,7 @@ def get_blob_info_from_url(url: str) -> Tuple[str, str]:
     validate_blob_url_host(url, ALLOWED_STORAGE_HOSTS)
     temp_blob_client = BlobClient.from_blob_url(blob_url=url)
     container_name = validate_container_name(temp_blob_client.container_name, ALLOWED_SOURCE_CONTAINERS)
-    blob_name = validate_blob_path(temp_blob_client.blob_name)
+    blob_name = validate_blob_path(temp_blob_client.blob_name, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
     return container_name, blob_name
 
 def main(msg: func.QueueMessage) -> None:
@@ -186,7 +193,7 @@ def main(msg: func.QueueMessage) -> None:
         raise
 
     dest_container_name, dest_blob_file_path = get_new_blob_move_file_path(container_name, blob_file_path)
-    retry_times = get_blob_retry_times(filepath)
+    retry_times = get_blob_retry_times(blob_file_path)
     retry_times += 1
 
     # Initialize Track Event/Metrics to App insight
