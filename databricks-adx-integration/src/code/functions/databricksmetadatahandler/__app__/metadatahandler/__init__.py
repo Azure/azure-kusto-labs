@@ -26,6 +26,16 @@ from applicationinsights import TelemetryClient
 from azure.storage.queue.aio import QueueClient
 from azure.storage.blob import BlobServiceClient, BlobClient
 
+from .validation import (
+    ValidationError,
+    parse_allow_list,
+    redact_url,
+    storage_hosts_from_account_url,
+    validate_blob_path,
+    validate_blob_url_host,
+    validate_container_name,
+)
+
 # Required func app configuration
 APPINSIGHTS_INSTRUMENTATIONKEY = None
 DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL = None
@@ -35,6 +45,15 @@ ADX_INGEST_QUEUE_SAS_TOKEN = None
 METADATA_HANDLE_EVENT_NAME = 'METADATA_HANDLE'
 CONCURRENT_ENQUEUE_TASKS = '20'
 MAX_COMPACT_FILE_RECORDS = 0  # The max file records number in compact file
+
+# Storage hosts, containers and directory this function is entitled to act on.
+# Populated by init_config_values() from configuration the function already has,
+# so that a queue message cannot steer the privileged blob client elsewhere.
+ALLOWED_STORAGE_HOSTS = set()
+ALLOWED_METADATA_CONTAINERS = set()
+# Spark's structured streaming file sink always writes its checkpoint log to a
+# directory of this name, so it is a safe default rather than a lab specific one.
+METADATA_REQUIRED_SEGMENT = '_spark_metadata'
 
 # CONFIG FOR LOG MESSAGE
 HEADER = "[Databricks Meatadata Handler]"
@@ -73,6 +92,7 @@ def init_config_values():
     global ADX_INGEST_QUEUE_URL_LIST, ADX_INGEST_QUEUE_SAS_TOKEN
     global CONCURRENT_ENQUEUE_TASKS
     global MAX_COMPACT_FILE_RECORDS
+    global ALLOWED_STORAGE_HOSTS, ALLOWED_METADATA_CONTAINERS, METADATA_REQUIRED_SEGMENT
     APPINSIGHTS_INSTRUMENTATIONKEY = os.getenv("APPINSIGHTS_INSTRUMENTATIONKEY",
                                                APPINSIGHTS_INSTRUMENTATIONKEY)
     DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL = os.getenv("DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL",
@@ -83,13 +103,23 @@ def init_config_values():
     ADX_INGEST_QUEUE_SAS_TOKEN = os.getenv("ADX_INGEST_QUEUE_SAS_TOKEN", ADX_INGEST_QUEUE_SAS_TOKEN)
     CONCURRENT_ENQUEUE_TASKS = int(os.getenv("CONCURRENT_ENQUEUE_TASKS", CONCURRENT_ENQUEUE_TASKS))
     ADX_INGEST_QUEUE_URL_LIST = ADX_INGEST_QUEUE_URL_LIST.replace(' ', '').split(',')
-    logging.info(f"ADX_INGEST_QUEUE_URL_LIST: {ADX_INGEST_QUEUE_URL_LIST}")
+    logging.info("ADX_INGEST_QUEUE_URL_LIST: %s",
+                 [redact_url(url) for url in ADX_INGEST_QUEUE_URL_LIST])
 
 
     HEADER = os.getenv("LOG_MESSAGE_HEADER", HEADER)
     PROCESS_PROGRAM_NAME = os.getenv("PROCESS_PROGRAM_NAME", PROCESS_PROGRAM_NAME)
     METADATA_HANDLE_EVENT_NAME = os.getenv("METADATA_HANDLE_EVENT_NAME", METADATA_HANDLE_EVENT_NAME)
     MAX_COMPACT_FILE_RECORDS = int(os.getenv("MAX_COMPACT_FILE_RECORDS", str(MAX_COMPACT_FILE_RECORDS)))
+
+    # Bind this function to the storage account it is already configured against.
+    # ALLOWED_STORAGE_HOSTS only needs setting for sovereign clouds, custom domains
+    # or the local storage emulator; ALLOWED_METADATA_CONTAINERS is an optional
+    # additional restriction and is not applied when left unset.
+    ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL)
+    ALLOWED_STORAGE_HOSTS |= {host.lower() for host in parse_allow_list(os.getenv("ALLOWED_STORAGE_HOSTS"))}
+    ALLOWED_METADATA_CONTAINERS = parse_allow_list(os.getenv("ALLOWED_METADATA_CONTAINERS"))
+    METADATA_REQUIRED_SEGMENT = os.getenv("METADATA_REQUIRED_SEGMENT", METADATA_REQUIRED_SEGMENT)
 
 def get_blob_content(container_name: str, blob_path: str) -> str:
     """ download blob file content as string
@@ -156,7 +186,7 @@ def get_queue_client(url: str) -> QueueClient:
     if not queue_client_dict.get(url):
         client = QueueClient.from_queue_url(url, credential=ADX_INGEST_QUEUE_SAS_TOKEN)
         queue_client_dict[url] = client
-        logging.info(f"{HEADER} Initialize Queue Client for {url}")
+        logging.info(f"{HEADER} Initialize Queue Client for {redact_url(url)}")
     return queue_client_dict[url]
 
 def convert_abfss_path_to_https(abfss_path: str) -> str:
@@ -208,6 +238,10 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
 
         try:
             https_url = convert_abfss_path_to_https(output_abfss_path)
+            # The metadata file content also selects a destination, for the ingest
+            # function downstream. Confine those urls to the same storage account
+            # rather than forwarding whatever the file happens to contain.
+            validate_blob_url_host(https_url, ALLOWED_STORAGE_HOSTS)
         except Exception: # pylint: disable=bare-except
             logging.warning(f"{HEADER} Skip invalid abfss path {output_abfss_path}", exc_info=True)
             continue
@@ -290,8 +324,9 @@ def main(msg: func.QueueMessage) -> None:
     :return: None
     """
     code_start_time = time.time()
-    logging.info('Python queue trigger function processed a queue item: %s',
-                 msg.get_body().decode('utf-8'))
+    # The queue body carries the blob url, which can include a SAS token, so the
+    # message is identified rather than echoed into the logs.
+    logging.info('Python queue trigger function processed a queue item: %s', msg.id)
     # modify the log level of azure sdk requests
     logging.getLogger('azure').setLevel(logging.WARNING)
     init_config_values()
@@ -304,27 +339,38 @@ def main(msg: func.QueueMessage) -> None:
     # 1. Get trigger file content (rename event)
     content_json = json.loads(msg.get_body().decode('utf-8'))
 
-    logging.info("meta-data event content: {}".format(msg.get_body().decode('utf-8')))
     file_url = content_json['data']['destinationUrl']
-    logging.info(f"file_url: {file_url}")
+    logging.info(f"file_url: {redact_url(file_url)}")
     event_time = content_json['eventTime']
 
     # 2. Download metadata blob content
-    logging.info(f"{HEADER} Download blob file from {file_url}")
-    temp_blob_client = BlobClient.from_blob_url(blob_url=file_url, logging_enable=False)
-    blob_path = temp_blob_client.blob_name
-    container_name = temp_blob_client.container_name
+    logging.info(f"{HEADER} Download blob file from {redact_url(file_url)}")
+    try:
+        # Authorise the raw url before the sdk parses it, then validate what the
+        # sdk resolved, since those resolved values are what reach the privileged
+        # blob client built from DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL.
+        validate_blob_url_host(file_url, ALLOWED_STORAGE_HOSTS)
+        temp_blob_client = BlobClient.from_blob_url(blob_url=file_url, logging_enable=False)
+        blob_path = validate_blob_path(temp_blob_client.blob_name, METADATA_REQUIRED_SEGMENT)
+        container_name = validate_container_name(temp_blob_client.container_name,
+                                                 ALLOWED_METADATA_CONTAINERS)
+    except ValidationError:
+        # Surface the rejection explicitly. A message that fails validation is
+        # worth its own log entry rather than being lost in a generic trace.
+        logging.error("%s Rejected untrusted metadata blob url from queue message: %s",
+                      HEADER, redact_url(file_url))
+        raise
 
     try:
         metadata_file_content = get_blob_content(container_name, blob_path)
     except Exception:
-        logging.exception(f"Failed to download blob from url {file_url}")
+        logging.exception(f"Failed to download blob from url {redact_url(file_url)}")
         raise
 
     # 3. Parse split output file from the metadata
     queue_msg_list = generate_metadata_queue_messages(event_time, metadata_file_content)
     logging.info(
-        f"{HEADER} Generate metadata queue_messages from {file_url}, {len(queue_msg_list)} messages")
+        f"{HEADER} Generate metadata queue_messages from {redact_url(file_url)}, {len(queue_msg_list)} messages")
 
     # 4. Loop to enqueue msg to ADX ingest queue
     queue_client_list = []
@@ -346,10 +392,10 @@ def main(msg: func.QueueMessage) -> None:
                             blob_path,
                             get_shrinked_checkpoint_content(
                                 metadata_file_content, MAX_COMPACT_FILE_RECORDS))
-        logging.info(f"{HEADER} Reduced checkpoint files {file_url}, max lines is {MAX_COMPACT_FILE_RECORDS}")
+        logging.info(f"{HEADER} Reduced checkpoint files {redact_url(file_url)}, max lines is {MAX_COMPACT_FILE_RECORDS}")
 
     code_duration = time.time() - code_start_time
     tc.track_event(METADATA_HANDLE_EVENT_NAME,
-                   {'FILE_URL': file_url},
+                   {'FILE_URL': redact_url(file_url)},
                    {METADATA_HANDLE_EVENT_NAME + '_DURATION_SEC': code_duration})
     tc.flush()

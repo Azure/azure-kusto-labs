@@ -94,6 +94,13 @@ Modify the following configuration of the two functions in the **_provision-conf
 Connection string is protected using Azure Key Vault created in Module 0.  
 ![function_setting](assets/Module5/function_setting.png)  
 
+***Note!** _A poison-queue message tells this function which blob to copy and then
+delete. The function therefore accepts only blobs on the storage account named in its
+own `AZURE_STORAGE_CONNECTION_STRING`, and rejects container or path values that try
+to escape it. No extra configuration is needed for this; it is derived from the
+connection string the script already sets. If you point the function at a different
+storage account, update that connection string rather than the queue message._
+
 
 
 #### Step 3: Deploy Code to Error-Retry Azure Functions

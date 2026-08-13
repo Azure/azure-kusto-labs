@@ -5,7 +5,23 @@ import pytest
 import azure.functions as func
 import __app__.errorhandler as errorhandler
 
+# The function derives the storage account it is allowed to act on from its own
+# connection string, so the tests must supply one just as the deployment does.
+FAKE_CONNECTION_STRING = ('DefaultEndpointsProtocol=https;AccountName=test;'
+                          'AccountKey=Zm9vYmFyYmF6Cg==;EndpointSuffix=core.windows.net')
+
 class TestUtAdxIngestErrorHandler():
+    @pytest.fixture(autouse=True)
+    def configure_function(self, monkeypatch, mocker):
+        """ Apply the function app configuration the deployment provides. """
+        monkeypatch.setenv('AZURE_STORAGE_CONNECTION_STRING', FAKE_CONNECTION_STRING)
+        # Never emit real telemetry from a unit test. The App Insights sender
+        # retries against the live endpoint and otherwise dominates the runtime
+        # of the whole suite. patch.object is undone properly after each test,
+        # unlike assigning over the module attribute directly.
+        mocker.patch.object(errorhandler, 'TelemetryClient')
+        errorhandler.get_config_values()
+
     def test_main(self, mocker):
         fake_container = 'split'
         fake_path = '2020/08/17/17/00/customerId=cId/pname=sao/part-uuid.c000.json'
@@ -30,10 +46,6 @@ class TestUtAdxIngestErrorHandler():
         mock_move_blob_file = mocker.patch('__app__.errorhandler.move_blob_file')
         mock_move_blob_file.return_value = None
         errorhandler.move_blob_file = mock_move_blob_file
-        mock_get_config_values = mocker.patch('__app__.errorhandler.get_config_values')
-        errorhandler.get_config_values = mock_get_config_values
-        mock_azure_telemetry_client = mocker.patch('applicationinsights.TelemetryClient')
-        errorhandler.TelemetryClient = mock_azure_telemetry_client
         
         spy_retry_blob_ingest_to_adx = mocker.spy(errorhandler, 'retry_blob_ingest_to_adx')
 
@@ -100,9 +112,92 @@ class TestUtAdxIngestErrorHandler():
         assert actual_cotainer == expected_container
         assert actual_blob_path == expected_blob_path
 
-    def test_retry_blob_ingest_to_adx(self, mocker):
+    def test_retry_blob_ingest_to_adx(self, mocker, monkeypatch):
         spy_move_blob_file = mocker.spy(errorhandler, 'move_blob_file')
-        errorhandler.BLOB_MAX_RETRY_DELAY_SEC = 1  # Shorten the delay time
+        # Shorten the backoff. The global is BLOB_REQ_MAX_RETRY_DELAY_SEC; setting
+        # any other name leaves the default 60s in place and makes this test sleep
+        # through a full minute of real backoff.
+        monkeypatch.setenv('BLOB_REQ_MAX_RETRY_DELAY_SEC', '1')
+        # Keep move_blob_file failing locally on an unusable connection string
+        # rather than attempting to reach a storage account over the network.
+        monkeypatch.setenv('AZURE_STORAGE_CONNECTION_STRING', '')
+        errorhandler.get_config_values()
         with pytest.raises(Exception):
-            errorhandler.retry_blob_ingest_to_adx('fake_container', 'fake_path', 'fake_container', 'fake_new_path')
+            errorhandler.retry_blob_ingest_to_adx('fake-container', 'fake_path', 'fake-container', 'fake_new_path')
         assert spy_move_blob_file.call_count == errorhandler.BLOB_REQ_MAX_ATTEMPT
+
+    # --- Validation of the queue supplied blob url ---
+
+    @pytest.mark.parametrize('bad_url', [
+        # Different storage account entirely.
+        'https://attacker.blob.core.windows.net/split/part-uuid.c000.json',
+        # Lookalike host that only shares a prefix with the allowed host.
+        'https://test.blob.core.windows.net.attacker.example/split/part-uuid.c000.json',
+        # Credentials embedded to confuse naive host parsing.
+        'https://test.blob.core.windows.net:pwd@attacker.example/split/part-uuid.c000.json',
+        # Non https schemes.
+        'http://test.blob.core.windows.net/split/part-uuid.c000.json',
+        'file:///etc/passwd',
+        # Control characters used to smuggle values past url parsers.
+        'https://test.blob.core.windows.net/split/part\n.json',
+    ])
+    def test_get_blob_info_from_url_rejects_off_account_urls(self, bad_url):
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.get_blob_info_from_url(bad_url)
+
+    @pytest.mark.parametrize('bad_path', [
+        '../../other-container/secret.json',
+        'a/../../../secret.json',
+        # Percent encoded traversal, decoded by the storage sdk before it reaches
+        # the sink, so it must be validated after the sdk has resolved it.
+        '%2e%2e%2f%2e%2e%2fsecret.json',
+    ])
+    def test_get_blob_info_from_url_rejects_traversal(self, bad_path):
+        url = 'https://test.blob.core.windows.net/split/{}'.format(bad_path)
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.get_blob_info_from_url(url)
+
+    def test_get_blob_info_from_url_fails_closed_without_configuration(self, monkeypatch):
+        monkeypatch.setenv('AZURE_STORAGE_CONNECTION_STRING', '')
+        errorhandler.get_config_values()
+        assert errorhandler.ALLOWED_STORAGE_HOSTS == set()
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.get_blob_info_from_url(
+                'https://test.blob.core.windows.net/split/part-uuid.c000.json')
+
+    def test_allowed_hosts_cover_both_blob_and_dfs_endpoints(self):
+        # Databricks emits dfs (ADLS Gen2) urls while the blob sdk uses blob urls;
+        # both address the same account and must both be accepted.
+        assert errorhandler.ALLOWED_STORAGE_HOSTS == {
+            'test.blob.core.windows.net', 'test.dfs.core.windows.net'}
+
+    def test_optional_container_allow_list_is_enforced(self, monkeypatch):
+        monkeypatch.setenv('ALLOWED_SOURCE_CONTAINERS', 'split, othercontainer')
+        errorhandler.get_config_values()
+
+        container, _ = errorhandler.get_blob_info_from_url(
+            'https://test.blob.core.windows.net/split/part-uuid.c000.json')
+        assert container == 'split'
+
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.get_blob_info_from_url(
+                'https://test.blob.core.windows.net/notallowed/part-uuid.c000.json')
+
+    def test_main_rejects_off_account_url_before_moving_anything(self, mocker):
+        spy_move_blob_file = mocker.spy(errorhandler, 'move_blob_file')
+        msg_body = {
+            "data": {"url": 'https://attacker.blob.core.windows.net/split/part-uuid.c000.json'}
+        }
+        req = func.QueueMessage(body=json.dumps(msg_body))
+
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.main(req)
+        # The copy/delete must not have been attempted at all.
+        assert spy_move_blob_file.call_count == 0
+
+    def test_retry_blob_ingest_to_adx_rejects_traversal_destination(self, mocker):
+        spy_move_blob_file = mocker.spy(errorhandler, 'move_blob_file')
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.retry_blob_ingest_to_adx(
+                'split', 'part-uuid.c000.json', 'split', '../escaped/part-uuid.c000.json')
+        assert spy_move_blob_file.call_count == 0

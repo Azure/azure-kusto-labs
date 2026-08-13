@@ -22,6 +22,16 @@ from azure.storage.blob import BlobClient, BlobServiceClient
 from tenacity import wait_exponential, stop_after_attempt, wait_random, Retrying
 import azure.functions as func
 
+from .validation import (
+    ValidationError,
+    parse_allow_list,
+    redact_url,
+    storage_hosts_from_connection_string,
+    validate_blob_path,
+    validate_blob_url_host,
+    validate_container_name,
+)
+
 # Required func app configuration
 AZURE_STORAGE_CONNECTION_STRING = ''
 APP_INSIGHT_KEY = ''
@@ -35,6 +45,12 @@ RETRY_END_IN_FAIL_CONTAINER_NAME = 'adx-ingest-retry-end-in-fail'
 BLOB_REQ_MAX_ATTEMPT = 3
 BLOB_REQ_MAX_RETRY_DELAY_SEC = 60
 APP_INSIGHT_QUERY_URL = 'https://api.applicationinsights.io/v1/apps/{app_id}/query'
+
+# Storage hosts and containers this function is entitled to act on. Populated by
+# get_config_values() from the credential the function already holds, so that a
+# queue message cannot steer the privileged copy/delete at another account.
+ALLOWED_STORAGE_HOSTS = set()
+ALLOWED_SOURCE_CONTAINERS = set()
 
 # # uncomment this for local debugging
 # logging.basicConfig(
@@ -51,6 +67,7 @@ def get_config_values() -> None:
     global MAX_INGEST_RETRIES_TIMES, RETRY_END_IN_FAIL_CONTAINER_NAME
     global BLOB_REQ_MAX_ATTEMPT, BLOB_REQ_MAX_RETRY_DELAY_SEC
     global APP_INSIGHT_APP_ID, APP_INSIGHT_APP_KEY, APP_INSIGHT_QUERY_URL
+    global ALLOWED_STORAGE_HOSTS, ALLOWED_SOURCE_CONTAINERS
 
     RETRY_END_IN_FAIL_EVENT_NAME = os.getenv("RETRY_END_IN_FAIL_EVENT_NAME", RETRY_END_IN_FAIL_EVENT_NAME)
     RETRY_EVENT_NAME = os.getenv("RETRY_EVENT_NAME", RETRY_EVENT_NAME)
@@ -63,6 +80,14 @@ def get_config_values() -> None:
     APP_INSIGHT_APP_ID = os.environ.get('APP_INSIGHT_APP_ID', APP_INSIGHT_APP_ID)
     APP_INSIGHT_APP_KEY = os.environ.get('APP_INSIGHT_APP_KEY', APP_INSIGHT_APP_KEY)
     APP_INSIGHT_QUERY_URL = os.environ.get('APP_INSIGHT_QUERY_URL', APP_INSIGHT_QUERY_URL)
+
+    # Bind this function to the storage account its own connection string points at.
+    # ALLOWED_STORAGE_HOSTS only needs setting for sovereign clouds, custom domains
+    # or the local storage emulator; ALLOWED_SOURCE_CONTAINERS is an optional
+    # additional restriction and is not applied when left unset.
+    ALLOWED_STORAGE_HOSTS = storage_hosts_from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+    ALLOWED_STORAGE_HOSTS |= {host.lower() for host in parse_allow_list(os.getenv("ALLOWED_STORAGE_HOSTS"))}
+    ALLOWED_SOURCE_CONTAINERS = parse_allow_list(os.getenv("ALLOWED_SOURCE_CONTAINERS"))
 
 def get_blob_retry_times(blob_path: str) -> int:
     """ Get the ingest trial count for a given blob path """
@@ -86,6 +111,12 @@ def move_blob_file(connect_str: str, source_container: str, target_container: st
 def retry_blob_ingest_to_adx(container_name: str, blob_file_path: str,
                              new_container_name: str, new_blob_file_path: str) -> None:
     """ Re-trigger the ingest pipeline by moving blob to retry folder """
+
+    # The destination is derived from the queue supplied source path, and
+    # move_blob_file() deletes the source once the copy is started, so validate
+    # the destination at the sink as well as the source at the entry point.
+    validate_container_name(new_container_name)
+    validate_blob_path(new_blob_file_path)
 
     # Add a random retry delay plus exponential backoff to mitigate the concurrent access to Azure
     retryer = Retrying(stop=stop_after_attempt(BLOB_REQ_MAX_ATTEMPT),
@@ -122,9 +153,14 @@ def get_new_blob_move_file_path(blob_container: str, blob_file_path: str, no_ret
     return new_blob_move_tuple
 
 def get_blob_info_from_url(url: str) -> Tuple[str, str]:
-    """ Get blob info from blob url string """
+    """ Get blob info from blob url string, rejecting any URL this function may not act on """
+    # Authorise the raw URL before the SDK parses it, then validate what the SDK
+    # actually resolved, since those resolved values are what reach the sink.
+    validate_blob_url_host(url, ALLOWED_STORAGE_HOSTS)
     temp_blob_client = BlobClient.from_blob_url(blob_url=url)
-    return temp_blob_client.container_name, temp_blob_client.blob_name
+    container_name = validate_container_name(temp_blob_client.container_name, ALLOWED_SOURCE_CONTAINERS)
+    blob_name = validate_blob_path(temp_blob_client.blob_name)
+    return container_name, blob_name
 
 def main(msg: func.QueueMessage) -> None:
     """
@@ -132,15 +168,23 @@ def main(msg: func.QueueMessage) -> None:
     :param msg: func.QueueMessage
     :return: None
     """
-    logging.info('Python queue trigger function processed a queue item: %s',
-                 msg.get_body().decode('utf-8'))
+    # The queue body carries the blob url, which can include a SAS token, so the
+    # message is identified rather than echoed into the logs.
+    logging.info('Python queue trigger function processed a queue item: %s', msg.id)
     get_config_values()
 
     # Get blob file content
     content = json.loads(msg.get_body().decode('utf-8'))
     filepath = content['data']['url']
 
-    container_name, blob_file_path = get_blob_info_from_url(filepath)
+    try:
+        container_name, blob_file_path = get_blob_info_from_url(filepath)
+    except ValidationError:
+        # Surface the rejection explicitly. A message that fails validation is
+        # worth its own log entry rather than being lost in a generic trace.
+        logging.error("Rejected untrusted blob url from queue message: %s", redact_url(filepath))
+        raise
+
     dest_container_name, dest_blob_file_path = get_new_blob_move_file_path(container_name, blob_file_path)
     retry_times = get_blob_retry_times(filepath)
     retry_times += 1
@@ -153,22 +197,22 @@ def main(msg: func.QueueMessage) -> None:
 
     # Do retry (move file to retry folder)
     # TODO: Should filter out the non-retry case
-    logging.info("Retry the blob ingest to ADX, blob_path: %s", filepath)
+    logging.info("Retry the blob ingest to ADX, blob_path: %s", redact_url(filepath))
     retry_blob_ingest_to_adx(container_name, blob_file_path, dest_container_name, dest_blob_file_path)
 
     if retry_times > MAX_INGEST_RETRIES_TIMES:
         logging.error("Retry blob ingest to ADX hit the retries limit %s, blob_path: %s",
-                      MAX_INGEST_RETRIES_TIMES, filepath)
+                      MAX_INGEST_RETRIES_TIMES, redact_url(filepath))
         tc.track_event(RETRY_END_IN_FAIL_EVENT_NAME,
-                       {'FILE_PATH': filepath},
+                       {'FILE_PATH': redact_url(filepath)},
                        {RETRY_END_IN_FAIL_EVENT_NAME + '_COUNT': 1})
         tc.flush()
         return
 
     tc.track_event(RETRY_EVENT_NAME,
-                   {'FILE_PATH': filepath},
+                   {'FILE_PATH': redact_url(filepath)},
                    {RETRY_EVENT_NAME + '_COUNT': 1})
     tc.flush()
 
     logging.info("ADX error handler execution succeeded, blob path: %s, trial count: %s",
-                 filepath, retry_times)
+                 redact_url(filepath), retry_times)
