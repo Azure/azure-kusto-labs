@@ -26,6 +26,11 @@ class TestUtAdxIngestErrorHandler():
     @pytest.fixture(autouse=True)
     def configure_function(self, monkeypatch, mocker):
         """ Apply the function app configuration the deployment provides. """
+        # get_config_values() reads each setting as os.getenv(NAME, <current global>),
+        # so a value set by a previous test survives monkeypatch's env cleanup and
+        # would leak into the next one. Reset the globals this suite varies.
+        errorhandler.SOURCE_PATH_ROOT = ''
+        errorhandler.SOURCE_FILE_SUFFIX = '.c000.json'
         monkeypatch.setenv('AZURE_STORAGE_CONNECTION_STRING', FAKE_CONNECTION_STRING)
         monkeypatch.setenv('ALLOWED_SOURCE_CONTAINERS', SOURCE_CONTAINER)
         monkeypatch.setenv('SOURCE_PATH_ROOT', PATH_ROOT)
@@ -183,11 +188,40 @@ class TestUtAdxIngestErrorHandler():
         # Percent encoded traversal, decoded by the storage sdk before it reaches
         # the sink, so it must be validated after the sdk has resolved it.
         '%2e%2e%2f%2e%2e%2fsecret.c000.json',
+        # Backslash as a separator, which some path handlers treat as a delimiter.
+        'databricks-out%5C..%5Csecret.c000.json',
+        # Null byte, historically used to truncate a name after validation.
+        'databricks-out/part%00.c000.json',
     ])
     def test_get_blob_info_from_url_rejects_traversal(self, bad_path):
         url = 'https://test.blob.core.windows.net/{}/{}'.format(SOURCE_CONTAINER, bad_path)
         with pytest.raises(errorhandler.ValidationError):
             errorhandler.get_blob_info_from_url(url)
+
+    def test_double_encoded_traversal_stays_a_literal_name(self):
+        # A doubly encoded sequence decodes once to literal percent text, not to a
+        # traversal, so it is a legal blob name and must be accepted as written.
+        url = 'https://test.blob.core.windows.net/{}/{}/%252e%252e%252fpart.c000.json'.format(
+            SOURCE_CONTAINER, PATH_ROOT)
+        _, blob_path = errorhandler.get_blob_info_from_url(url)
+        assert blob_path.endswith('%2e%2e%2fpart.c000.json')
+
+    def test_validated_path_is_the_path_that_would_be_requested(self):
+        # The value the validator approves must be the value the sdk addresses. If
+        # the two ever diverge, validation could pass for one blob while a
+        # different one is copied and deleted.
+        from azure.storage.blob import BlobClient
+        from urllib.parse import unquote, urlsplit
+
+        for name in ['part-0.c000.json', 'my file.c000.json', '%2e%2e%2fpart.c000.json',
+                     'caf\u00e9.c000.json', 'cafe\u0301.c000.json']:
+            source = 'https://test.blob.core.windows.net/{}/{}/{}'.format(
+                SOURCE_CONTAINER, PATH_ROOT, name.replace('%', '%25').replace(' ', '%20'))
+            container, blob_path = errorhandler.get_blob_info_from_url(source)
+            requested = BlobClient(
+                'https://test.blob.core.windows.net', container, blob_path).url
+            addressed = unquote(urlsplit(requested).path).lstrip('/')
+            assert addressed == '{}/{}'.format(container, blob_path)
 
     def test_get_blob_info_from_url_fails_closed_without_configuration(self, monkeypatch):
         monkeypatch.setenv('AZURE_STORAGE_CONNECTION_STRING', '')
@@ -200,6 +234,23 @@ class TestUtAdxIngestErrorHandler():
         # Naming the account is not enough on its own; without a container the
         # function would accept any blob in the account.
         monkeypatch.setenv('ALLOWED_SOURCE_CONTAINERS', '')
+        errorhandler.get_config_values()
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.get_blob_info_from_url(BLOB_URL)
+
+    @pytest.mark.parametrize('setting', ['SOURCE_PATH_ROOT', 'SOURCE_FILE_SUFFIX'])
+    def test_get_blob_info_from_url_fails_closed_on_blank_policy(self, monkeypatch, setting):
+        # A blank setting must deny rather than quietly skip its check, otherwise a
+        # partial deployment widens the function instead of breaking loudly.
+        monkeypatch.setenv(setting, '')
+        errorhandler.get_config_values()
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.get_blob_info_from_url(BLOB_URL)
+
+    def test_root_comparison_is_case_sensitive(self, monkeypatch):
+        # Azure blob names are case sensitive, so the directory comparison must be
+        # too. Accepting a differently cased spelling would name a different blob.
+        monkeypatch.setenv('SOURCE_PATH_ROOT', 'DataBricks-Out')
         errorhandler.get_config_values()
         with pytest.raises(errorhandler.ValidationError):
             errorhandler.get_blob_info_from_url(BLOB_URL)

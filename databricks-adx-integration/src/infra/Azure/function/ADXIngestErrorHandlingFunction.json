@@ -27,12 +27,14 @@
         },
         "SourceContainerName": {
             "type": "string",
+            "minLength": 3,
             "metadata": {
                 "description": "Container holding the blobs this handler may retry, i.e. Storage.FileSystemName."
             }
         },
         "SourcePathRoot": {
             "type": "string",
+            "minLength": 1,
             "metadata": {
                 "description": "Directory within the container that the Databricks job writes to, i.e. Storage.AzureStorageTargetFolder."
             }

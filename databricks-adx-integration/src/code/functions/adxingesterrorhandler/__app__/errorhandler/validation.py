@@ -175,19 +175,31 @@ def validate_container_name(container_name: str, allowed_containers: Set[str]) -
     return container_name
 
 
-def validate_blob_path(blob_path: str, required_root: Optional[str] = None,
-                       required_suffix: Optional[str] = None) -> str:
+def validate_blob_path(blob_path: str, required_root: str, required_suffix: str) -> str:
     """Validate a blob path resolved from an untrusted URL.
 
     The path is validated *after* the storage SDK has resolved and percent-decoded
     it, so encoded traversal sequences such as ``%2e%2e%2f`` are caught here.
 
+    ``required_root`` and ``required_suffix`` are policy, not conveniences, so they
+    have no defaults and a blank value is an error. If they were optional, a
+    deployment that failed to supply them would silently widen this function to
+    every blob in the container instead of failing.
+
     :param blob_path: blob name resolved by the storage SDK
     :param required_root: first path segment the blob must live under
     :param required_suffix: file name suffix the blob must carry
     :return: the validated blob path
-    :raises ValidationError: when the path is malformed or outside the pipeline
+    :raises ValidationError: when policy is missing, or the path is malformed or
+        outside the pipeline
     """
+    if not required_root:
+        raise ValidationError('SOURCE_PATH_ROOT is not configured for this function app.')
+    if not required_suffix:
+        raise ValidationError('SOURCE_FILE_SUFFIX is not configured for this function app.')
+    if '/' in required_root:
+        raise ValidationError('SOURCE_PATH_ROOT must be a single path segment.')
+
     if not blob_path or not isinstance(blob_path, str):
         raise ValidationError('Blob path is missing or not a string.')
     if len(blob_path) > MAX_BLOB_PATH_LENGTH:
@@ -203,15 +215,15 @@ def validate_blob_path(blob_path: str, required_root: Optional[str] = None,
     if any(segment in ('', '.', '..') for segment in segments):
         raise ValidationError('Blob path {!r} contains empty or traversal segments.'.format(blob_path))
 
-    if required_root:
-        # Compare whole segments. A prefix comparison would also accept a sibling
-        # directory whose name merely starts with the expected one.
-        if segments[0] != required_root:
-            raise ValidationError(
-                'Blob path {!r} is outside the {!r} directory.'.format(blob_path, required_root))
-        if len(segments) < 2:
-            raise ValidationError('Blob path {!r} does not name a file.'.format(blob_path))
-    if required_suffix and not segments[-1].endswith(required_suffix):
+    # Compare whole segments. A prefix comparison would also accept a sibling
+    # directory whose name merely starts with the expected one. The comparison is
+    # exact because Azure blob names are case sensitive.
+    if segments[0] != required_root:
+        raise ValidationError(
+            'Blob path {!r} is outside the {!r} directory.'.format(blob_path, required_root))
+    if len(segments) < 2:
+        raise ValidationError('Blob path {!r} does not name a file.'.format(blob_path))
+    if not segments[-1].endswith(required_suffix):
         raise ValidationError(
             'Blob path {!r} is not a {} file.'.format(blob_path, required_suffix))
     return blob_path

@@ -145,20 +145,25 @@ def validate_container_name(container_name: str, allowed_containers: Set[str]) -
     return container_name
 
 
-def validate_blob_path(blob_path: str, required_root: Optional[str] = None,
-                       required_parent: Optional[str] = None) -> str:
-    """Validate a blob path resolved from an untrusted url.
+def _validate_path_syntax(blob_path: str, required_root: str) -> list:
+    """Run the checks every blob path must pass, and return its segments.
 
-    The path is validated *after* the storage sdk has resolved and percent-decoded
-    it, so encoded traversal sequences such as ``%2e%2e%2f`` are caught here.
+    ``required_root`` is policy, not a convenience, so it has no default and a
+    blank value is an error. If it were optional, a deployment that failed to
+    supply it would silently widen this function to every blob in the container
+    instead of failing.
 
     :param blob_path: blob name resolved by the storage sdk
     :param required_root: first path segment the blob must live under
-    :param required_parent: directory that must contain the file directly, for
-        example ``_spark_metadata``
-    :return: the validated blob path
-    :raises ValidationError: when the path is malformed or outside the pipeline
+    :return: the path segments
+    :raises ValidationError: when policy is missing, or the path is malformed or
+        outside the configured directory
     """
+    if not required_root:
+        raise ValidationError('METADATA_PATH_ROOT is not configured for this function app.')
+    if '/' in required_root:
+        raise ValidationError('METADATA_PATH_ROOT must be a single path segment.')
+
     if not blob_path or not isinstance(blob_path, str):
         raise ValidationError('Blob path is missing or not a string.')
     if len(blob_path) > MAX_BLOB_PATH_LENGTH:
@@ -174,24 +179,58 @@ def validate_blob_path(blob_path: str, required_root: Optional[str] = None,
     if any(segment in ('', '.', '..') for segment in segments):
         raise ValidationError('Blob path {!r} contains empty or traversal segments.'.format(blob_path))
 
-    if required_root:
-        # Compare whole segments. A prefix comparison would also accept a sibling
-        # directory whose name merely starts with the expected one.
-        if segments[0] != required_root:
-            raise ValidationError(
-                'Blob path {!r} is outside the {!r} directory.'.format(blob_path, required_root))
+    # Compare whole segments. A prefix comparison would also accept a sibling
+    # directory whose name merely starts with the expected one. The comparison is
+    # exact because Azure blob names are case sensitive.
+    if segments[0] != required_root:
+        raise ValidationError(
+            'Blob path {!r} is outside the {!r} directory.'.format(blob_path, required_root))
+    return segments
 
-    if required_parent:
-        # The checkpoint log lives directly inside this directory. Accepting it
-        # anywhere in the path would also accept an unrelated file that merely has
-        # such a directory somewhere above it.
-        if len(segments) < 2 or segments[-2] != required_parent:
-            raise ValidationError(
-                'Blob path {!r} is not directly inside a {!r} directory.'.format(
-                    blob_path, required_parent))
-        if not _SPARK_METADATA_FILE_REGEX.match(segments[-1]):
-            raise ValidationError(
-                'Blob path {!r} is not a checkpoint log file name.'.format(blob_path))
+
+def validate_checkpoint_path(blob_path: str, required_root: str, required_parent: str) -> str:
+    """Validate the path of a checkpoint log file this function reads or rewrites.
+
+    :param blob_path: blob name resolved by the storage sdk
+    :param required_root: first path segment the blob must live under
+    :param required_parent: directory that must contain the file directly
+    :return: the validated blob path
+    :raises ValidationError: when policy is missing, or the path is not a
+        checkpoint log file inside the configured directory
+    """
+    if not required_parent:
+        raise ValidationError(
+            'METADATA_REQUIRED_SEGMENT is not configured for this function app.')
+    segments = _validate_path_syntax(blob_path, required_root)
+
+    # The checkpoint log lives directly inside this directory. Accepting it
+    # anywhere in the path would also accept an unrelated file that merely has
+    # such a directory somewhere above it.
+    if len(segments) < 2 or segments[-2] != required_parent:
+        raise ValidationError(
+            'Blob path {!r} is not directly inside a {!r} directory.'.format(
+                blob_path, required_parent))
+    if not _SPARK_METADATA_FILE_REGEX.match(segments[-1]):
+        raise ValidationError(
+            'Blob path {!r} is not a checkpoint log file name.'.format(blob_path))
+    return blob_path
+
+
+def validate_output_path(blob_path: str, required_root: str) -> str:
+    """Validate the path of an output file referenced by checkpoint content.
+
+    These are the data files the Databricks job produced, so they carry no
+    checkpoint naming rules; only the directory boundary applies.
+
+    :param blob_path: blob path taken from a checkpoint entry
+    :param required_root: first path segment the blob must live under
+    :return: the validated blob path
+    :raises ValidationError: when policy is missing, or the path is malformed or
+        outside the configured directory
+    """
+    segments = _validate_path_syntax(blob_path, required_root)
+    if len(segments) < 2:
+        raise ValidationError('Blob path {!r} does not name a file.'.format(blob_path))
     return blob_path
 
 

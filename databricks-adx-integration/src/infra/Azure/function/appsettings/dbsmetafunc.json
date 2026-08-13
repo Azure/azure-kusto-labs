@@ -24,12 +24,14 @@
         },
         "MetadataContainerName": {
             "type": "string",
+            "minLength": 3,
             "metadata": {
                 "description": "Container holding the Databricks output, i.e. Storage.FileSystemName."
             }
         },
         "MetadataPathRoot": {
             "type": "string",
+            "minLength": 1,
             "metadata": {
                 "description": "Directory within the container that the Databricks job writes to, i.e. Storage.AzureStorageTargetFolder."
             }

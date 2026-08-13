@@ -33,9 +33,10 @@ from .validation import (
     redact_url,
     split_blob_url,
     storage_hosts_from_account_url,
-    validate_blob_path,
     validate_blob_url_host,
+    validate_checkpoint_path,
     validate_container_name,
+    validate_output_path,
 )
 
 # Required func app configuration
@@ -227,10 +228,13 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
     current_part_num = 100000 #Max part number
     global MAX_COMPACT_FILE_RECORDS
 
-    for line in reversed(metadata_file_content.splitlines()):
-        logging.info(f"{HEADER} Processing metadata line content: {line}")
+    lines = list(reversed(metadata_file_content.splitlines()))
+    for line_number, line in enumerate(lines):
+        # The checkpoint file is produced upstream and is not trusted here, so its
+        # content is identified by position rather than copied into the logs.
+        logging.debug(f"{HEADER} Processing metadata line {line_number}")
         if not is_json(line):
-            logging.info(f"{HEADER} Skip non JSON line content: {line}")
+            logging.debug(f"{HEADER} Skip non JSON metadata line {line_number}")
             continue
 
         pnum = get_part_number(line)
@@ -253,9 +257,10 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             validate_blob_url_host(https_url, ALLOWED_STORAGE_HOSTS)
             referenced_container, referenced_path = split_blob_url(https_url)
             validate_container_name(referenced_container, ALLOWED_METADATA_CONTAINERS)
-            validate_blob_path(referenced_path, METADATA_PATH_ROOT)
+            validate_output_path(referenced_path, METADATA_PATH_ROOT)
         except Exception: # pylint: disable=bare-except
-            logging.warning(f"{HEADER} Skip invalid abfss path {output_abfss_path}", exc_info=True)
+            logging.warning(f"{HEADER} Skip metadata line {line_number}, "
+                            f"path is outside this pipeline: {redact_url(output_abfss_path)}")
             continue
 
         queue_msg = INGEST_QUEUE_MSG_TEMPLATE.format(blob_size=output_file_size,
@@ -367,8 +372,8 @@ def main(msg: func.QueueMessage) -> None:
         # blob client built from DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL.
         validate_blob_url_host(file_url, ALLOWED_STORAGE_HOSTS)
         temp_blob_client = BlobClient.from_blob_url(blob_url=file_url, logging_enable=False)
-        blob_path = validate_blob_path(temp_blob_client.blob_name, METADATA_PATH_ROOT,
-                                       METADATA_REQUIRED_SEGMENT)
+        blob_path = validate_checkpoint_path(temp_blob_client.blob_name, METADATA_PATH_ROOT,
+                                             METADATA_REQUIRED_SEGMENT)
         container_name = validate_container_name(temp_blob_client.container_name,
                                                  ALLOWED_METADATA_CONTAINERS)
     except ValidationError:

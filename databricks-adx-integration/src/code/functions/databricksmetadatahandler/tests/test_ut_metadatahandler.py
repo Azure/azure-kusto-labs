@@ -32,6 +32,11 @@ class TestUtDatabricksMetadataHandler():
     @pytest.fixture(autouse=True)
     def configure_function(self, mocker, monkeypatch):
         """ Apply the function app configuration the deployment provides. """
+        # init_config_values() reads each setting as os.getenv(NAME, <current global>),
+        # so a value set by a previous test survives monkeypatch's env cleanup and
+        # would leak into the next one. Reset the globals this suite varies.
+        metadatahandler.METADATA_PATH_ROOT = ''
+        metadatahandler.METADATA_REQUIRED_SEGMENT = '_spark_metadata'
         monkeypatch.setenv('DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL', FAKE_ACCOUNT_URL)
         monkeypatch.setenv('ADX_INGEST_QUEUE_URL_LIST', FAKE_QUEUE_URLS)
         monkeypatch.setenv('ADX_INGEST_QUEUE_SAS_TOKEN', 'fake_token')
@@ -166,6 +171,12 @@ class TestUtDatabricksMetadataHandler():
         'unrelated/output_0/_spark_metadata/0',
         # A sibling directory whose name merely starts with the expected one.
         PATH_ROOT + 'X/output_0/_spark_metadata/0',
+        # Backslash as a separator, which some path handlers treat as a delimiter.
+        PATH_ROOT + '%5C..%5C_spark_metadata%5C0',
+        # Null byte, historically used to truncate a name after validation.
+        PATH_ROOT + '/output_0/_spark_metadata/0%00',
+        # Raw control character smuggled through the url.
+        PATH_ROOT + '/output_0/_spark_metadata/0%0a',
     ])
     def test_main_rejects_paths_outside_the_metadata_directory(self, mocker, bad_path):
         mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
@@ -185,6 +196,27 @@ class TestUtDatabricksMetadataHandler():
         # Naming the account is not enough on its own; without a container the
         # function would accept any blob in the account.
         monkeypatch.setenv('ALLOWED_METADATA_CONTAINERS', '')
+        metadatahandler.init_config_values()
+        mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
+        with pytest.raises(metadatahandler.ValidationError):
+            metadatahandler.main(self._metadata_message(CHECKPOINT_URL))
+        assert mock_get_blob_content.call_count == 0
+
+    @pytest.mark.parametrize('setting', ['METADATA_PATH_ROOT', 'METADATA_REQUIRED_SEGMENT'])
+    def test_main_fails_closed_on_blank_policy(self, mocker, monkeypatch, setting):
+        # A blank setting must deny rather than quietly skip its check, otherwise a
+        # partial deployment widens the function instead of breaking loudly.
+        monkeypatch.setenv(setting, '')
+        metadatahandler.init_config_values()
+        mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
+        with pytest.raises(metadatahandler.ValidationError):
+            metadatahandler.main(self._metadata_message(CHECKPOINT_URL))
+        assert mock_get_blob_content.call_count == 0
+
+    def test_root_comparison_is_case_sensitive(self, mocker, monkeypatch):
+        # Azure blob names are case sensitive, so the directory comparison must be
+        # too. Accepting a differently cased spelling would name a different blob.
+        monkeypatch.setenv('METADATA_PATH_ROOT', 'DataBricks-Out')
         metadatahandler.init_config_values()
         mock_get_blob_content = mocker.patch('__app__.metadatahandler.get_blob_content')
         with pytest.raises(metadatahandler.ValidationError):
