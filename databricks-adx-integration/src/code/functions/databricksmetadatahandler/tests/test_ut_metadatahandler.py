@@ -244,6 +244,72 @@ class TestUtDatabricksMetadataHandler():
         # are not guaranteed to be digits. One bad line must not fail the file.
         assert metadatahandler.get_part_number('output/part-abcde.json') == -1
         assert metadatahandler.get_part_number('output/part-00007-x.json') == 7
+        assert metadatahandler.get_part_number('part-00007.json') == 7
+        assert metadatahandler.get_part_number('output/nomarker.json') == -1
+
+    def _checkpoint_line(self, name, size=1):
+        return json.dumps({
+            'path': 'abfss://{}@account.dfs.core.windows.net/{}/{}'.format(
+                METADATA_CONTAINER, PATH_ROOT, name),
+            'size': size,
+            'modificationTime': 1599182552000,
+        })
+
+    def _messages_and_retention(self, lines):
+        metadatahandler.MAX_COMPACT_FILE_RECORDS = 0
+        messages = metadatahandler.generate_metadata_queue_messages(
+            '2020-09-07T06:43:03.2126947Z', '\n'.join(lines))
+        return messages, metadatahandler.MAX_COMPACT_FILE_RECORDS
+
+    @pytest.mark.parametrize('rejected_entry', [
+        # Well formed part number, but outside the output root this deployment
+        # serves, and carrying the lowest number a batch can contain.
+        '../elsewhere/part-00000.c000.json',
+        # Same idea, addressed through a container this deployment does not serve.
+        None,
+    ])
+    def test_a_rejected_entry_leaves_the_batch_untouched(self, rejected_entry):
+        # The checkpoint is walked in reverse, so an entry appended last is seen
+        # first. A rejected entry must not become the batch-order ceiling and cut
+        # the scan short, which would drop valid files and shrink the retained
+        # record count used when a compact checkpoint is rewritten.
+        valid = ['v1',
+                 self._checkpoint_line('splitdata/output_0/part-00001.c000.json'),
+                 self._checkpoint_line('splitdata/output_0/part-00007.c000.json')]
+        if rejected_entry is None:
+            extra = json.dumps({
+                'path': 'abfss://private@account.dfs.core.windows.net/'
+                        + PATH_ROOT + '/part-00000.c000.json',
+                'size': 1,
+                'modificationTime': 1599182552000,
+            })
+        else:
+            extra = self._checkpoint_line(rejected_entry)
+
+        expected_messages, expected_retention = self._messages_and_retention(valid)
+        actual_messages, actual_retention = self._messages_and_retention(valid + [extra])
+
+        assert expected_retention == 2, 'the valid checkpoint should produce two records'
+        assert actual_messages == expected_messages
+        assert actual_retention == expected_retention
+
+    def test_an_entry_without_a_part_number_does_not_truncate_the_batch(self):
+        # A name that carries no usable part number says nothing about batch order.
+        # It is still inside the output directory, so it is forwarded rather than
+        # dropped, and the valid entries after it must survive.
+        valid = ['v1',
+                 self._checkpoint_line('splitdata/output_0/part-00001.c000.json'),
+                 self._checkpoint_line('splitdata/output_0/part-00007.c000.json')]
+        unordered = self._checkpoint_line('splitdata/output_0/part-abcde.c000.json')
+
+        expected_messages, expected_retention = self._messages_and_retention(valid)
+        actual_messages, actual_retention = self._messages_and_retention(valid + [unordered])
+
+        assert expected_retention == 2, 'the valid checkpoint should produce two records'
+        assert all(message in actual_messages for message in expected_messages), \
+            'the valid entries must still be forwarded'
+        assert len(actual_messages) == 3, 'the unordered entry is forwarded, not dropped'
+        assert actual_retention == 3
 
     def test_skipped_checkpoint_paths_cannot_forge_log_records(self, caplog):
         # A checkpoint entry is untrusted content. A newline in a rejected path

@@ -219,14 +219,14 @@ def get_part_number(content) ->int:
     """Find part number"""
     pindex = content.find('part-')
     pnum = -1
-    if pindex > 0:
+    if pindex >= 0:
         try:
             pnum = int(content[pindex+5:pindex+10])
         except ValueError:
             # The checkpoint file is written upstream, so the characters after the
             # marker are not guaranteed to be digits. Report the same "no part
-            # number" result as a line without the marker instead of failing the
-            # whole file.
+            # number" result as a name without the marker, and let the caller decide
+            # what to do about it.
             pnum = -1
     return pnum
 
@@ -246,19 +246,12 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             logging.debug(f"{HEADER} Skip non JSON metadata line {line_number}")
             continue
 
-        pnum = get_part_number(line)
-
-        if pnum > current_part_num:
-            break   # Reached files in previous batch, stop parsing
-
-        current_part_num = pnum
-
-        split_output_file_json = json.loads(line)
-        output_abfss_path = split_output_file_json["path"]
-        output_file_size = split_output_file_json["size"]
-        output_file_modification_time = split_output_file_json["modificationTime"]
-
         try:
+            split_output_file_json = json.loads(line)
+            output_abfss_path = split_output_file_json["path"]
+            output_file_size = split_output_file_json["size"]
+            output_file_modification_time = split_output_file_json["modificationTime"]
+
             https_url = convert_abfss_path_to_https(output_abfss_path)
             # The metadata file content also selects a destination, for the ingest
             # function downstream. Confine those urls to the same account, container
@@ -273,6 +266,19 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             # line breaks. Keeping the reason makes a skipped file diagnosable.
             logging.warning("%s Skip metadata line %d: %s", HEADER, line_number, exc)
             continue
+
+        # Batch order comes from the validated path, and only after the entry has
+        # been accepted. An entry this function skips therefore cannot move the
+        # ceiling below the batch and cut the scan short.
+        pnum = get_part_number(referenced_path)
+
+        if pnum > current_part_num:
+            break   # Reached files in previous batch, stop parsing
+
+        if pnum >= 0:
+            # A name that carries no part number says nothing about batch order, so
+            # it is forwarded on its own merit and leaves the ceiling where it is.
+            current_part_num = pnum
 
         queue_msg = INGEST_QUEUE_MSG_TEMPLATE.format(blob_size=output_file_size,
                                                      blob_url=https_url,
