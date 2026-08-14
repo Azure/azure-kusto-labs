@@ -239,6 +239,31 @@ class TestUtDatabricksMetadataHandler():
         assert metadatahandler.ALLOWED_STORAGE_HOSTS == {
             'account.blob.core.windows.net', 'account.dfs.core.windows.net'}
 
+    def test_get_part_number_reports_no_part_number_for_a_malformed_marker(self):
+        # A checkpoint line is written upstream, so the characters after the marker
+        # are not guaranteed to be digits. One bad line must not fail the file.
+        assert metadatahandler.get_part_number('output/part-abcde.json') == -1
+        assert metadatahandler.get_part_number('output/part-00007-x.json') == 7
+
+    def test_skipped_checkpoint_paths_cannot_forge_log_records(self, caplog):
+        # A checkpoint entry is untrusted content. A newline in a rejected path
+        # must arrive escaped so it cannot fabricate an extra log record.
+        event_time = '2020-09-07T06:43:03.2126947Z'
+        metadata_file_content = (
+            'v1\n'
+            '{"path":"abfss://data@account.dfs.core.windows.net/'
+            'unrelated/part-0\\nWARNING:root:forged entry.json",'
+            '"size":1,"modificationTime":1599182552000}'
+        )
+        with caplog.at_level(logging.WARNING):
+            actual = metadatahandler.generate_metadata_queue_messages(
+                event_time, metadata_file_content)
+
+        assert actual == []
+        assert caplog.records, 'the skipped entry should be reported'
+        for record in caplog.records:
+            assert '\n' not in record.getMessage()
+
     def test_generate_metadata_queue_messages_skips_references_outside_the_pipeline(self):
         # The metadata file content also selects destinations for the downstream
         # ingest function, so entries outside this account, container or output

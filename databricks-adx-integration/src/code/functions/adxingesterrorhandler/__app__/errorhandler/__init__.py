@@ -85,8 +85,8 @@ def get_config_values() -> None:
     APP_INSIGHT_QUERY_URL = os.environ.get('APP_INSIGHT_QUERY_URL', APP_INSIGHT_QUERY_URL)
 
     # Bind this function to the storage account its own connection string points at.
-    # ALLOWED_STORAGE_HOSTS only needs setting for sovereign clouds, custom domains
-    # or the local storage emulator.
+    # ALLOWED_STORAGE_HOSTS is an escape hatch for a custom domain in front of that
+    # same account; the rest of this lab targets global Azure endpoints throughout.
     ALLOWED_STORAGE_HOSTS = storage_hosts_from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
     ALLOWED_STORAGE_HOSTS |= {host.lower() for host in parse_allow_list(os.getenv("ALLOWED_STORAGE_HOSTS"))}
     # The container, directory and file type this deployment ingests. Naming the

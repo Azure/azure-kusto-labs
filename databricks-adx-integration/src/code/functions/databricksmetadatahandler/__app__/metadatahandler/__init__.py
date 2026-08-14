@@ -118,8 +118,8 @@ def init_config_values():
     MAX_COMPACT_FILE_RECORDS = int(os.getenv("MAX_COMPACT_FILE_RECORDS", str(MAX_COMPACT_FILE_RECORDS)))
 
     # Bind this function to the storage account it is already configured against.
-    # ALLOWED_STORAGE_HOSTS only needs setting for sovereign clouds, custom domains
-    # or the local storage emulator.
+    # ALLOWED_STORAGE_HOSTS is an escape hatch for a custom domain in front of that
+    # same account; the rest of this lab targets global Azure endpoints throughout.
     ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL)
     ALLOWED_STORAGE_HOSTS |= {host.lower() for host in parse_allow_list(os.getenv("ALLOWED_STORAGE_HOSTS"))}
     # The container and directory the Databricks job writes its output to. Naming
@@ -205,7 +205,9 @@ def convert_abfss_path_to_https(abfss_path: str) -> str:
     regex = re.compile(pattern)
     match = regex.match(abfss_path)
     if not match:
-        raise ValueError(f"Invalid abfss path {abfss_path}")
+        # !r escapes control characters, so a newline in this untrusted value
+        # cannot forge extra records wherever this message is logged.
+        raise ValueError('Invalid abfss path {!r}'.format(abfss_path))
     container = match.group(1)
     storage_account = match.group(2)
     filepath = match.group(3)
@@ -218,7 +220,14 @@ def get_part_number(content) ->int:
     pindex = content.find('part-')
     pnum = -1
     if pindex > 0:
-        pnum = int(content[pindex+5:pindex+10])
+        try:
+            pnum = int(content[pindex+5:pindex+10])
+        except ValueError:
+            # The checkpoint file is written upstream, so the characters after the
+            # marker are not guaranteed to be digits. Report the same "no part
+            # number" result as a line without the marker instead of failing the
+            # whole file.
+            pnum = -1
     return pnum
 
 
@@ -258,9 +267,11 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             referenced_container, referenced_path = split_blob_url(https_url)
             validate_container_name(referenced_container, ALLOWED_METADATA_CONTAINERS)
             validate_output_path(referenced_path, METADATA_PATH_ROOT)
-        except Exception: # pylint: disable=bare-except
-            logging.warning(f"{HEADER} Skip metadata line {line_number}, "
-                            f"path is outside this pipeline: {redact_url(output_abfss_path)}")
+        except Exception as exc: # pylint: disable=broad-except
+            # The rejection messages quote the offending value with !r, so control
+            # characters in this untrusted path arrive escaped rather than as real
+            # line breaks. Keeping the reason makes a skipped file diagnosable.
+            logging.warning("%s Skip metadata line %d: %s", HEADER, line_number, exc)
             continue
 
         queue_msg = INGEST_QUEUE_MSG_TEMPLATE.format(blob_size=output_file_size,
