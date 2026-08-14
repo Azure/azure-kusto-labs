@@ -59,12 +59,33 @@ def redact_url(url: Optional[str]) -> Optional[str]:
     verbatim would copy a credential into the application logs. The path is
     retained because it is what makes the entry useful.
 
+    A url is also passed here when it has just been rejected, so nothing has
+    vouched for its shape yet: it can still carry credentials in its authority and
+    control characters anywhere.
+
     :param url: the url about to be recorded, may be None
-    :return: the url with any query string replaced by a marker
+    :return: the url without credentials, with control characters escaped and any
+        query string replaced by a marker
     """
     if not url or not isinstance(url, str):
         return url
     base, separator, _ = url.partition('?')
+
+    prefix, delimiter, remainder = base.partition('://')
+    if not delimiter:
+        prefix, remainder = '', base
+    # The authority follows any leading slashes, which are all a scheme relative
+    # url has in front of it.
+    slashes = remainder[:len(remainder) - len(remainder.lstrip('/'))]
+    authority, slash, path = remainder[len(slashes):].partition('/')
+    if '@' in authority:
+        authority = authority.rsplit('@', 1)[1]
+    base = prefix + delimiter + slashes + authority + slash + path
+
+    # Escaped rather than removed, so the recorded value still shows what arrived
+    # without letting a newline forge a second log record.
+    base = _CONTROL_CHARS_REGEX.sub(
+        lambda match: '\\x{:02x}'.format(ord(match.group(0))), base)
     return base + '?<redacted>' if separator else base
 
 
@@ -81,9 +102,11 @@ def _sibling_service_hosts(host: str) -> Set[str]:
     if not host:
         return set()
     labels = host.split('.')
-    if len(labels) < 3:
-        # Not a standard <account>.<service>.<suffix> host (for example the local
-        # storage emulator). Trust it verbatim rather than deriving nonsense.
+    if len(labels) < 3 or labels[1] not in ('blob', 'dfs'):
+        # Not a standard <account>.<service>.<suffix> host (for example a custom
+        # domain, or the local storage emulator). Swapping the second label of
+        # "storage.example.com" would invent "storage.blob.com", a name that is
+        # registrable by someone else, so the host is trusted verbatim instead.
         return {host}
     account, suffix = labels[0], '.'.join(labels[2:])
     return {host} | {'{}.{}.{}'.format(account, service, suffix) for service in ('blob', 'dfs')}
@@ -197,8 +220,10 @@ def validate_blob_path(blob_path: str, required_root: str, required_suffix: str)
         raise ValidationError('SOURCE_PATH_ROOT is not configured for this function app.')
     if not required_suffix:
         raise ValidationError('SOURCE_FILE_SUFFIX is not configured for this function app.')
-    if '/' in required_root:
-        raise ValidationError('SOURCE_PATH_ROOT must be a single path segment.')
+    root_segments = required_root.strip('/').split('/')
+    if any(segment in ('', '.', '..') for segment in root_segments):
+        raise ValidationError(
+            'SOURCE_PATH_ROOT {!r} is not a valid directory.'.format(required_root))
 
     if not blob_path or not isinstance(blob_path, str):
         raise ValidationError('Blob path is missing or not a string.')
@@ -218,10 +243,10 @@ def validate_blob_path(blob_path: str, required_root: str, required_suffix: str)
     # Compare whole segments. A prefix comparison would also accept a sibling
     # directory whose name merely starts with the expected one. The comparison is
     # exact because Azure blob names are case sensitive.
-    if segments[0] != required_root:
+    if segments[:len(root_segments)] != root_segments:
         raise ValidationError(
             'Blob path {!r} is outside the {!r} directory.'.format(blob_path, required_root))
-    if len(segments) < 2:
+    if len(segments) <= len(root_segments):
         raise ValidationError('Blob path {!r} does not name a file.'.format(blob_path))
     if not segments[-1].endswith(required_suffix):
         raise ValidationError(

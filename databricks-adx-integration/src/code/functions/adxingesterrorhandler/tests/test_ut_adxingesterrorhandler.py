@@ -4,6 +4,7 @@ import pytest
 
 import azure.functions as func
 import __app__.errorhandler as errorhandler
+import __app__.errorhandler.validation as validation
 
 # The function derives the storage account it is allowed to act on from its own
 # connection string, so the tests must supply one just as the deployment does.
@@ -260,6 +261,47 @@ class TestUtAdxIngestErrorHandler():
         # both address the same account and must both be accepted.
         assert errorhandler.ALLOWED_STORAGE_HOSTS == {
             'test.blob.core.windows.net', 'test.dfs.core.windows.net'}
+
+    def test_a_custom_endpoint_does_not_admit_lookalike_hosts(self):
+        # Only a real blob or dfs endpoint has a service label to swap. Swapping
+        # the second label of a custom domain would invent a name that somebody
+        # else can register, and admit it to the allow-list.
+        hosts = validation.storage_hosts_from_connection_string(
+            'DefaultEndpointsProtocol=https;AccountName=storage;'
+            'AccountKey=PLACEHOLDER-NOT-A-REAL-KEY==;'
+            'BlobEndpoint=https://storage.example.com')
+        assert hosts == {'storage.example.com'}
+
+    @pytest.mark.parametrize('url,expected', [
+        # A rejected url reaches the log before anything has vouched for its shape.
+        ('https://acct.blob.core.windows.net/data/p\nWARNING:root:forged',
+         'https://acct.blob.core.windows.net/data/p\\x0aWARNING:root:forged'),
+        ('https://user:secret@acct.blob.core.windows.net/data/p?sig=x',
+         'https://acct.blob.core.windows.net/data/p?<redacted>'),
+        ('https://acct.blob.core.windows.net/data/p?sig=x',
+         'https://acct.blob.core.windows.net/data/p?<redacted>'),
+        # A url that never had a scheme still has an authority to clean.
+        ('//user:secret@acct.blob.core.windows.net/data/p', '//acct.blob.core.windows.net/data/p'),
+    ])
+    def test_redacted_urls_carry_no_credentials_and_cannot_forge_records(self, url, expected):
+        redacted = validation.redact_url(url)
+        assert redacted == expected
+        assert 'secret' not in redacted
+        assert '\n' not in redacted
+
+    def test_a_nested_output_directory_is_accepted(self, monkeypatch):
+        # The configured folder also drives the Databricks output path and the
+        # event grid subject filter, both of which accept nested paths. Rejecting
+        # one here would deploy cleanly and then refuse every blob.
+        monkeypatch.setenv('SOURCE_PATH_ROOT', 'landing/' + PATH_ROOT)
+        errorhandler.get_config_values()
+        nested = BLOB_URL.replace('/' + PATH_ROOT + '/', '/landing/' + PATH_ROOT + '/')
+
+        assert errorhandler.get_blob_info_from_url(nested)
+        with pytest.raises(errorhandler.ValidationError):
+            # A path that matches only the first configured segment is still out.
+            errorhandler.get_blob_info_from_url(
+                BLOB_URL.replace('/' + PATH_ROOT + '/', '/landing/'))
 
     @pytest.mark.parametrize('container,blob_path', [
         # A real container in the same account, but not the one this app serves.

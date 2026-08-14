@@ -3,6 +3,7 @@ import json
 import logging
 
 import __app__.metadatahandler as metadatahandler
+import __app__.metadatahandler.validation as validation
 import azure.functions as func
 import nest_asyncio
 import pytest
@@ -238,6 +239,40 @@ class TestUtDatabricksMetadataHandler():
         # both address the same account and must both be accepted.
         assert metadatahandler.ALLOWED_STORAGE_HOSTS == {
             'account.blob.core.windows.net', 'account.dfs.core.windows.net'}
+
+    def test_a_custom_endpoint_does_not_admit_lookalike_hosts(self):
+        # Only a real blob or dfs endpoint has a service label to swap. Swapping
+        # the second label of a custom domain would invent a name that somebody
+        # else can register, and admit it to the allow-list.
+        assert validation.storage_hosts_from_account_url(
+            'https://storage.example.com') == {'storage.example.com'}
+
+    @pytest.mark.parametrize('url,expected', [
+        # A rejected url reaches the log before anything has vouched for its shape.
+        ('https://account.blob.core.windows.net/data/p\nWARNING:root:forged',
+         'https://account.blob.core.windows.net/data/p\\x0aWARNING:root:forged'),
+        ('https://user:secret@account.queue.core.windows.net/q?sig=x',
+         'https://account.queue.core.windows.net/q?<redacted>'),
+    ])
+    def test_redacted_urls_carry_no_credentials_and_cannot_forge_records(self, url, expected):
+        redacted = validation.redact_url(url)
+        assert redacted == expected
+        assert 'secret' not in redacted
+        assert '\n' not in redacted
+
+    def test_a_nested_output_directory_is_accepted(self, monkeypatch):
+        # The configured folder also drives the Databricks output path and the
+        # event grid subject filter, both of which accept nested paths. Rejecting
+        # one here would deploy cleanly and then refuse every checkpoint.
+        monkeypatch.setenv('METADATA_PATH_ROOT', 'landing/' + PATH_ROOT)
+        metadatahandler.init_config_values()
+
+        assert validation.validate_checkpoint_path(
+            'landing/' + CHECKPOINT_BLOB, 'landing/' + PATH_ROOT, '_spark_metadata')
+        with pytest.raises(validation.ValidationError):
+            # Matching only the first configured segment is still outside.
+            validation.validate_checkpoint_path(
+                'landing/_spark_metadata/0', 'landing/' + PATH_ROOT, '_spark_metadata')
 
     def test_get_part_number_reports_no_part_number_for_a_malformed_marker(self):
         # A checkpoint line is written upstream, so the characters after the marker
