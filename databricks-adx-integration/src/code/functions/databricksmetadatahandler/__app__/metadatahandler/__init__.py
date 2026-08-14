@@ -238,6 +238,10 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
     global MAX_COMPACT_FILE_RECORDS
 
     lines = list(reversed(metadata_file_content.splitlines()))
+    # How far into the file this batch reached. A line can be scanned without
+    # producing a message, so counting messages here would let a skipped line take
+    # the place of an accepted one when the compact file is later trimmed.
+    batch_line_count = len(lines)
     for line_number, line in enumerate(lines):
         # The checkpoint file is produced upstream and is not trusted here, so its
         # content is identified by position rather than copied into the logs.
@@ -273,6 +277,7 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
         pnum = get_part_number(referenced_path)
 
         if pnum > current_part_num:
+            batch_line_count = line_number
             break   # Reached files in previous batch, stop parsing
 
         if pnum >= 0:
@@ -287,7 +292,7 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
         minify_msg = json.dumps(json.loads(queue_msg))
         ingest_queue_msg_list.append(minify_msg)
 
-    MAX_COMPACT_FILE_RECORDS = max(len(ingest_queue_msg_list), MAX_COMPACT_FILE_RECORDS)
+    MAX_COMPACT_FILE_RECORDS = max(batch_line_count, MAX_COMPACT_FILE_RECORDS)
     return ingest_queue_msg_list
 
 

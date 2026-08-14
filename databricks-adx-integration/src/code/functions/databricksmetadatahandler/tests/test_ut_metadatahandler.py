@@ -261,6 +261,61 @@ class TestUtDatabricksMetadataHandler():
             '2020-09-07T06:43:03.2126947Z', '\n'.join(lines))
         return messages, metadatahandler.MAX_COMPACT_FILE_RECORDS
 
+    def _rewritten_checkpoint(self, lines):
+        # Mirrors what main() uploads over a compact checkpoint: the retained line
+        # count is decided while generating messages, then applied to the file.
+        _, retention = self._messages_and_retention(lines)
+        return metadatahandler.get_shrinked_checkpoint_content(
+            '\n'.join(lines), retention).splitlines()
+
+    @pytest.mark.parametrize('extra_entry_kind', ['rejected', 'missing_field', 'unordered'])
+    def test_trimming_a_compact_checkpoint_never_drops_an_accepted_entry(self, extra_entry_kind):
+        # The retained window is a trailing slice of the raw file. If it were sized
+        # by messages produced rather than lines scanned, an entry this function
+        # skipped would occupy a slot and push an accepted entry out of the file,
+        # which the overwrite would then make permanent.
+        first = self._checkpoint_line('splitdata/output_0/part-00001.c000.json')
+        second = self._checkpoint_line('splitdata/output_0/part-00007.c000.json')
+        valid = ['v1', first, second]
+        extra = {
+            'rejected': self._checkpoint_line('../elsewhere/part-00000.c000.json'),
+            'missing_field': json.dumps({
+                'path': 'abfss://{}@account.dfs.core.windows.net/{}/'
+                        'splitdata/output_0/part-00002.c000.json'.format(
+                            METADATA_CONTAINER, PATH_ROOT),
+                'size': 1,
+            }),
+            'unordered': self._checkpoint_line('splitdata/output_0/part-abcde.c000.json'),
+        }[extra_entry_kind]
+
+        baseline = self._rewritten_checkpoint(valid)
+        assert baseline == valid, 'a checkpoint of one batch should survive intact'
+
+        rewritten = self._rewritten_checkpoint(valid + [extra])
+
+        assert rewritten[0] == 'v1', 'the header must be preserved'
+        assert first in rewritten, 'the oldest accepted entry must not be displaced'
+        assert second in rewritten
+        assert extra in rewritten, \
+            'a line this deployment does not act on is still the producer\'s to keep'
+
+    def test_trimming_a_multi_batch_checkpoint_keeps_the_whole_current_batch(self):
+        # A real compact checkpoint holds earlier batches too, so trimming actually
+        # removes lines here. The current batch must survive whole even when a
+        # skipped line sits inside it.
+        older = [self._checkpoint_line('splitdata/output_0/part-00005.c000.json'),
+                 self._checkpoint_line('splitdata/output_0/part-00006.c000.json')]
+        first = self._checkpoint_line('splitdata/output_0/part-00001.c000.json')
+        second = self._checkpoint_line('splitdata/output_0/part-00002.c000.json')
+        rejected = self._checkpoint_line('../elsewhere/part-00000.c000.json')
+
+        rewritten = self._rewritten_checkpoint(['v1'] + older + [first, second, rejected])
+
+        assert rewritten[0] == 'v1', 'the header must be preserved'
+        assert first in rewritten, 'the oldest accepted entry must not be displaced'
+        assert second in rewritten
+        assert older[0] not in rewritten, 'the earlier batch should still be trimmed away'
+
     @pytest.mark.parametrize('rejected_entry', [
         # Well formed part number, but outside the output root this deployment
         # serves, and carrying the lowest number a batch can contain.
@@ -289,9 +344,11 @@ class TestUtDatabricksMetadataHandler():
         expected_messages, expected_retention = self._messages_and_retention(valid)
         actual_messages, actual_retention = self._messages_and_retention(valid + [extra])
 
-        assert expected_retention == 2, 'the valid checkpoint should produce two records'
+        assert len(expected_messages) == 2, 'the valid checkpoint should produce two messages'
         assert actual_messages == expected_messages
-        assert actual_retention == expected_retention
+        # Retention counts lines scanned, so it may grow to cover the extra line but
+        # must never shrink, which is what would push an accepted entry out.
+        assert actual_retention >= expected_retention
 
     def test_an_entry_without_a_part_number_does_not_truncate_the_batch(self):
         # A name that carries no usable part number says nothing about batch order.
@@ -305,11 +362,11 @@ class TestUtDatabricksMetadataHandler():
         expected_messages, expected_retention = self._messages_and_retention(valid)
         actual_messages, actual_retention = self._messages_and_retention(valid + [unordered])
 
-        assert expected_retention == 2, 'the valid checkpoint should produce two records'
+        assert len(expected_messages) == 2, 'the valid checkpoint should produce two messages'
         assert all(message in actual_messages for message in expected_messages), \
             'the valid entries must still be forwarded'
         assert len(actual_messages) == 3, 'the unordered entry is forwarded, not dropped'
-        assert actual_retention == 3
+        assert actual_retention >= expected_retention
 
     def test_skipped_checkpoint_paths_cannot_forge_log_records(self, caplog):
         # A checkpoint entry is untrusted content. A newline in a rejected path
