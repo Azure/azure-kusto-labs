@@ -215,26 +215,31 @@ def convert_abfss_path_to_https(abfss_path: str) -> str:
     return https_path
 
 
+# Spark names each output file part-<number>-<uuid>. The digit run is bounded so a
+# crafted name cannot hand int() an arbitrarily long number, and the number must end
+# at a non-digit so a longer run is treated as unnumbered rather than truncated.
+_PART_FILE_REGEX = re.compile(r'^part-(\d{1,10})(?![0-9])')
+
 def get_part_number(content) ->int:
     """Find part number"""
-    pindex = content.find('part-')
-    pnum = -1
-    if pindex >= 0:
-        try:
-            pnum = int(content[pindex+5:pindex+10])
-        except ValueError:
-            # The checkpoint file is written upstream, so the characters after the
-            # marker are not guaranteed to be digits. Report the same "no part
-            # number" result as a name without the marker, and let the caller decide
-            # what to do about it.
-            pnum = -1
-    return pnum
+    # Only the file name decides batch order. The directories above it are partition
+    # values written from the telemetry itself, so a company id of the right shape
+    # would otherwise be read as this file's part number.
+    file_name = content.rsplit('/', 1)[-1]
+    match = _PART_FILE_REGEX.match(file_name)
+    if not match:
+        # The writer did not number this name, so it says nothing about batch order.
+        # The caller decides what to do about it.
+        return -1
+    return int(match.group(1))
 
 
 def generate_metadata_queue_messages(event_time: str, metadata_file_content: str) -> List[str]:
     """ Generate queue messages from Databricks ouutput metadata file content """
     ingest_queue_msg_list = []
-    current_part_num = 100000 #Max part number
+    # No ceiling until the newest numbered file of this batch is seen. A fixed
+    # starting value would drop a whole batch whose part numbers run past it.
+    current_part_num = None
     global MAX_COMPACT_FILE_RECORDS
 
     lines = list(reversed(metadata_file_content.splitlines()))
@@ -276,7 +281,7 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
         # ceiling below the batch and cut the scan short.
         pnum = get_part_number(referenced_path)
 
-        if pnum > current_part_num:
+        if current_part_num is not None and pnum > current_part_num:
             batch_line_count = line_number
             break   # Reached files in previous batch, stop parsing
 

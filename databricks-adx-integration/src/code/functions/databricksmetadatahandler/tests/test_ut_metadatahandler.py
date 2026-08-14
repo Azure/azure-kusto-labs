@@ -247,6 +247,50 @@ class TestUtDatabricksMetadataHandler():
         assert metadatahandler.get_part_number('part-00007.json') == 7
         assert metadatahandler.get_part_number('output/nomarker.json') == -1
 
+    def test_get_part_number_reads_only_the_spark_file_name(self):
+        # Partition directories are named from telemetry, so they must not be able
+        # to supply the part number of the file inside them.
+        assert metadatahandler.get_part_number(
+            'companyIdkey=part-00000/typekey=TEMP/part-00007-uuid.c000.json') == 7
+        assert metadatahandler.get_part_number('output/notapart-00000.json') == -1
+        # The number is not truncated to a fixed width, and a run too long to be a
+        # real part number is treated as unnumbered rather than as a smaller one.
+        assert metadatahandler.get_part_number('part-100000-uuid.c000.json') == 100000
+        assert metadatahandler.get_part_number('part-123456789012-uuid.c000.json') == -1
+
+    def test_a_partition_named_like_a_part_number_does_not_suppress_the_batch(self):
+        # companyIdkey is written straight from the telemetry, so a company id of
+        # this shape reaches the path without any traversal or boundary crossing.
+        # Read as the file's part number it would set the ceiling to zero and drop
+        # every other file in the batch, including from the rewritten checkpoint.
+        first = self._checkpoint_line(
+            'landingeventqueue0/companyIdkey=c0/typekey=TEMP/part-00001-uuid.c000.json')
+        second = self._checkpoint_line(
+            'landingeventqueue0/companyIdkey=c0/typekey=TEMP/part-00006-uuid.c000.json')
+        partition_lookalike = self._checkpoint_line(
+            'landingeventqueue0/companyIdkey=part-00000/typekey=TEMP/part-00007-uuid.c000.json')
+        checkpoint = ['v1', first, second, partition_lookalike]
+
+        messages, _ = self._messages_and_retention(checkpoint)
+        rewritten = self._rewritten_checkpoint(checkpoint)
+
+        assert len(messages) == 3, 'every file in the batch should be forwarded'
+        assert rewritten == checkpoint, 'the whole batch should survive the rewrite'
+
+    def test_a_batch_numbered_past_the_old_fixed_ceiling_is_still_forwarded(self):
+        # Now that the full part number is read rather than its first five digits,
+        # a job with more than 100000 output files produces numbers that a fixed
+        # starting ceiling would have treated as a previous batch, dropping all of
+        # them on the first entry.
+        checkpoint = ['v1',
+                      self._checkpoint_line('q0/c/t/part-100001-uuid.c000.json'),
+                      self._checkpoint_line('q0/c/t/part-100002-uuid.c000.json')]
+
+        messages, _ = self._messages_and_retention(checkpoint)
+
+        assert len(messages) == 2, 'a large job should not be mistaken for a previous batch'
+        assert self._rewritten_checkpoint(checkpoint) == checkpoint
+
     def _checkpoint_line(self, name, size=1):
         return json.dumps({
             'path': 'abfss://{}@account.dfs.core.windows.net/{}/{}'.format(
