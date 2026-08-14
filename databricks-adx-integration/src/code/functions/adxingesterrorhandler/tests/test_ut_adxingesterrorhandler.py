@@ -263,14 +263,68 @@ class TestUtAdxIngestErrorHandler():
             'test.blob.core.windows.net', 'test.dfs.core.windows.net'}
 
     def test_a_custom_endpoint_does_not_admit_lookalike_hosts(self):
-        # Only a real blob or dfs endpoint has a service label to swap. Swapping
-        # the second label of a custom domain would invent a name that somebody
-        # else can register, and admit it to the allow-list.
-        hosts = validation.storage_hosts_from_connection_string(
-            'DefaultEndpointsProtocol=https;AccountName=storage;'
-            'AccountKey=PLACEHOLDER-NOT-A-REAL-KEY==;'
-            'BlobEndpoint=https://storage.example.com')
-        assert hosts == {'storage.example.com'}
+        # Only a real Azure Storage endpoint has a service label to swap. A custom
+        # domain shaped like one says nothing about who owns its sibling.
+        def hosts(endpoint):
+            return validation.storage_hosts_from_connection_string(
+                'DefaultEndpointsProtocol=https;AccountName=storage;'
+                'AccountKey=PLACEHOLDER-NOT-A-REAL-KEY==;'
+                'BlobEndpoint=https://' + endpoint)
+
+        assert hosts('storage.example.com') == {'storage.example.com'}
+        assert hosts('storage.blob.example.com') == {'storage.blob.example.com'}
+        assert hosts('storage.dfs.example.com') == {'storage.dfs.example.com'}
+        assert hosts('account.blob.core.windows.net') == {
+            'account.blob.core.windows.net', 'account.dfs.core.windows.net'}
+
+    @pytest.mark.parametrize('tenant', ['tenant-retry1', 'tenant-retry2', 'tenant-retry3'])
+    def test_rewriting_the_retry_generation_leaves_the_tenant_alone(self, tenant):
+        # The partition value is the tenant, and it can legitimately contain the
+        # same text as a retry directory. Rewriting it would send the next
+        # ingestion to a different customer's database.
+        base = PATH_ROOT + '/companyIdkey=' + tenant + '/typekey=T'
+        for generation in (1, 2):
+            container, path = errorhandler.get_new_blob_move_file_path(
+                SOURCE_CONTAINER, base + '/retry{}/part-uuid.c000.json'.format(generation))
+            assert container == SOURCE_CONTAINER
+            assert path == base + '/retry{}/part-uuid.c000.json'.format(generation + 1)
+
+        # At the final generation the retry directory is removed, and nothing else.
+        container, path = errorhandler.get_new_blob_move_file_path(
+            SOURCE_CONTAINER, base + '/retry3/part-uuid.c000.json')
+        assert container == errorhandler.RETRY_END_IN_FAIL_CONTAINER_NAME
+        assert path == base + '/part-uuid.c000.json'
+
+        # A blob with no retry directory gains one directly above the file name.
+        container, path = errorhandler.get_new_blob_move_file_path(
+            SOURCE_CONTAINER, base + '/part-uuid.c000.json')
+        assert container == SOURCE_CONTAINER
+        assert path == base + '/retry1/part-uuid.c000.json'
+
+    def test_the_source_is_kept_when_the_copy_has_not_completed(self, mocker):
+        # The source is the only copy of the payload. Deleting it while the copy is
+        # still pending would leave nothing to retry from.
+        source, target = mocker.Mock(), mocker.Mock()
+        service = mocker.Mock()
+        service.get_blob_client.side_effect = [source, target]
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+
+        target.start_copy_from_url.return_value = {'copy_status': 'pending'}
+        with pytest.raises(RuntimeError):
+            errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+        source.delete_blob.assert_not_called()
+
+        service.get_blob_client.side_effect = [source, target]
+        target.start_copy_from_url.return_value = {'copy_status': 'success'}
+        errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+        source.delete_blob.assert_called_once()
+
+    def test_a_url_carrying_a_fragment_is_refused_and_not_logged(self):
+        # A blob request drops the fragment, so it reaches nothing but the logs.
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.get_blob_info_from_url(BLOB_URL + '#access_token=SECRET')
+        assert 'SECRET' not in validation.redact_url(BLOB_URL + '#access_token=SECRET')
 
     @pytest.mark.parametrize('url,expected', [
         # A rejected url reaches the log before anything has vouched for its shape.

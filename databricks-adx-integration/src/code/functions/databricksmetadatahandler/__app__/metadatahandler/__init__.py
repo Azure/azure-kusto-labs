@@ -65,17 +65,6 @@ PROCESS_PROGRAM_NAME = "KUSTO_LAB_METADATA_HANDLER_SAMPLE"
 
 BLOB_SERVICE_CLIENT = None
 
-INGEST_QUEUE_MSG_TEMPLATE = """
-{{
-    "data": {{
-        "api": "PutBlockList",
-        "contentLength": {blob_size},
-        "url": "{blob_url}"
-    }},
-    "eventTime": "{event_time}",
-    "modificationTime": "{modification_time}"
-}}
-"""
 
 def is_json(json_str: str) -> bool:
     """ Check whether the input string is a valid JSON """
@@ -261,6 +250,13 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             output_file_size = split_output_file_json["size"]
             output_file_modification_time = split_output_file_json["modificationTime"]
 
+            # The size is emitted as a json number. Anything else would have to be
+            # rendered as text, and the entry does not describe a file this pipeline
+            # produced, so it is refused rather than coerced.
+            if isinstance(output_file_size, bool) or not isinstance(output_file_size, int):
+                raise ValueError(
+                    'Checkpoint entry size {!r} is not a whole number.'.format(output_file_size))
+
             https_url = convert_abfss_path_to_https(output_abfss_path)
             # The metadata file content also selects a destination, for the ingest
             # function downstream. Confine those urls to the same account, container
@@ -290,12 +286,19 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             # it is forwarded on its own merit and leaves the ceiling where it is.
             current_part_num = pnum
 
-        queue_msg = INGEST_QUEUE_MSG_TEMPLATE.format(blob_size=output_file_size,
-                                                     blob_url=https_url,
-                                                     event_time=event_time,
-                                                     modification_time=output_file_modification_time)
-        minify_msg = json.dumps(json.loads(queue_msg))
-        ingest_queue_msg_list.append(minify_msg)
+        # Built as a structure and serialised once. Formatting these values into a
+        # json string would let a checkpoint entry close the quoting and append its
+        # own "data" object, which json decoding then prefers over the validated one.
+        queue_msg = json.dumps({
+            'data': {
+                'api': 'PutBlockList',
+                'contentLength': output_file_size,
+                'url': https_url,
+            },
+            'eventTime': event_time,
+            'modificationTime': str(output_file_modification_time),
+        })
+        ingest_queue_msg_list.append(queue_msg)
 
     MAX_COMPACT_FILE_RECORDS = max(batch_line_count, MAX_COMPACT_FILE_RECORDS)
     return ingest_queue_msg_list

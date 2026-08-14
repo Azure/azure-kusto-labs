@@ -76,14 +76,13 @@ class TestUtDatabricksMetadataHandler():
         metadata_file_content = "\n".join(
             ['v1'] + ['{{"path":"{}","size":1014200,"modificationTime":1599182552000}}'.format(
                 OUTPUT_ABFSS.format(i + 1)) for i in (2, 1, 0)])
-        expected_result = []
-        for i in range(3):
-            msg = metadatahandler.INGEST_QUEUE_MSG_TEMPLATE.format(blob_size='1014200',
-                                                                   blob_url=OUTPUT_HTTPS.format(i + 1),
-                                                                   event_time=event_time,
-                                                                   modification_time=1599182552000)
-            msg = json.dumps(json.loads(msg))
-            expected_result.append(msg) 
+        # Spelled out rather than built the way the code builds it, so this pins the
+        # wire format the ingest function downstream reads.
+        expected_result = [
+            '{"data": {"api": "PutBlockList", "contentLength": 1014200, "url": "'
+            + OUTPUT_HTTPS.format(i + 1)
+            + '"}, "eventTime": "' + event_time + '", "modificationTime": "1599182552000"}'
+            for i in range(3)]
         actual = metadatahandler.generate_metadata_queue_messages(event_time, metadata_file_content)
         assert actual == expected_result
 
@@ -240,12 +239,58 @@ class TestUtDatabricksMetadataHandler():
         assert metadatahandler.ALLOWED_STORAGE_HOSTS == {
             'account.blob.core.windows.net', 'account.dfs.core.windows.net'}
 
+    @pytest.mark.parametrize('field,value', [
+        # Close the quoting and append a second "data" object. json decoding keeps
+        # the last one, so this would replace the validated url after validation.
+        ('modificationTime',
+         '1", "data": {"api":"PutBlockList","contentLength":9,'
+         '"url":"https://attacker.example/private/payroll.c000.json"}, "z": "'),
+        # Braces and quotes in a plain value must survive as data, not structure.
+        ('modificationTime', '{"url": "https://attacker.example/x"}'),
+        # A size that is not a number would have to be rendered as text.
+        ('size', '1, "url": "https://attacker.example/x"'),
+        ('size', True),
+    ])
+    def test_checkpoint_values_cannot_rewrite_the_queue_message(self, field, value):
+        entry = {
+            'path': 'abfss://{}@account.dfs.core.windows.net/{}/'
+                    'splitdata/output_0/part-00001-u.c000.json'.format(
+                        METADATA_CONTAINER, PATH_ROOT),
+            'size': 1,
+            'modificationTime': 1599182552000,
+        }
+        entry[field] = value
+
+        messages, _ = self._messages_and_retention(['v1', json.dumps(entry)])
+
+        for message in messages:
+            emitted = json.loads(message)['data']['url']
+            assert emitted.startswith(
+                'https://account.blob.core.windows.net/' + METADATA_CONTAINER + '/' + PATH_ROOT), \
+                'the emitted url must remain the one that passed validation'
+            assert isinstance(json.loads(message)['data']['contentLength'], int)
+
+    def test_a_url_carrying_a_fragment_is_refused_and_not_logged(self):
+        # A blob request drops the fragment, so it reaches nothing but the logs.
+        with pytest.raises(validation.ValidationError):
+            validation.validate_blob_url_host(
+                'https://account.blob.core.windows.net/data/p#access_token=SECRET',
+                {'account.blob.core.windows.net'})
+        assert 'SECRET' not in validation.redact_url(
+            'https://account.blob.core.windows.net/data/p#access_token=SECRET')
+
     def test_a_custom_endpoint_does_not_admit_lookalike_hosts(self):
-        # Only a real blob or dfs endpoint has a service label to swap. Swapping
-        # the second label of a custom domain would invent a name that somebody
-        # else can register, and admit it to the allow-list.
+        # Only a real Azure Storage endpoint has a service label to swap. A custom
+        # domain shaped like one says nothing about who owns its sibling.
         assert validation.storage_hosts_from_account_url(
             'https://storage.example.com') == {'storage.example.com'}
+        assert validation.storage_hosts_from_account_url(
+            'https://storage.blob.example.com') == {'storage.blob.example.com'}
+        assert validation.storage_hosts_from_account_url(
+            'https://storage.dfs.example.com') == {'storage.dfs.example.com'}
+        assert validation.storage_hosts_from_account_url(
+            'https://account.blob.core.windows.net') == {
+                'account.blob.core.windows.net', 'account.dfs.core.windows.net'}
 
     @pytest.mark.parametrize('url,expected', [
         # A rejected url reaches the log before anything has vouched for its shape.

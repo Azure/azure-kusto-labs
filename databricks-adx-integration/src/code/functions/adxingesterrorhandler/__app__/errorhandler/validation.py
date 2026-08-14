@@ -15,6 +15,10 @@ from urllib.parse import urlsplit
 # Azure Storage naming limits. See
 # https://learn.microsoft.com/rest/api/storageservices/naming-and-referencing-containers--blobs--and-metadata
 MAX_URL_LENGTH = 2048
+
+# The only endpoint suffix whose <account>.<service> shape this repository deploys
+# against. A host outside it is trusted only as configured, never expanded.
+AZURE_STORAGE_SUFFIX = 'core.windows.net'
 MAX_BLOB_PATH_LENGTH = 1024
 
 DEFAULT_ENDPOINT_SUFFIX = 'core.windows.net'
@@ -69,7 +73,14 @@ def redact_url(url: Optional[str]) -> Optional[str]:
     """
     if not url or not isinstance(url, str):
         return url
-    base, separator, _ = url.partition('?')
+    # Cut at whichever comes first. A fragment is not part of the request the sdk
+    # issues, so it adds nothing to a log entry but can still carry a token.
+    cut = len(url)
+    for marker in ('?', '#'):
+        index = url.find(marker)
+        if 0 <= index < cut:
+            cut = index
+    base, trimmed = url[:cut], cut < len(url)
 
     prefix, delimiter, remainder = base.partition('://')
     if not delimiter:
@@ -86,7 +97,7 @@ def redact_url(url: Optional[str]) -> Optional[str]:
     # without letting a newline forge a second log record.
     base = _CONTROL_CHARS_REGEX.sub(
         lambda match: '\\x{:02x}'.format(ord(match.group(0))), base)
-    return base + '?<redacted>' if separator else base
+    return base + '?<redacted>' if trimmed else base
 
 
 def _sibling_service_hosts(host: str) -> Set[str]:
@@ -102,11 +113,12 @@ def _sibling_service_hosts(host: str) -> Set[str]:
     if not host:
         return set()
     labels = host.split('.')
-    if len(labels) < 3 or labels[1] not in ('blob', 'dfs'):
-        # Not a standard <account>.<service>.<suffix> host (for example a custom
-        # domain, or the local storage emulator). Swapping the second label of
-        # "storage.example.com" would invent "storage.blob.com", a name that is
-        # registrable by someone else, so the host is trusted verbatim instead.
+    if (len(labels) < 3 or labels[1] not in ('blob', 'dfs')
+            or '.'.join(labels[2:]) != AZURE_STORAGE_SUFFIX):
+        # Only a real Azure Storage endpoint has a service label to swap. A custom
+        # domain that merely looks like one, such as "storage.blob.example.com",
+        # says nothing about who owns "storage.dfs.example.com", so the configured
+        # host is trusted on its own.
         return {host}
     account, suffix = labels[0], '.'.join(labels[2:])
     return {host} | {'{}.{}.{}'.format(account, service, suffix) for service in ('blob', 'dfs')}
@@ -169,6 +181,10 @@ def validate_blob_url_host(url: str, allowed_hosts: Set[str]) -> None:
         raise ValidationError('Blob URL scheme must be https, got {!r}.'.format(parts.scheme))
     if parts.username or parts.password:
         raise ValidationError('Blob URL must not embed credentials.')
+    if parts.fragment:
+        # A blob request never carries a fragment, so one here is not addressing
+        # part of the blob; it is carrying something else along for the ride.
+        raise ValidationError('Blob URL must not contain a fragment.')
 
     hostname = (parts.hostname or '').lower()
     # Exact match only. A suffix match would accept lookalikes such as
@@ -252,6 +268,20 @@ def validate_blob_path(blob_path: str, required_root: str, required_suffix: str)
         raise ValidationError(
             'Blob path {!r} is not a {} file.'.format(blob_path, required_suffix))
     return blob_path
+
+
+def is_retry_segment(segment: Optional[str]) -> bool:
+    """Report whether a single path segment is a retry generation directory.
+
+    Callers that rewrite the generation need to identify the exact segment. A
+    substring test would also match a partition value such as
+    ``companyIdkey=tenant-retry1``, and rewriting that would move the blob into
+    another tenant's directory.
+
+    :param segment: one path segment
+    :return: True when the segment is exactly retry<number>
+    """
+    return bool(segment) and bool(_RETRY_SEGMENT_REGEX.match(segment))
 
 
 def retry_generation(blob_path: str, max_retry_times: int) -> int:

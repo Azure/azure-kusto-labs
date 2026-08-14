@@ -23,6 +23,7 @@ import azure.functions as func
 
 from .validation import (
     ValidationError,
+    is_retry_segment,
     parse_allow_list,
     redact_url,
     retry_generation,
@@ -108,7 +109,14 @@ def move_blob_file(connect_str: str, source_container: str, target_container: st
     blob_service_client = BlobServiceClient.from_connection_string(connect_str)
     blob_source_client = blob_service_client.get_blob_client(container=source_container, blob=source_path)
     blob_target_client = blob_service_client.get_blob_client(container=target_container, blob=target_path)
-    blob_target_client.start_copy_from_url(blob_source_client.url)
+    copy_result = blob_target_client.start_copy_from_url(blob_source_client.url)
+    # Only delete once the destination holds the data. A copy that is still pending
+    # or has failed would otherwise leave nothing to retry from, and the source is
+    # the only remaining copy of the payload.
+    if (copy_result or {}).get('copy_status') != 'success':
+        raise RuntimeError(
+            'Copy of {}/{} did not complete, leaving the source in place.'.format(
+                source_container, source_path))
     blob_source_client.delete_blob()
 
 def retry_blob_ingest_to_adx(container_name: str, blob_file_path: str,
@@ -136,26 +144,30 @@ def retry_blob_ingest_to_adx(container_name: str, blob_file_path: str,
 def get_new_blob_move_file_path(blob_container: str, blob_file_path: str, no_retry: bool = False) -> Tuple[str, str]:
     """ Get the new blob move container and path depends on current trigger blob path """
     retry_times = get_blob_retry_times(blob_file_path)
-    retry_folder_pattern = 'retry{}/'
+    # The generation is one whole path segment, directly above the file name. It is
+    # rewritten by position rather than by string replacement, because a partition
+    # value such as "companyIdkey=tenant-retry1" contains the same text and
+    # rewriting it would move the blob into another tenant's directory.
+    segments = blob_file_path.split('/')
+    retry_index = len(segments) - 2
+    has_retry_segment = retry_index >= 0 and is_retry_segment(segments[retry_index])
     new_blob_move_tuple = ()
     if no_retry:
         # case no-retry: <folder path>/<filename> -> <folder path>/<filename> in retryEndInFail container
         new_blob_move_tuple = RETRY_END_IN_FAIL_CONTAINER_NAME, blob_file_path
-    elif retry_times == 0 or "retry" not in blob_file_path:
-        # case retry: <folder path>/<filename> -> <folder path>/retryx/<filename> in same container
-        split_path = blob_file_path.rsplit('/', 1)
-        new_path = '/retry1/'.join(split_path) if len(split_path) > 1 else 'retry1/' + blob_file_path
-        new_blob_move_tuple = blob_container, new_path
+    elif not has_retry_segment:
+        # case retry: <folder path>/<filename> -> <folder path>/retry1/<filename> in same container
+        segments.insert(len(segments) - 1, 'retry1')
+        new_blob_move_tuple = blob_container, '/'.join(segments)
     elif retry_times >= MAX_INGEST_RETRIES_TIMES:
         # case retry-end-fail: <folder path>/retryX/<filename> -> <folder path>/<filename>
         # in retryEndInFail container
-        new_path = blob_file_path.replace(retry_folder_pattern.format(retry_times), '')
-        new_blob_move_tuple = RETRY_END_IN_FAIL_CONTAINER_NAME, new_path
+        del segments[retry_index]
+        new_blob_move_tuple = RETRY_END_IN_FAIL_CONTAINER_NAME, '/'.join(segments)
     else:
         # case keep-retry: update the retry<retry_times> to retry<retry_times+1> in same container
-        new_path = blob_file_path.replace(retry_folder_pattern.format(retry_times),
-                                          retry_folder_pattern.format(retry_times + 1))
-        new_blob_move_tuple = blob_container, new_path
+        segments[retry_index] = 'retry{}'.format(retry_times + 1)
+        new_blob_move_tuple = blob_container, '/'.join(segments)
 
     return new_blob_move_tuple
 
