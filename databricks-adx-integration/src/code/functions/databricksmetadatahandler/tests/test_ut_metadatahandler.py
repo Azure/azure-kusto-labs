@@ -239,19 +239,7 @@ class TestUtDatabricksMetadataHandler():
         assert metadatahandler.ALLOWED_STORAGE_HOSTS == {
             'account.blob.core.windows.net', 'account.dfs.core.windows.net'}
 
-    @pytest.mark.parametrize('field,value', [
-        # Close the quoting and append a second "data" object. json decoding keeps
-        # the last one, so this would replace the validated url after validation.
-        ('modificationTime',
-         '1", "data": {"api":"PutBlockList","contentLength":9,'
-         '"url":"https://attacker.example/private/payroll.c000.json"}, "z": "'),
-        # Braces and quotes in a plain value must survive as data, not structure.
-        ('modificationTime', '{"url": "https://attacker.example/x"}'),
-        # A size that is not a number would have to be rendered as text.
-        ('size', '1, "url": "https://attacker.example/x"'),
-        ('size', True),
-    ])
-    def test_checkpoint_values_cannot_rewrite_the_queue_message(self, field, value):
+    def _entry(self, **overrides):
         entry = {
             'path': 'abfss://{}@account.dfs.core.windows.net/{}/'
                     'splitdata/output_0/part-00001-u.c000.json'.format(
@@ -259,16 +247,66 @@ class TestUtDatabricksMetadataHandler():
             'size': 1,
             'modificationTime': 1599182552000,
         }
-        entry[field] = value
+        entry.update(overrides)
+        return json.dumps(entry)
 
-        messages, _ = self._messages_and_retention(['v1', json.dumps(entry)])
+    @pytest.mark.parametrize('modification_time', [
+        # Close the quoting and append a second "data" object. json decoding keeps
+        # the last one, so this would replace the validated url after validation.
+        '1", "data": {"api":"PutBlockList","contentLength":9,'
+        '"url":"https://attacker.example/private/payroll.c000.json"}, "z": "',
+        # Braces and quotes in a plain value must survive as data, not structure.
+        '{"url": "https://attacker.example/x"}',
+        '", "eventTime": "forged',
+    ])
+    def test_checkpoint_values_cannot_rewrite_the_queue_message(self, modification_time):
+        messages, _ = self._messages_and_retention(
+            ['v1', self._entry(modificationTime=modification_time)])
 
-        for message in messages:
-            emitted = json.loads(message)['data']['url']
-            assert emitted.startswith(
-                'https://account.blob.core.windows.net/' + METADATA_CONTAINER + '/' + PATH_ROOT), \
-                'the emitted url must remain the one that passed validation'
-            assert isinstance(json.loads(message)['data']['contentLength'], int)
+        assert len(messages) == 1
+        emitted = json.loads(messages[0])
+        assert sorted(emitted) == ['data', 'eventTime', 'modificationTime']
+        assert sorted(emitted['data']) == ['api', 'contentLength', 'url']
+        assert emitted['data']['url'] == (
+            'https://account.blob.core.windows.net/' + METADATA_CONTAINER + '/' + PATH_ROOT
+            + '/splitdata/output_0/part-00001-u.c000.json')
+        assert emitted['data']['contentLength'] == 1
+        assert emitted['modificationTime'] == modification_time
+
+    @pytest.mark.parametrize('size', [
+        '1, "url": "https://attacker.example/x"',  # would have to be rendered as text
+        True,                                       # bool is an int subclass
+        1.5,
+        -1,
+        10 ** 100,
+        None,
+    ])
+    def test_a_size_that_is_not_a_file_length_is_refused(self, size):
+        messages, _ = self._messages_and_retention(['v1', self._entry(size=size)])
+        assert messages == []
+
+    def test_the_largest_real_file_length_is_still_accepted(self):
+        messages, _ = self._messages_and_retention(
+            ['v1', self._entry(size=metadatahandler.MAX_BLOB_SIZE_BYTES)])
+        assert len(messages) == 1
+        assert json.loads(messages[0])['data']['contentLength'] == \
+            metadatahandler.MAX_BLOB_SIZE_BYTES
+
+    @pytest.mark.parametrize('file_name', [
+        '\u0661',            # Arabic-Indic one
+        '\uff11',            # full width one
+        '\u0661.compact',
+    ])
+    def test_only_ascii_digits_name_a_checkpoint_file(self, file_name):
+        # int() accepts these and so does the \\d class, so a file the Spark writer
+        # never produced would otherwise be read, and overwritten, as a checkpoint.
+        with pytest.raises(validation.ValidationError):
+            validation.validate_checkpoint_path(
+                PATH_ROOT + '/o/_spark_metadata/' + file_name, PATH_ROOT, '_spark_metadata')
+
+    def test_only_ascii_digits_carry_a_part_number(self):
+        assert metadatahandler.get_part_number('part-\u0661\u0661-u.json') == -1
+        assert metadatahandler.get_part_number('part-\uff11\uff11-u.json') == -1
 
     def test_a_url_carrying_a_fragment_is_refused_and_not_logged(self):
         # A blob request drops the fragment, so it reaches nothing but the logs.

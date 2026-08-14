@@ -8,7 +8,7 @@
 """
 
 from datetime import date
-from typing import Tuple
+from typing import Optional, Tuple
 import json
 import logging
 import os
@@ -17,6 +17,7 @@ import time
 import requests
 
 from applicationinsights import TelemetryClient
+from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient, BlobServiceClient
 from tenacity import wait_exponential, stop_after_attempt, wait_random, Retrying
 import azure.functions as func
@@ -101,6 +102,21 @@ def get_blob_retry_times(blob_path: str) -> int:
     """ Get the ingest trial count for a given blob path """
     return retry_generation(blob_path, MAX_INGEST_RETRIES_TIMES)
 
+def adopted_copy_status(blob_target_client, source_url: str) -> Optional[str]:
+    """ Report the status of a copy already at the destination from this same source """
+    # The queue redelivers, and the destination path is derived from the source, so
+    # a previous attempt may already have started this exact copy. Observing it is
+    # what lets a retry finish the move instead of starting a competing copy.
+    try:
+        copy = blob_target_client.get_blob_properties().copy
+    except ResourceNotFoundError:
+        return None
+    if not copy or not copy.source:
+        return None
+    if copy.source.split('?', 1)[0] != source_url.split('?', 1)[0]:
+        return None
+    return copy.status
+
 def move_blob_file(connect_str: str, source_container: str, target_container: str,
                    source_path: str, target_path: str) -> None:
     """ Move blob from source to destination container """
@@ -109,14 +125,16 @@ def move_blob_file(connect_str: str, source_container: str, target_container: st
     blob_service_client = BlobServiceClient.from_connection_string(connect_str)
     blob_source_client = blob_service_client.get_blob_client(container=source_container, blob=source_path)
     blob_target_client = blob_service_client.get_blob_client(container=target_container, blob=target_path)
-    copy_result = blob_target_client.start_copy_from_url(blob_source_client.url)
+    copy_status = adopted_copy_status(blob_target_client, blob_source_client.url)
+    if copy_status is None:
+        copy_status = (blob_target_client.start_copy_from_url(blob_source_client.url) or {}).get('copy_status')
     # Only delete once the destination holds the data. A copy that is still pending
     # or has failed would otherwise leave nothing to retry from, and the source is
     # the only remaining copy of the payload.
-    if (copy_result or {}).get('copy_status') != 'success':
+    if copy_status != 'success':
         raise RuntimeError(
-            'Copy of {}/{} did not complete, leaving the source in place.'.format(
-                source_container, source_path))
+            'Copy of {}/{} reported {!r}, leaving the source in place.'.format(
+                source_container, source_path, copy_status))
     blob_source_client.delete_blob()
 
 def retry_blob_ingest_to_adx(container_name: str, blob_file_path: str,

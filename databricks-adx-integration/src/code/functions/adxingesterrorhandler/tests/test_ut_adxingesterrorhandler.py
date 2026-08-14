@@ -3,6 +3,7 @@ import logging
 import pytest
 
 import azure.functions as func
+from azure.core.exceptions import ResourceNotFoundError
 import __app__.errorhandler as errorhandler
 import __app__.errorhandler.validation as validation
 
@@ -116,8 +117,6 @@ class TestUtAdxIngestErrorHandler():
         PATH_ROOT + '/a/retry999/part-uuid.c000.json',
         # retry0 is never written by this function.
         PATH_ROOT + '/a/retry0/part-uuid.c000.json',
-        # Two generations leave the intended one ambiguous.
-        PATH_ROOT + '/a/retry1/retry2/part-uuid.c000.json',
     ])
     def test_get_blob_retry_times_rejects_unusable_generations(self, bad_path):
         with pytest.raises(errorhandler.ValidationError):
@@ -301,6 +300,85 @@ class TestUtAdxIngestErrorHandler():
         assert container == SOURCE_CONTAINER
         assert path == base + '/retry1/part-uuid.c000.json'
 
+    def test_the_retry_reader_and_writer_use_the_same_slot(self):
+        # A directory further up can legitimately be named retry1, for example a
+        # nested output root. If the reader looked there while the writer wrote
+        # above the file name, the blob would collect two generations and then be
+        # refused for the rest of its life. Such a directory is ordinary path data.
+        path = PATH_ROOT + '/retry1/companyIdkey=c/typekey=T/part-uuid.c000.json'
+        assert errorhandler.get_blob_retry_times(path) == 0
+        assert errorhandler.get_blob_retry_times(
+            PATH_ROOT + '/retry1/retry2/part-uuid.c000.json') == 2
+
+        container, first = errorhandler.get_new_blob_move_file_path(SOURCE_CONTAINER, path)
+        assert first == PATH_ROOT + '/retry1/companyIdkey=c/typekey=T/retry1/part-uuid.c000.json'
+        assert errorhandler.get_blob_retry_times(first) == 1
+
+        container, second = errorhandler.get_new_blob_move_file_path(SOURCE_CONTAINER, first)
+        assert second == PATH_ROOT + '/retry1/companyIdkey=c/typekey=T/retry2/part-uuid.c000.json'
+        assert errorhandler.get_blob_retry_times(second) == 2
+
+    @pytest.mark.parametrize('segment', ['retry\u0661', 'retry\uff11'])
+    def test_only_ascii_digits_make_a_retry_segment(self, segment):
+        # int() accepts these digits, so a lookalike directory would otherwise be
+        # read as a generation and could send the blob to the give-up container.
+        assert not validation.is_retry_segment(segment)
+        assert errorhandler.get_blob_retry_times(
+            PATH_ROOT + '/' + segment + '/part-uuid.c000.json') == 0
+
+    @pytest.mark.parametrize('copy_status', ['pending', 'failed', 'aborted', None])
+    def test_the_source_is_kept_unless_the_copy_succeeded(self, mocker, copy_status):
+        # The source is the only copy of the payload. Deleting it before the
+        # destination holds the data would leave nothing to retry from.
+        source, target = mocker.Mock(), mocker.Mock()
+        service = mocker.Mock()
+        service.get_blob_client.side_effect = [source, target]
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+        target.get_blob_properties.side_effect = ResourceNotFoundError('missing')
+        target.start_copy_from_url.return_value = (
+            None if copy_status is None else {'copy_status': copy_status})
+
+        with pytest.raises(RuntimeError):
+            errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+        source.delete_blob.assert_not_called()
+
+    def test_a_completed_copy_from_a_redelivery_is_adopted(self, mocker):
+        # The queue redelivers and the destination path is derived from the source,
+        # so an earlier attempt may already have done the copy. Finishing that move
+        # is better than starting a competing one.
+        source, target = mocker.Mock(), mocker.Mock()
+        source.url = 'https://test.blob.core.windows.net/data/a/b.json'
+        service = mocker.Mock()
+        service.get_blob_client.side_effect = [source, target]
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+        target.get_blob_properties.return_value = mocker.Mock(
+            copy=mocker.Mock(source=source.url + '?sig=x', status='success'))
+
+        errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+
+        target.start_copy_from_url.assert_not_called()
+        source.delete_blob.assert_called_once()
+
+    def test_a_destination_copied_from_somewhere_else_is_not_adopted(self, mocker):
+        # Only a copy of this exact source says the payload is safe.
+        source, target = mocker.Mock(), mocker.Mock()
+        source.url = 'https://test.blob.core.windows.net/data/a/b.json'
+        service = mocker.Mock()
+        service.get_blob_client.side_effect = [source, target]
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+        target.get_blob_properties.return_value = mocker.Mock(
+            copy=mocker.Mock(source='https://test.blob.core.windows.net/data/other.json',
+                             status='success'))
+        target.start_copy_from_url.return_value = {'copy_status': 'success'}
+
+        errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+
+        target.start_copy_from_url.assert_called_once()
+        source.delete_blob.assert_called_once()
+
     def test_the_source_is_kept_when_the_copy_has_not_completed(self, mocker):
         # The source is the only copy of the payload. Deleting it while the copy is
         # still pending would leave nothing to retry from.
@@ -309,6 +387,7 @@ class TestUtAdxIngestErrorHandler():
         service.get_blob_client.side_effect = [source, target]
         mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
                             return_value=service)
+        target.get_blob_properties.side_effect = ResourceNotFoundError('missing')
 
         target.start_copy_from_url.return_value = {'copy_status': 'pending'}
         with pytest.raises(RuntimeError):

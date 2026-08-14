@@ -38,7 +38,7 @@ _CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
 
 # A retry generation is written by this function as a whole path segment, for
 # example "databricks-out/.../retry1/part-0.c000.json".
-_RETRY_SEGMENT_REGEX = re.compile(r'^retry(\d{1,3})$')
+_RETRY_SEGMENT_REGEX = re.compile(r'^retry([0-9]{1,3})$')
 
 
 class ValidationError(ValueError):
@@ -71,8 +71,12 @@ def redact_url(url: Optional[str]) -> Optional[str]:
     :return: the url without credentials, with control characters escaped and any
         query string replaced by a marker
     """
-    if not url or not isinstance(url, str):
+    if not url:
         return url
+    if not isinstance(url, str):
+        # A queue message can carry any json value here, and it reaches the log
+        # before anything has checked it. Describe it rather than print it.
+        return '<non-string URL>'
     # Cut at whichever comes first. A fragment is not part of the request the sdk
     # issues, so it adds nothing to a log entry but can still carry a token.
     cut = len(url)
@@ -287,27 +291,26 @@ def is_retry_segment(segment: Optional[str]) -> bool:
 def retry_generation(blob_path: str, max_retry_times: int) -> int:
     """Return the retry generation encoded in a blob path.
 
-    The generation is written as its own path segment. Matching the segment rather
-    than searching the whole string keeps an unrelated file name such as
+    The generation is one whole path segment, directly above the file name, which
+    is where this function app writes it. Reading any other segment would disagree
+    with the rewriting side: a directory further up that happens to be named
+    "retry1" would be read as the generation while the rewrite added a second one,
+    and the resulting path would then be refused on its next pass.
+
+    Matching the whole segment also keeps an unrelated name such as
     "notaretry999folder/part-0.c000.json" from being read as generation 999, which
     would send the blob straight to the final failure container and delete it.
 
     :param blob_path: validated blob path
     :param max_retry_times: highest generation this deployment allows
     :return: the generation, or 0 when the path carries none
-    :raises ValidationError: when more than one generation is present, or the
-        generation is outside the configured range
+    :raises ValidationError: when the generation is outside the configured range
     """
-    generations = [int(match.group(1))
-                   for match in (_RETRY_SEGMENT_REGEX.match(segment)
-                                 for segment in blob_path.split('/'))
-                   if match]
-    if not generations:
+    segments = (blob_path or '').split('/')
+    match = _RETRY_SEGMENT_REGEX.match(segments[-2]) if len(segments) >= 2 else None
+    if not match:
         return 0
-    if len(generations) > 1:
-        raise ValidationError(
-            'Blob path {!r} carries more than one retry generation.'.format(blob_path))
-    generation = generations[0]
+    generation = int(match.group(1))
     if generation < 1 or generation > max_retry_times:
         raise ValidationError(
             'Retry generation {} in {!r} is outside the configured range 1..{}.'.format(

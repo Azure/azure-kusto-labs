@@ -36,7 +36,7 @@ _CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
 
 # Spark's structured streaming file sink names each checkpoint log entry after its
 # batch number, and periodically rolls them up into "<batch>.compact".
-_SPARK_METADATA_FILE_REGEX = re.compile(r'^\d{1,19}(\.compact)?$')
+_SPARK_METADATA_FILE_REGEX = re.compile(r'^[0-9]{1,19}(\.compact)?$')
 
 class ValidationError(ValueError):
     """Raised when untrusted input fails validation."""
@@ -68,8 +68,12 @@ def redact_url(url: Optional[str]) -> Optional[str]:
     :return: the url without credentials, with control characters escaped and any
         query string replaced by a marker
     """
-    if not url or not isinstance(url, str):
+    if not url:
         return url
+    if not isinstance(url, str):
+        # A queue message can carry any json value here, and it reaches the log
+        # before anything has checked it. Describe it rather than print it.
+        return '<non-string URL>'
     # Cut at whichever comes first. A fragment is not part of the request the sdk
     # issues, so it adds nothing to a log entry but can still carry a token.
     cut = len(url)

@@ -207,7 +207,11 @@ def convert_abfss_path_to_https(abfss_path: str) -> str:
 # Spark names each output file part-<number>-<uuid>. The digit run is bounded so a
 # crafted name cannot hand int() an arbitrarily long number, and the number must end
 # at a non-digit so a longer run is treated as unnumbered rather than truncated.
-_PART_FILE_REGEX = re.compile(r'^part-(\d{1,10})(?![0-9])')
+_PART_FILE_REGEX = re.compile(r'^part-([0-9]{1,10})(?![0-9])')
+
+# The largest value a file length can take, matching the signed 64 bit length
+# Spark and the storage service report.
+MAX_BLOB_SIZE_BYTES = 2 ** 63 - 1
 
 def get_part_number(content) ->int:
     """Find part number"""
@@ -250,12 +254,13 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             output_file_size = split_output_file_json["size"]
             output_file_modification_time = split_output_file_json["modificationTime"]
 
-            # The size is emitted as a json number. Anything else would have to be
-            # rendered as text, and the entry does not describe a file this pipeline
-            # produced, so it is refused rather than coerced.
-            if isinstance(output_file_size, bool) or not isinstance(output_file_size, int):
+            # The size is emitted as a json number and read downstream as the raw
+            # data size of the blob. Anything outside the range a file length can
+            # take does not describe a file this pipeline produced.
+            if (isinstance(output_file_size, bool) or not isinstance(output_file_size, int)
+                    or not 0 <= output_file_size <= MAX_BLOB_SIZE_BYTES):
                 raise ValueError(
-                    'Checkpoint entry size {!r} is not a whole number.'.format(output_file_size))
+                    'Checkpoint entry size {!r} is not a file length.'.format(output_file_size))
 
             https_url = convert_abfss_path_to_https(output_abfss_path)
             # The metadata file content also selects a destination, for the ingest
