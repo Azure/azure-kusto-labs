@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 import azure.functions as func
@@ -92,6 +93,41 @@ class TestUtAdxIngest():
         with pytest.raises(validation.ValidationError):
             dataingest.get_target_info(
                 PATH_ROOT + '/q/notcompanyIdkey=company-id-1/typekey=TEMP/part-0.c000.json')
+
+    @pytest.mark.parametrize('path', [
+        # Two database selectors: whichever this function reads, the other one is
+        # the one an operator would see when looking at the path.
+        PATH_ROOT + '/companyIdkey=company-id-0/companyIdkey=company-id-1/'
+        'typekey=TEMP/part-0.c000.json',
+        # Two table selectors.
+        PATH_ROOT + '/companyIdkey=company-id-1/typekey=CO2/typekey=TEMP/part-0.c000.json',
+    ])
+    def test_an_ambiguous_destination_is_refused(self, path):
+        # Both selectors name provisioned destinations, so the allow-list alone
+        # cannot settle this; the path itself has to be unambiguous.
+        with pytest.raises(validation.ValidationError):
+            dataingest.get_target_info(path)
+
+    def test_a_malformed_message_is_refused_without_crashing(self, mocker):
+        ingest = mocker.patch.object(dataingest, 'ingest_to_adx')
+        for body in ({'data': {}, 'eventTime': '2020-09-07T06:43:03Z'},
+                     {'eventTime': '2020-09-07T06:43:03Z'},
+                     {'data': {'url': 12345}, 'eventTime': '2020-09-07T06:43:03Z'}):
+            message = func.QueueMessage(body=json.dumps(body).encode('utf-8'))
+            with pytest.raises((validation.ValidationError, KeyError, TypeError)):
+                dataingest.main(message)
+        ingest.assert_not_called()
+
+    def test_the_queue_body_is_not_echoed_into_the_logs(self, caplog, mocker):
+        # The body carries the blob url, which can include a sas token.
+        mocker.patch.object(dataingest, 'ingest_to_adx')
+        mocker.patch.object(dataingest, 'initialize_kusto_client')
+        url = BLOB_URL
+        with caplog.at_level(logging.INFO):
+            dataingest.main(self._message(url=url))
+        for record in caplog.records:
+            assert '"contentLength"' not in record.getMessage(), \
+                'the raw queue body must not be logged'
 
     def test_destination_policy_is_mandatory(self, monkeypatch):
         # Absent configuration must deny, not widen the function to the cluster.
