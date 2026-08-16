@@ -269,7 +269,49 @@ def build_database_allow_list(name_format: Optional[str], count: Optional[int]) 
         raise ValidationError(
             'ALLOWED_DATABASE_COUNT must be between 1 and {}; got {!r}.'.format(
                 MAX_DATABASE_COUNT, count))
-    return {name_format.format(INDEX=index) for index in range(count)}
+    try:
+        names = {name_format.format(INDEX=index) for index in range(count)}
+    except (IndexError, KeyError, ValueError) as exc:
+        # An unmatched brace or an unexpected field makes the template unusable.
+        raise ValidationError(
+            'ALLOWED_DATABASE_NAME_FORMAT {!r} is not a usable name template: {}.'.format(
+                name_format, exc))
+    # A format such as "{{INDEX}}" contains the marker but escapes it, so every
+    # index produces the same name. Provisioning would then create one database
+    # while the operator believes there are many, and this allow-list would agree
+    # with neither. Check the result rather than the template.
+    if len(names) != count:
+        raise ValidationError(
+            'ALLOWED_DATABASE_NAME_FORMAT {!r} produced {} names for {} databases.'.format(
+                name_format, len(names), count))
+    if any('{' in name or '}' in name for name in names):
+        raise ValidationError(
+            'ALLOWED_DATABASE_NAME_FORMAT {!r} leaves unresolved braces in the name.'.format(
+                name_format))
+    return names
+
+
+def validate_selector_keys(database_key: Optional[str], table_key: Optional[str]) -> None:
+    """Assert that the two destination markers can name two different things.
+
+    A blob path is expected to carry one database directory and one table
+    directory. If the markers were equal, or one were a prefix of the other, a
+    single directory would answer both questions and the path could no longer
+    express which database and which table were meant.
+
+    :param database_key: the marker that introduces the database directory
+    :param table_key: the marker that introduces the table directory
+    :raises ValidationError: when the pair cannot express that grammar
+    """
+    for value, name in ((database_key, 'DATABASEID_KEY'), (table_key, 'TABLEID_KEY')):
+        if not value or not isinstance(value, str):
+            raise ValidationError('{} is not configured for this function app.'.format(name))
+        if '/' in value:
+            raise ValidationError('{} must name part of one path segment.'.format(name))
+    if database_key.startswith(table_key) or table_key.startswith(database_key):
+        raise ValidationError(
+            'DATABASEID_KEY {!r} and TABLEID_KEY {!r} cannot select different directories.'.format(
+                database_key, table_key))
 
 
 def validate_content_length(size) -> int:

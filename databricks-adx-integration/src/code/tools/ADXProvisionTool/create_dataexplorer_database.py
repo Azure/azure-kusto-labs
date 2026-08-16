@@ -72,6 +72,14 @@ def init_config():
     # The ingestion function rebuilds its allow-list from this same format and the
     # database count, so both sides describe one set of databases.
     DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
+    # The same check the ingestion function applies. A format that escapes the
+    # marker, such as "{{INDEX}}", yields one name for every index, so the loops
+    # below would create a single database while reporting many.
+    sample = {DATABASE_NAME_FORMAT.format(INDEX=index) for index in range(2)}
+    if len(sample) != 2 or any('{' in name or '}' in name for name in sample):
+        raise ValueError(
+            'DATABASE_NAME_FORMAT {!r} does not produce one name per database.'.format(
+                DATABASE_NAME_FORMAT))
     print(TABLE_LIST)
 
 def initialize_kusto_client():
