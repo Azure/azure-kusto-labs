@@ -50,6 +50,7 @@ from .validation import (
     redact_url,
     storage_hosts_from_account_url,
     validate_blob_url,
+    validate_content_length,
     validate_source_location,
     validate_target,
 )
@@ -135,6 +136,8 @@ def main(msg: func.QueueMessage) -> None:
         validate_blob_url(file_url, ALLOWED_STORAGE_HOSTS)
         blob_path = validate_source_location(file_url, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT)
         target_database, target_table = get_target_info(blob_path)
+        #get file size from storage queue directly
+        file_size = validate_content_length(content_json['data']['contentLength'])
     except (ValidationError, KeyError, TypeError) as exc:
         # A message this function cannot read is refused in one place, so a
         # malformed one fails the same way as a rejected one.
@@ -149,8 +152,6 @@ def main(msg: func.QueueMessage) -> None:
     except Exception:
         modification_time = msg_time
 
-    #get file size from storage queue directly
-    file_size = content_json['data']['contentLength']
     logging.info(f"{LOG_MESSAGE_HEADER} target_database:{target_database}, target_table:{target_table}")
     
     #set up if log table connection when duplicate check enable
@@ -342,7 +343,7 @@ def get_target_info(blob_path):
         if part.startswith(DATABASEID_KEY):
             databases.append(part[len(DATABASEID_KEY):])
         if part.startswith(TABLEID_KEY):
-            tables.append(part[len(TABLEID_KEY):].upper())
+            tables.append(part[len(TABLEID_KEY):])
     # One directory each, or the destination is ambiguous. Taking the first or the
     # last would let a crafted path put a second selector where this function is
     # not looking, and have it read instead of the one written by the job.
@@ -350,8 +351,12 @@ def get_target_info(blob_path):
         if len(values) > 1:
             raise ValidationError(
                 'Blob path names more than one target {}.'.format(kind))
+    # The table directory is named from a telemetry field, whose casing is not
+    # guaranteed, so it is matched without regard to case and resolved to the name
+    # the provisioning tool actually created.
     return (validate_target(databases[0] if databases else None, 'database', ALLOWED_DATABASES),
-            validate_target(tables[0] if tables else None, 'table', ALLOWED_TABLE_NAMES))
+            validate_target(tables[0] if tables else None, 'table', ALLOWED_TABLE_NAMES,
+                            fold_case=True))
 
 def initialize_kusto_client():
     """initialize kusto client
