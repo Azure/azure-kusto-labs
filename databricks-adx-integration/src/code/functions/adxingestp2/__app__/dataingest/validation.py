@@ -10,7 +10,7 @@
 """
 import re
 from typing import Optional, Set
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 # A blob url and an identifier are both bounded in practice. Rejecting anything
 # longer keeps a crafted value from reaching the sdk or the ingestion properties.
@@ -34,6 +34,11 @@ _FORBIDDEN_CHARS_REGEX = re.compile(r'[\x00-\x20\x7f-\x9f]')
 
 # Control characters in a blob path, which may legitimately contain spaces.
 _CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
+
+
+# The largest value a file length can take, matching the signed 64 bit length
+# the storage service reports.
+MAX_BLOB_SIZE_BYTES = 2 ** 63 - 1
 
 
 class ValidationError(Exception):
@@ -180,11 +185,15 @@ def validate_blob_url(url: str, allowed_hosts: Set[str]) -> str:
 def blob_path_segments(url: str) -> list:
     """Return the container and blob path segments of a validated blob url.
 
+    The path is percent decoded first, because that is what the storage sdk
+    resolves the blob name to. Checking the encoded form instead would accept
+    ``%2e%2e`` as an ordinary segment while the request addressed ``..``.
+
     :param url: a blob url that has already passed host validation
-    :return: the path segments, container first
+    :return: the decoded path segments, container first
     :raises ValidationError: when the path is malformed
     """
-    path = urlsplit(url).path.lstrip('/')
+    path = unquote(urlsplit(url).path).lstrip('/')
     if not path:
         raise ValidationError('Blob url does not name a container.')
     if _CONTROL_CHARS_REGEX.search(path):
@@ -263,17 +272,43 @@ def build_database_allow_list(name_format: Optional[str], count: Optional[int]) 
     return {name_format.format(INDEX=index) for index in range(count)}
 
 
-def validate_target(value: Optional[str], kind: str, allowed_values: Set[str]) -> str:
+def validate_content_length(size) -> int:
+    """Assert that the size on the queue message is a file length.
+
+    The value is forwarded to ADX as the raw data size of the blob, and this
+    function treats its queue as untrusted, so it cannot rely on the producer
+    having checked it.
+
+    :param size: the contentLength taken from the queue message
+    :return: the validated size
+    :raises ValidationError: when the value is not a file length
+    """
+    if isinstance(size, bool) or not isinstance(size, int):
+        raise ValidationError('Content length {!r} is not a whole number.'.format(size))
+    if not 0 <= size <= MAX_BLOB_SIZE_BYTES:
+        raise ValidationError(
+            'Content length {!r} is outside the range a file can take.'.format(size))
+    return size
+
+
+def validate_target(value: Optional[str], kind: str, allowed_values: Set[str],
+                    fold_case: bool = False) -> str:
     """Assert that a destination the blob path selected is one this app provisioned.
 
     The directories that carry these values are named from the telemetry itself,
     so the value is only ever a request. Checking it against the destinations the
     deployment actually created is what turns that request into an authorisation.
 
+    With ``fold_case`` the provisioned spelling is returned rather than the one
+    from the path. Kusto identifiers are case sensitive, so the name that reaches
+    the ingestion properties has to be the one that was created, not the casing a
+    telemetry field happened to use.
+
     :param value: the database or table name taken from the blob path
     :param kind: which of the two, for the error message
     :param allowed_values: the destinations this deployment provisioned
-    :return: the validated value
+    :param fold_case: match without regard to case and return the provisioned name
+    :return: the validated destination name
     :raises ValidationError: when the value is missing, malformed or not allowed
     """
     if not allowed_values:
@@ -284,6 +319,19 @@ def validate_target(value: Optional[str], kind: str, allowed_values: Set[str]) -
         raise ValidationError('Target {} is missing from the blob path.'.format(kind))
     if len(value) > MAX_IDENTIFIER_LENGTH:
         raise ValidationError('Target {} exceeds {} characters.'.format(kind, MAX_IDENTIFIER_LENGTH))
+
+    if fold_case:
+        provisioned = {allowed.upper(): allowed for allowed in allowed_values}
+        if len(provisioned) != len(allowed_values):
+            # Two provisioned names differing only by case cannot be told apart
+            # from a path, so there is no safe answer to give.
+            raise ValidationError(
+                'Configured target {}s differ only by case; refusing to guess.'.format(kind))
+        if value.upper() not in provisioned:
+            raise ValidationError(
+                'Target {} {!r} is not one this deployment provisioned.'.format(kind, value))
+        return provisioned[value.upper()]
+
     # Whole-value match against the provisioned set. Nothing is normalised here
     # beyond what the caller already did, so a lookalike cannot pass as a
     # neighbour's destination.

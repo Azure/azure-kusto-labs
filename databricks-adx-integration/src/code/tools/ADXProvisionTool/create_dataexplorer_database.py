@@ -66,7 +66,9 @@ def init_config():
     HOTCACHEPERIOD = int(os.getenv('HOTCACHEPERIOD', HOTCACHEPERIOD))
     CLUSTER = f"https://{CLUSTER_NAME}.{REGION}.kusto.windows.net"
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
-    TABLE_LIST = TABLE_LIST_STR.split(',')
+    # Stripped, so a list written as "CO2, TEMP" creates TEMP rather than a table
+    # whose name begins with a space, which the ingestion function could never name.
+    TABLE_LIST = [name.strip() for name in TABLE_LIST_STR.split(',') if name.strip()]
     # The ingestion function rebuilds its allow-list from this same format and the
     # database count, so both sides describe one set of databases.
     DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)

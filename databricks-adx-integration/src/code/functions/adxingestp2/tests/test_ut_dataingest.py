@@ -87,6 +87,65 @@ class TestUtAdxIngest():
         with pytest.raises(validation.ValidationError):
             dataingest.get_target_info(path)
 
+    @pytest.mark.parametrize('encoded', [
+        # The sdk percent decodes the path, so checking the encoded form would
+        # accept these as ordinary segments while the request addressed "..".
+        'databricks-out/%2e%2e/private/companyIdkey=company-id-1/typekey=TEMP/p.c000.json',
+        'databricks-out/%2E%2E/private/companyIdkey=company-id-1/typekey=TEMP/p.c000.json',
+        'databricks-out/..%2fprivate/companyIdkey=company-id-1/typekey=TEMP/p.c000.json',
+    ])
+    def test_encoded_traversal_is_rejected_after_decoding(self, encoded, mocker):
+        ingest = mocker.patch.object(dataingest, 'ingest_to_adx')
+        url = 'https://account.blob.core.windows.net/{}/{}'.format(SOURCE_CONTAINER, encoded)
+        with pytest.raises(validation.ValidationError):
+            dataingest.main(self._message(url=url))
+        ingest.assert_not_called()
+
+    def test_a_mixed_case_configured_table_is_usable(self, monkeypatch):
+        # Kusto identifiers are case sensitive, so the name that reaches the
+        # ingestion properties has to be the provisioned spelling, not the casing
+        # the telemetry field happened to use.
+        monkeypatch.setenv('ALLOWED_TABLES', 'Temp, CO2')
+        dataingest.get_config_values()
+        assert dataingest.ALLOWED_TABLE_NAMES == {'Temp', 'CO2'}
+
+        for requested in ('Temp', 'temp', 'TEMP'):
+            path = PATH_ROOT + '/q/companyIdkey=company-id-1/typekey={}/p.c000.json'.format(requested)
+            assert dataingest.get_target_info(path) == ('company-id-1', 'Temp')
+
+    def test_tables_that_differ_only_by_case_are_refused(self, monkeypatch):
+        # Two provisioned names that fold together cannot be told apart from a
+        # path, so there is no safe answer to give.
+        monkeypatch.setenv('ALLOWED_TABLES', 'Temp,TEMP')
+        dataingest.get_config_values()
+        with pytest.raises(validation.ValidationError):
+            dataingest.get_target_info(
+                PATH_ROOT + '/q/companyIdkey=company-id-1/typekey=Temp/p.c000.json')
+
+    @pytest.mark.parametrize('size', [-1, 10 ** 30, True, 1.5, '1024', None])
+    def test_an_invalid_content_length_never_reaches_ingestion(self, size, mocker):
+        ingest = mocker.patch.object(dataingest, 'ingest_to_adx')
+        mocker.patch.object(dataingest, 'initialize_kusto_client')
+        with pytest.raises((validation.ValidationError, KeyError, TypeError)):
+            dataingest.main(self._message(size=size))
+        ingest.assert_not_called()
+
+    def test_the_largest_real_file_length_is_accepted(self):
+        assert validation.validate_content_length(validation.MAX_BLOB_SIZE_BYTES) == \
+            validation.MAX_BLOB_SIZE_BYTES
+        assert validation.validate_content_length(0) == 0
+
+    def test_a_producer_cannot_be_bound_to_one_tenant_here(self):
+        # Recorded deliberately: every company's telemetry arrives through one
+        # container and one credential, and companyId is a field inside each
+        # record, so this function has no producer identity to bind a database to.
+        # The allow-list confines the choice to provisioned databases; it cannot
+        # decide which of them the data belongs to. Closing that gap needs the
+        # ingress to carry a trusted tenant identity.
+        for company in ('company-id-0', 'company-id-2'):
+            path = PATH_ROOT + '/q/companyIdkey={}/typekey=TEMP/p.c000.json'.format(company)
+            assert dataingest.get_target_info(path) == (company, 'TEMP')
+
     def test_the_marker_must_start_a_whole_segment(self):
         # A directory that merely contains the marker is not a destination
         # selector, and must not be read as one.
