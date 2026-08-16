@@ -271,8 +271,9 @@ def build_database_allow_list(name_format: Optional[str], count: Optional[int]) 
                 MAX_DATABASE_COUNT, count))
     try:
         names = {name_format.format(INDEX=index) for index in range(count)}
-    except (IndexError, KeyError, ValueError) as exc:
-        # An unmatched brace or an unexpected field makes the template unusable.
+    except Exception as exc:  # pylint: disable=broad-except
+        # Any way the template fails to render is a configuration error, not a
+        # different kind of problem, so they are all reported the same way.
         raise ValidationError(
             'ALLOWED_DATABASE_NAME_FORMAT {!r} is not a usable name template: {}.'.format(
                 name_format, exc))
@@ -308,6 +309,11 @@ def validate_selector_keys(database_key: Optional[str], table_key: Optional[str]
             raise ValidationError('{} is not configured for this function app.'.format(name))
         if '/' in value:
             raise ValidationError('{} must name part of one path segment.'.format(name))
+        if '\\' in value or _CONTROL_CHARS_REGEX.search(value):
+            # Path validation refuses these characters, so a selector containing
+            # one could never match a blob this function is willing to read.
+            raise ValidationError(
+                '{} contains characters a blob path may not carry.'.format(name))
     if database_key.startswith(table_key) or table_key.startswith(database_key):
         raise ValidationError(
             'DATABASEID_KEY {!r} and TABLEID_KEY {!r} cannot select different directories.'.format(

@@ -13,6 +13,8 @@ from azure.mgmt.kusto.models import ReadWriteDatabase
 from azure.mgmt.kusto import KustoManagementClient
 from azure.common.credentials import ServicePrincipalCredentials
 
+from provisioning_policy import validate_provisioning_policy
+
 RETENTION_DAYS = None
 KUSTO_MGMT_CLIENT = None
 SERVICE_CLIENT = None
@@ -72,14 +74,6 @@ def init_config():
     # The ingestion function rebuilds its allow-list from this same format and the
     # database count, so both sides describe one set of databases.
     DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
-    # The same check the ingestion function applies. A format that escapes the
-    # marker, such as "{{INDEX}}", yields one name for every index, so the loops
-    # below would create a single database while reporting many.
-    sample = {DATABASE_NAME_FORMAT.format(INDEX=index) for index in range(2)}
-    if len(sample) != 2 or any('{' in name or '}' in name for name in sample):
-        raise ValueError(
-            'DATABASE_NAME_FORMAT {!r} does not produce one name per database.'.format(
-                DATABASE_NAME_FORMAT))
     print(TABLE_LIST)
 
 def initialize_kusto_client():
@@ -370,6 +364,9 @@ if __name__ == "__main__": # pragma: no cover
 
     # run functions
     s = []
+    # Checked once, against the count these operations are about to use, so a
+    # configuration the ingestion function would refuse never reaches Kusto.
+    validate_provisioning_policy(DATABASE_NAME_FORMAT, int(databaseCount), TABLE_LIST)
     if act == "createDatabase":
         create_database(databaseCount)
     elif act == "createTableofDatabase":
