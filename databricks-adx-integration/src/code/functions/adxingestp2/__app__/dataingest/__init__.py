@@ -51,6 +51,7 @@ from .validation import (
     storage_hosts_from_account_url,
     validate_blob_url,
     validate_content_length,
+    validate_selector_keys,
     validate_source_location,
     validate_target,
 )
@@ -253,6 +254,7 @@ def get_config_values():
 
     # Outside the try above: a failure to establish these boundaries must stop the
     # function, not be logged and stepped over.
+    validate_selector_keys(DATABASEID_KEY, TABLEID_KEY)
     ALLOWED_DATABASE_NAME_FORMAT = os.getenv("ALLOWED_DATABASE_NAME_FORMAT", ALLOWED_DATABASE_NAME_FORMAT)
     ALLOWED_DATABASE_COUNT = int(os.getenv("ALLOWED_DATABASE_COUNT", ALLOWED_DATABASE_COUNT))
     ALLOWED_TABLES = os.getenv("ALLOWED_TABLES", ALLOWED_TABLES)

@@ -135,16 +135,51 @@ class TestUtAdxIngest():
             validation.MAX_BLOB_SIZE_BYTES
         assert validation.validate_content_length(0) == 0
 
-    def test_a_producer_cannot_be_bound_to_one_tenant_here(self):
+    def test_policy_allows_any_provisioned_database_without_producer_binding(self):
         # Recorded deliberately: every company's telemetry arrives through one
         # container and one credential, and companyId is a field inside each
         # record, so this function has no producer identity to bind a database to.
         # The allow-list confines the choice to provisioned databases; it cannot
-        # decide which of them the data belongs to. Closing that gap needs the
-        # ingress to carry a trusted tenant identity.
+        # decide which of them the data belongs to. This is a residual limitation,
+        # not closure, and it needs the ingress to carry a trusted tenant identity.
         for company in ('company-id-0', 'company-id-2'):
             path = PATH_ROOT + '/q/companyIdkey={}/typekey=TEMP/p.c000.json'.format(company)
             assert dataingest.get_target_info(path) == (company, 'TEMP')
+
+    @pytest.mark.parametrize('name_format', [
+        # Escapes the marker, so every index yields the same name. Provisioning
+        # would create one database while reporting many.
+        '{{INDEX}}',
+        'company-id-{{INDEX}}',
+        # Contains the marker but leaves another brace unresolved.
+        'company-{INDEX}-{OTHER',
+    ])
+    def test_a_name_format_that_does_not_vary_per_database_is_refused(self, name_format):
+        with pytest.raises(validation.ValidationError):
+            validation.build_database_allow_list(name_format, 3)
+
+    def test_a_usable_name_format_produces_one_name_per_database(self):
+        assert validation.build_database_allow_list('company-id-{INDEX}', 3) == {
+            'company-id-0', 'company-id-1', 'company-id-2'}
+
+    @pytest.mark.parametrize('database_key,table_key', [
+        # One directory would answer both questions.
+        ('key=', 'key='),
+        # One marker is a prefix of the other, so a segment matching the longer
+        # one also matches the shorter.
+        ('key=', 'key=type='),
+        ('companyIdkey=', 'companyIdkey'),
+        # Absent, or spanning more than one segment.
+        ('', 'typekey='),
+        ('companyIdkey=', ''),
+        ('companyIdkey=/x', 'typekey='),
+    ])
+    def test_markers_that_cannot_select_two_directories_are_refused(self, database_key, table_key):
+        with pytest.raises(validation.ValidationError):
+            validation.validate_selector_keys(database_key, table_key)
+
+    def test_the_configured_markers_are_usable(self):
+        assert validation.validate_selector_keys('companyIdkey=', 'typekey=') is None
 
     def test_the_marker_must_start_a_whole_segment(self):
         # A directory that merely contains the marker is not a destination
