@@ -117,8 +117,9 @@ def main(msg: func.QueueMessage) -> None:
     :param msg: func.QueueMessage
     :return: None
     """
-    logging.info('Python queue trigger function processed a queue item: %s',
-                 msg.get_body().decode('utf-8'))
+    # The queue body carries the blob url, which can include a sas token, so the
+    # message is identified rather than echoed into the logs.
+    logging.info('Python queue trigger function processed a queue item: %s', msg.id)
     # Set the logging level for all azure-* libraries
     logging.getLogger('azure').setLevel(logging.WARNING)
     modification_time = None
@@ -126,16 +127,19 @@ def main(msg: func.QueueMessage) -> None:
     #get message content
     #queue from checkpoint function
     content_json = json.loads(msg.get_body().decode('utf-8'))
-    file_url = content_json['data']['url']
+    file_url = None
     try:
+        file_url = content_json['data']['url']
         # The url is given this function's storage sas token below, so authorise
         # it before the token is attached and before ADX is asked to fetch it.
         validate_blob_url(file_url, ALLOWED_STORAGE_HOSTS)
         blob_path = validate_source_location(file_url, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT)
         target_database, target_table = get_target_info(blob_path)
-    except ValidationError:
-        logging.error("%s Rejected untrusted queue message for %s",
-                      LOG_MESSAGE_HEADER, redact_url(file_url))
+    except (ValidationError, KeyError, TypeError) as exc:
+        # A message this function cannot read is refused in one place, so a
+        # malformed one fails the same way as a rejected one.
+        logging.error("%s Rejected untrusted queue message for %s: %s",
+                      LOG_MESSAGE_HEADER, redact_url(file_url), exc)
         raise
     logging.info(f"{LOG_MESSAGE_HEADER} file_url:{redact_url(file_url)}")
     msg_time = p.parse(content_json['eventTime'])
@@ -332,15 +336,22 @@ def get_target_info(blob_path):
     """
     global DATABASEID_KEY
     global TABLEID_KEY
-    target_database = None
-    target_table = None
+    databases = []
+    tables = []
     for part in blob_path.split('/'):
         if part.startswith(DATABASEID_KEY):
-            target_database = part[len(DATABASEID_KEY):]
+            databases.append(part[len(DATABASEID_KEY):])
         if part.startswith(TABLEID_KEY):
-            target_table = part[len(TABLEID_KEY):].upper()
-    return (validate_target(target_database, 'database', ALLOWED_DATABASES),
-            validate_target(target_table, 'table', ALLOWED_TABLE_NAMES))
+            tables.append(part[len(TABLEID_KEY):].upper())
+    # One directory each, or the destination is ambiguous. Taking the first or the
+    # last would let a crafted path put a second selector where this function is
+    # not looking, and have it read instead of the one written by the job.
+    for values, kind in ((databases, 'database'), (tables, 'table')):
+        if len(values) > 1:
+            raise ValidationError(
+                'Blob path names more than one target {}.'.format(kind))
+    return (validate_target(databases[0] if databases else None, 'database', ALLOWED_DATABASES),
+            validate_target(tables[0] if tables else None, 'table', ALLOWED_TABLE_NAMES))
 
 def initialize_kusto_client():
     """initialize kusto client
