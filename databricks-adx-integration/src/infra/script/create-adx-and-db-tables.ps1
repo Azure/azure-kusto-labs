@@ -32,6 +32,10 @@ Function Set-Environment-Variables {
         [Environment]::SetEnvironmentVariable('CLUSTER_NAME',$clusterName)
         [Environment]::SetEnvironmentVariable('SUBSCRIPTION_ID',$configObj.AzureSubscriptionId)
         [Environment]::SetEnvironmentVariable('RESOURCE_GROUP',$configObj.ResourceGroupName)
+        # The ingestion function is told the same two values, so the destinations it
+        # accepts are exactly the ones created here.
+        [Environment]::SetEnvironmentVariable('DATABASE_NAME_FORMAT',$configObj.ADX.DatabaseNameFormat)
+        [Environment]::SetEnvironmentVariable('TABLE_LIST_STR',$configObj.ADX.TableList)
     }
     elseif ($action.ToLower().Equals("delete")){
         [Environment]::SetEnvironmentVariable('RETENTION_DAYS',$null)

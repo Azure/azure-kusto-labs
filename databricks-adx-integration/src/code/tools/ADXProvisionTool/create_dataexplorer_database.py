@@ -50,6 +50,7 @@ def init_config():
     global MAX_BATCHTIME, MAX_ITEMS, MAX_RAWSIZE
     global SOFTDELETEPERIOD, HOTCACHEPERIOD
     global TABLE_LIST_STR, TABLE_LIST
+    global DATABASE_NAME_FORMAT
     RETENTION_DAYS = os.getenv('RETENTION_DAYS', RETENTION_DAYS)
     RESOURCE_GROUP = os.getenv('RESOURCE_GROUP')
     REGION = os.getenv('REGION')
@@ -66,6 +67,9 @@ def init_config():
     CLUSTER = f"https://{CLUSTER_NAME}.{REGION}.kusto.windows.net"
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
     TABLE_LIST = TABLE_LIST_STR.split(',')
+    # The ingestion function rebuilds its allow-list from this same format and the
+    # database count, so both sides describe one set of databases.
+    DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
     print(TABLE_LIST)
 
 def initialize_kusto_client():

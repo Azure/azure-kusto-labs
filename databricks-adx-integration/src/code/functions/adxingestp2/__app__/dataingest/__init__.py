@@ -43,6 +43,17 @@ from tenacity import (
     wait_random
 )
 
+from .validation import (
+    ValidationError,
+    build_database_allow_list,
+    parse_allow_list,
+    redact_url,
+    storage_hosts_from_account_url,
+    validate_blob_url,
+    validate_source_location,
+    validate_target,
+)
+
 # # DATA LAKE CONFIG
 SOURCE_TELEMETRY_FILE_TOKEN = ""
 
@@ -65,6 +76,22 @@ IS_FLUSH_IMMEDIATELY = "True"  # True or False
 KUSTO_INGESTION_CLIENT = None
 DATABASEID_KEY = "companyIdkey="
 TABLEID_KEY = "typekey="
+
+# The blob path chooses the ADX database and table, and those directories are
+# named from the telemetry itself. These describe what the deployment actually
+# provisioned, so a name the blob path asks for can be checked against it.
+ALLOWED_DATABASE_NAME_FORMAT = 'company-id-{INDEX}'
+ALLOWED_DATABASE_COUNT = 0
+ALLOWED_TABLES = ''
+ALLOWED_DATABASES = set()
+ALLOWED_TABLE_NAMES = set()
+
+# The blob this function hands to ADX, together with its own sas token. These
+# confine it to the storage this deployment ingests from.
+SOURCE_STORAGE_ACCOUNT_URL = ''
+ALLOWED_SOURCE_CONTAINERS = set()
+SOURCE_PATH_ROOT = ''
+ALLOWED_STORAGE_HOSTS = set()
 
 # MAX Retry Times
 RETRY_MAX_ATTEMPT_NUMBER = "5" #times
@@ -100,7 +127,17 @@ def main(msg: func.QueueMessage) -> None:
     #queue from checkpoint function
     content_json = json.loads(msg.get_body().decode('utf-8'))
     file_url = content_json['data']['url']
-    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{file_url}")
+    try:
+        # The url is given this function's storage sas token below, so authorise
+        # it before the token is attached and before ADX is asked to fetch it.
+        validate_blob_url(file_url, ALLOWED_STORAGE_HOSTS)
+        blob_path = validate_source_location(file_url, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT)
+        target_database, target_table = get_target_info(blob_path)
+    except ValidationError:
+        logging.error("%s Rejected untrusted queue message for %s",
+                      LOG_MESSAGE_HEADER, redact_url(file_url))
+        raise
+    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{redact_url(file_url)}")
     msg_time = p.parse(content_json['eventTime'])
     try:
         #modification time is the time databricks processed finished
@@ -110,8 +147,6 @@ def main(msg: func.QueueMessage) -> None:
 
     #get file size from storage queue directly
     file_size = content_json['data']['contentLength']
-    # Sharing: New logic based on new schema
-    target_database, target_table = get_target_info(file_url)
     logging.info(f"{LOG_MESSAGE_HEADER} target_database:{target_database}, target_table:{target_table}")
     
     #set up if log table connection when duplicate check enable
@@ -147,12 +182,12 @@ def main(msg: func.QueueMessage) -> None:
                 insert_log_table(log_table_name, target_database, log_table_key, msg_time, \
                     modification_time, file_url, ingest_source_id)
         else:
-                logging.warning(f"{DUPLICATE_EVENT_NAME} DUPLICATE DATA Subject : {file_url} \
+                logging.warning(f"{DUPLICATE_EVENT_NAME} DUPLICATE DATA Subject : {redact_url(file_url)} \
                     has been processed already. Skip process.")      
     else:
         logging.warning(
             "%s Subject : %s does not match regular express %s. Skip process. ", \
-                LOG_MESSAGE_HEADER, file_url, EVENT_SUBJECT_FILTER_REGEX)
+                LOG_MESSAGE_HEADER, redact_url(file_url), EVENT_SUBJECT_FILTER_REGEX)
 
 
 def get_config_values():
@@ -169,6 +204,10 @@ def get_config_values():
 
     global RETRY_MAX_ATTEMPT_NUMBER, RETRY_WAIT_INCREMENT_VALUE, RETRY_MAX_WAIT_TIME
     global IS_DUPLICATE_CHECK, STORAGE_TABLE_ACCOUNT, STORAGE_TABLE_TOKEN, DUPLICATE_EVENT_NAME, LOG_TABLE_PREFIX
+    global ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT, ALLOWED_TABLES
+    global ALLOWED_DATABASES, ALLOWED_TABLE_NAMES
+    global SOURCE_STORAGE_ACCOUNT_URL, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT
+    global ALLOWED_STORAGE_HOSTS
     for var in MANDATORY_ENV_VARS:
         if var not in os.environ:
             raise EnvironmentError(f"{LOG_MESSAGE_HEADER} Get Config Failed: {var} is not set.")
@@ -207,6 +246,27 @@ def get_config_values():
     except Exception as e:
         logging.exception(e)
 
+    # Outside the try above: a failure to establish these boundaries must stop the
+    # function, not be logged and stepped over.
+    ALLOWED_DATABASE_NAME_FORMAT = os.getenv("ALLOWED_DATABASE_NAME_FORMAT", ALLOWED_DATABASE_NAME_FORMAT)
+    ALLOWED_DATABASE_COUNT = int(os.getenv("ALLOWED_DATABASE_COUNT", ALLOWED_DATABASE_COUNT))
+    ALLOWED_TABLES = os.getenv("ALLOWED_TABLES", ALLOWED_TABLES)
+    # Rebuilt from the same two values the provisioning tool used, so the
+    # allow-list cannot drift from the databases that actually exist.
+    ALLOWED_DATABASES = build_database_allow_list(ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT)
+    ALLOWED_TABLE_NAMES = parse_allow_list(ALLOWED_TABLES)
+
+    SOURCE_STORAGE_ACCOUNT_URL = os.getenv("SOURCE_STORAGE_ACCOUNT_URL", SOURCE_STORAGE_ACCOUNT_URL)
+    ALLOWED_SOURCE_CONTAINERS = parse_allow_list(
+        os.getenv("ALLOWED_SOURCE_CONTAINERS", ','.join(sorted(ALLOWED_SOURCE_CONTAINERS))))
+    SOURCE_PATH_ROOT = os.getenv("SOURCE_PATH_ROOT", SOURCE_PATH_ROOT)
+    # Bind this function to the storage account it is already configured against.
+    ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(SOURCE_STORAGE_ACCOUNT_URL)
+
+    logging.info("%s Serving %s databases and tables %s from %s/%s",
+                 LOG_MESSAGE_HEADER, len(ALLOWED_DATABASES),
+                 sorted(ALLOWED_TABLE_NAMES), sorted(ALLOWED_SOURCE_CONTAINERS), SOURCE_PATH_ROOT)
+
 def ingest_to_adx(file_path, file_size, target_database, target_table, \
     msg_time, modification_time):
     """
@@ -226,10 +286,10 @@ def ingest_to_adx(file_path, file_size, target_database, target_table, \
         blob_path = file_path +  SOURCE_TELEMETRY_FILE_TOKEN
     else:
         blob_path = file_path + '?' + SOURCE_TELEMETRY_FILE_TOKEN
-    logging.info(f"{LOG_MESSAGE_HEADER} blob_path:{blob_path}, ingest_source_id:{ingest_source_id}")
+    logging.info(f"{LOG_MESSAGE_HEADER} blob_path:{redact_url(blob_path)}, ingest_source_id:{ingest_source_id}")
     logging.info('%s FILEURL : %s, INGESTION URL: %s, Database: %s, \
                     Table: %s, FILESIZE: %s, msg_time: %s, modification_time: %s', \
-                    LOG_MESSAGE_HEADER, blob_path, INGESTION_SERVER_URI, \
+                    LOG_MESSAGE_HEADER, redact_url(blob_path), INGESTION_SERVER_URI, \
                     target_database, target_table, file_size, msg_time, modification_time)
     
     ingestion_properties = IngestionProperties(database=target_database, table=target_table, \
@@ -253,23 +313,34 @@ def ingest_to_adx(file_path, file_size, target_database, target_table, \
 
     return ingest_source_id
 
-def get_target_info(file_url):
-    """get target database and table from file path
-    :param file_url: file path
-    :type file_url: string
+def get_target_info(blob_path):
+    """get target database and table from the validated blob path
+
+    The two directory names are written from the telemetry itself, so they say
+    which destination the data is asking for, not which one it is entitled to.
+    Each is matched as a whole path segment and then checked against the
+    destinations this deployment provisioned, so a name the deployment never
+    created cannot reach the ingestion properties.
+
+    :param blob_path: validated blob path within the container
+    :type blob_path: string
     :return: target_database
     :rtype: string
     :return: target_table
     :rtype: string
+    :raises ValidationError: when either destination is absent or not provisioned
     """
     global DATABASEID_KEY
-    global TABLEID_KEY  
-    for part in Path(file_url).parts:
+    global TABLEID_KEY
+    target_database = None
+    target_table = None
+    for part in blob_path.split('/'):
         if part.startswith(DATABASEID_KEY):
-            target_database = part.replace(DATABASEID_KEY, '')
+            target_database = part[len(DATABASEID_KEY):]
         if part.startswith(TABLEID_KEY):
-            target_table = (part.replace(TABLEID_KEY, '')).upper()
-    return target_database, target_table
+            target_table = part[len(TABLEID_KEY):].upper()
+    return (validate_target(target_database, 'database', ALLOWED_DATABASES),
+            validate_target(target_table, 'table', ALLOWED_TABLE_NAMES))
 
 def initialize_kusto_client():
     """initialize kusto client
@@ -305,7 +376,7 @@ def check_file_process_log(log_table_name, file_url, target_database):
     #use md5 for hash
     hash_result = hashlib.md5(file_url.encode('utf-8'))
     table_key = hash_result.hexdigest()
-    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{file_url} , table_key:{table_key}")
+    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{redact_url(file_url)} , table_key:{table_key}")
     query_filter = f"(PartitionKey eq '{target_database}') and (RowKey eq '{table_key}')"
     logging.info(f"{LOG_MESSAGE_HEADER} LOG_TABLE_NAME:{log_table_name}")
     results = None
