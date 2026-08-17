@@ -47,9 +47,18 @@ $ingestion_func_strParamValues = @{
     TableIDKey=$config.Functions.IngestionFunction.TableIDKey
     IsFlushImmediately=$config.Functions.IngestionFunction.IsFlushImmediately
     IsDuplicateCheck=$config.Functions.IngestionFunction.IsDuplicateCheck
+    # The database is fixed by deployment configuration. The provisioned set is
+    # also supplied so the function can fail if the fixed target does not exist.
+    AllowedDatabaseNameFormat=$config.ADX.DatabaseNameFormat
+    TargetDatabase=$config.ADX.TargetDatabase
+    AllowedTables=$config.ADX.TableList
+    SourceStorageAccountUrl="https://$((Get-Resource-Prefix $config.ResourceGroupName)+$config.Storage.IngestionDatalakeName).blob.core.windows.net"
+    SourceContainerName=$config.Storage.FileSystemName
+    SourcePathRoot=$config.Storage.AzureStorageTargetFolder
  }
 $ingestion_func_objParamValues = @{
     IngestionEventQueueCount=$config.EventGrid.IngestionEventQueueCount
+    AllowedDatabaseCount=$config.ADX.DatabaseNum
  }
 $ingestion_func_parameters = ConvertTo-ARM-Parameters-JSON $ingestion_func_strParamValues  $ingestion_func_objParamValues  
 

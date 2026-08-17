@@ -61,6 +61,22 @@ We need to setup the following additional parameters in the _provision-config.js
 
 Then run _create-ingestion-function.ps1_ script to create and setup Azure Function.
 
+***Note!** _The `companyIdkey=` directory remains in the Databricks output path for
+compatibility, but it does not select the ADX database. The script configures one
+mandatory `ADX.TargetDatabase`, verifies that Module 2 provisioned it, and every
+accepted blob is ingested there. `typekey=` may select only a table in `ADX.TableList`.
+The function is also pinned to the account holding `Storage.IngestionDatalakeName`, the
+container in `Storage.FileSystemName`, and the directory in
+`Storage.AzureStorageTargetFolder`. If you change any of those values, the table list,
+or the fixed database, re-run this script so the function is updated to match._
+
+***Note on tenant separation!** _Fixing the database removes caller-controlled
+cross-database routing, but it also removes this sample's dynamic per-company database
+separation: all telemetry is stored in `ADX.TargetDatabase`. A production deployment
+that requires separate customer databases must authenticate producers at ingress and
+derive the tenant from that identity or use per-tenant pipelines, such as the
+[Deployment Stamps pattern](https://learn.microsoft.com/azure/architecture/patterns/deployment-stamp)._
+
 After the creation is done, you can verify the creation result in Azure Portal.
 
 ![databaselist](../LabModules/assets/module3/steps/config.PNG)

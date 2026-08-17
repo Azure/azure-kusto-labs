@@ -43,6 +43,20 @@ from tenacity import (
     wait_random
 )
 
+from .validation import (
+    ValidationError,
+    build_database_allow_list,
+    build_table_allow_list,
+    parse_allow_list,
+    redact_url,
+    storage_hosts_from_account_url,
+    validate_blob_url,
+    validate_content_length,
+    validate_selector_keys,
+    validate_source_location,
+    validate_target,
+)
+
 # # DATA LAKE CONFIG
 SOURCE_TELEMETRY_FILE_TOKEN = ""
 
@@ -66,6 +80,24 @@ KUSTO_INGESTION_CLIENT = None
 DATABASEID_KEY = "companyIdkey="
 TABLEID_KEY = "typekey="
 
+# The database is fixed by deployment configuration. The legacy companyIdkey
+# directory is still validated for path compatibility, but cannot choose the ADX
+# database. The table remains constrained to the tables provisioning created.
+ALLOWED_DATABASE_NAME_FORMAT = 'company-id-{INDEX}'
+ALLOWED_DATABASE_COUNT = 0
+ALLOWED_TABLES = ''
+ALLOWED_DATABASES = set()
+ALLOWED_TABLE_NAMES = set()
+TARGET_DATABASE = ''
+
+# The blob this function hands to ADX, together with its own sas token. These
+# confine it to the storage this deployment ingests from.
+SOURCE_STORAGE_ACCOUNT_URL = ''
+ALLOWED_SOURCE_CONTAINERS = set()
+SOURCE_PATH_ROOT = ''
+SOURCE_FILE_SUFFIX = '.c000.json'
+ALLOWED_STORAGE_HOSTS = set()
+
 # MAX Retry Times
 RETRY_MAX_ATTEMPT_NUMBER = "5" #times
 # Retry wait Incremental value
@@ -82,7 +114,7 @@ LOG_TABLE_PREFIX = 'logtable'
 TABLE_SERVICE = None
 
 MANDATORY_ENV_VARS = ["APP_AAD_TENANT_ID", "APP_CLIENT_ID", "APP_CLIENT_SECRETS", \
-    "INGESTION_SERVER_URI", "INGESTION_MAPPING"]
+    "INGESTION_SERVER_URI", "INGESTION_MAPPING", "TARGET_DATABASE"]
 
 def main(msg: func.QueueMessage) -> None:
     """
@@ -90,8 +122,9 @@ def main(msg: func.QueueMessage) -> None:
     :param msg: func.QueueMessage
     :return: None
     """
-    logging.info('Python queue trigger function processed a queue item: %s',
-                 msg.get_body().decode('utf-8'))
+    # The queue body carries the blob url, which can include a sas token, so the
+    # message is identified rather than echoed into the logs.
+    logging.info('Python queue trigger function processed a queue item: %s', msg.id)
     # Set the logging level for all azure-* libraries
     logging.getLogger('azure').setLevel(logging.WARNING)
     modification_time = None
@@ -99,8 +132,24 @@ def main(msg: func.QueueMessage) -> None:
     #get message content
     #queue from checkpoint function
     content_json = json.loads(msg.get_body().decode('utf-8'))
-    file_url = content_json['data']['url']
-    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{file_url}")
+    file_url = None
+    try:
+        file_url = content_json['data']['url']
+        # The url is given this function's storage sas token below, so authorise
+        # it before the token is attached and before ADX is asked to fetch it.
+        validate_blob_url(file_url, ALLOWED_STORAGE_HOSTS)
+        blob_path = validate_source_location(file_url, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT,
+                                             SOURCE_FILE_SUFFIX)
+        target_database, target_table = get_target_info(blob_path)
+        #get file size from storage queue directly
+        file_size = validate_content_length(content_json['data']['contentLength'])
+    except (ValidationError, KeyError, TypeError) as exc:
+        # A message this function cannot read is refused in one place, so a
+        # malformed one fails the same way as a rejected one.
+        logging.error("%s Rejected untrusted queue message for %s: %s",
+                      LOG_MESSAGE_HEADER, redact_url(file_url), exc)
+        raise
+    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{redact_url(file_url)}")
     msg_time = p.parse(content_json['eventTime'])
     try:
         #modification time is the time databricks processed finished
@@ -108,10 +157,6 @@ def main(msg: func.QueueMessage) -> None:
     except Exception:
         modification_time = msg_time
 
-    #get file size from storage queue directly
-    file_size = content_json['data']['contentLength']
-    # Sharing: New logic based on new schema
-    target_database, target_table = get_target_info(file_url)
     logging.info(f"{LOG_MESSAGE_HEADER} target_database:{target_database}, target_table:{target_table}")
     
     #set up if log table connection when duplicate check enable
@@ -138,8 +183,8 @@ def main(msg: func.QueueMessage) -> None:
                         increment=RETRY_WAIT_INCREMENT_VALUE, \
                         max=RETRY_MAX_WAIT_TIME), \
                         before_sleep=before_sleep_log(logging, logging.WARNING), reraise=True)
-            ingest_source_id = retryer(ingest_to_adx, file_url, file_size, target_database, \
-                target_table, msg_time, modification_time)
+            ingest_source_id = retryer(ingest_to_adx, file_url, file_size, target_table, \
+                msg_time, modification_time)
             logging.info(f"ingest_source_id:{ingest_source_id}")
 
             if IS_DUPLICATE_CHECK:
@@ -147,12 +192,12 @@ def main(msg: func.QueueMessage) -> None:
                 insert_log_table(log_table_name, target_database, log_table_key, msg_time, \
                     modification_time, file_url, ingest_source_id)
         else:
-                logging.warning(f"{DUPLICATE_EVENT_NAME} DUPLICATE DATA Subject : {file_url} \
+                logging.warning(f"{DUPLICATE_EVENT_NAME} DUPLICATE DATA Subject : {redact_url(file_url)} \
                     has been processed already. Skip process.")      
     else:
         logging.warning(
             "%s Subject : %s does not match regular express %s. Skip process. ", \
-                LOG_MESSAGE_HEADER, file_url, EVENT_SUBJECT_FILTER_REGEX)
+                LOG_MESSAGE_HEADER, redact_url(file_url), EVENT_SUBJECT_FILTER_REGEX)
 
 
 def get_config_values():
@@ -169,6 +214,12 @@ def get_config_values():
 
     global RETRY_MAX_ATTEMPT_NUMBER, RETRY_WAIT_INCREMENT_VALUE, RETRY_MAX_WAIT_TIME
     global IS_DUPLICATE_CHECK, STORAGE_TABLE_ACCOUNT, STORAGE_TABLE_TOKEN, DUPLICATE_EVENT_NAME, LOG_TABLE_PREFIX
+    global ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT, ALLOWED_TABLES
+    global ALLOWED_DATABASES, ALLOWED_TABLE_NAMES
+    global TARGET_DATABASE
+    global SOURCE_STORAGE_ACCOUNT_URL, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT
+    global SOURCE_FILE_SUFFIX
+    global ALLOWED_STORAGE_HOSTS
     for var in MANDATORY_ENV_VARS:
         if var not in os.environ:
             raise EnvironmentError(f"{LOG_MESSAGE_HEADER} Get Config Failed: {var} is not set.")
@@ -207,29 +258,65 @@ def get_config_values():
     except Exception as e:
         logging.exception(e)
 
-def ingest_to_adx(file_path, file_size, target_database, target_table, \
+    # Outside the try above: a failure to establish these boundaries must stop the
+    # function, not be logged and stepped over.
+    validate_selector_keys(DATABASEID_KEY, TABLEID_KEY)
+    ALLOWED_DATABASE_NAME_FORMAT = os.getenv("ALLOWED_DATABASE_NAME_FORMAT", ALLOWED_DATABASE_NAME_FORMAT)
+    ALLOWED_DATABASE_COUNT = int(os.getenv("ALLOWED_DATABASE_COUNT", ALLOWED_DATABASE_COUNT))
+    ALLOWED_TABLES = os.getenv("ALLOWED_TABLES", ALLOWED_TABLES)
+    # Rebuilt from the same two values the provisioning tool used, so the
+    # allow-list cannot drift from the databases that actually exist.
+    ALLOWED_DATABASES = build_database_allow_list(ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT)
+    ALLOWED_TABLE_NAMES = build_table_allow_list(ALLOWED_TABLES)
+    TARGET_DATABASE = validate_target(
+        os.getenv("TARGET_DATABASE"), 'database', ALLOWED_DATABASES)
+
+    SOURCE_STORAGE_ACCOUNT_URL = os.getenv("SOURCE_STORAGE_ACCOUNT_URL", SOURCE_STORAGE_ACCOUNT_URL)
+    ALLOWED_SOURCE_CONTAINERS = parse_allow_list(
+        os.getenv("ALLOWED_SOURCE_CONTAINERS", ','.join(sorted(ALLOWED_SOURCE_CONTAINERS))))
+    SOURCE_PATH_ROOT = os.getenv("SOURCE_PATH_ROOT", SOURCE_PATH_ROOT)
+    SOURCE_FILE_SUFFIX = os.getenv("SOURCE_FILE_SUFFIX", SOURCE_FILE_SUFFIX)
+    # Bind this function to the storage account it is already configured against.
+    ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(SOURCE_STORAGE_ACCOUNT_URL)
+
+    logging.info("%s Serving fixed database %s and tables %s from %s/%s",
+                 LOG_MESSAGE_HEADER, TARGET_DATABASE,
+                 sorted(ALLOWED_TABLE_NAMES), sorted(ALLOWED_SOURCE_CONTAINERS), SOURCE_PATH_ROOT)
+
+def ingest_to_adx(file_path, file_size, target_table, \
     msg_time, modification_time):
     """
     Trigger ADX to ingest the specified file in Azure Data Lake
     Prepare ADX ingestion meta-data
     :param file_path: The full path of blob file
     :param file_size: The full size of blob file
-    :param target_database: The target database
     :param target_table: The target table
     :param msg_time: The msg_time from eventgrid
     :param azure_telemetry_client: The telemetry client used for sending telemetry of the ingest function
     :return: None
     """
+    # Re-authorise at the privileged sink. The database is obtained only from
+    # deployment configuration, never from the blob path or a caller argument.
+    validate_blob_url(file_path, ALLOWED_STORAGE_HOSTS)
+    validated_blob_path = validate_source_location(
+        file_path, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
+    authorized_database, authorized_table = get_target_info(validated_blob_path)
+    if target_table != authorized_table:
+        raise ValidationError(
+            'ADX ingestion table does not match the authorised blob route.')
+    target_database = authorized_database
+    file_size = validate_content_length(file_size)
+
     logging.info(f'{LOG_MESSAGE_HEADER} start to ingest to adx')
     ingest_source_id = str(uuid.uuid4())
     if SOURCE_TELEMETRY_FILE_TOKEN.startswith('?'):
         blob_path = file_path +  SOURCE_TELEMETRY_FILE_TOKEN
     else:
         blob_path = file_path + '?' + SOURCE_TELEMETRY_FILE_TOKEN
-    logging.info(f"{LOG_MESSAGE_HEADER} blob_path:{blob_path}, ingest_source_id:{ingest_source_id}")
+    logging.info(f"{LOG_MESSAGE_HEADER} blob_path:{redact_url(blob_path)}, ingest_source_id:{ingest_source_id}")
     logging.info('%s FILEURL : %s, INGESTION URL: %s, Database: %s, \
                     Table: %s, FILESIZE: %s, msg_time: %s, modification_time: %s', \
-                    LOG_MESSAGE_HEADER, blob_path, INGESTION_SERVER_URI, \
+                    LOG_MESSAGE_HEADER, redact_url(blob_path), INGESTION_SERVER_URI, \
                     target_database, target_table, file_size, msg_time, modification_time)
     
     ingestion_properties = IngestionProperties(database=target_database, table=target_table, \
@@ -253,23 +340,50 @@ def ingest_to_adx(file_path, file_size, target_database, target_table, \
 
     return ingest_source_id
 
-def get_target_info(file_url):
-    """get target database and table from file path
-    :param file_url: file path
-    :type file_url: string
+def get_target_info(blob_path):
+    """get the fixed database and authorised table for a validated blob path
+
+    The company directory is written from telemetry and is retained only as a
+    validated partition in the documented blob grammar. It cannot select the ADX
+    database. Every accepted blob is routed to TARGET_DATABASE, which is supplied
+    by deployment configuration and verified against the provisioned databases.
+    The table directory is still matched against the provisioned table allow-list.
+
+    :param blob_path: validated blob path within the container
+    :type blob_path: string
     :return: target_database
     :rtype: string
     :return: target_table
     :rtype: string
+    :raises ValidationError: when a selector is absent, ambiguous or not provisioned
     """
     global DATABASEID_KEY
-    global TABLEID_KEY  
-    for part in Path(file_url).parts:
+    global TABLEID_KEY
+    databases = []
+    tables = []
+    for part in blob_path.split('/'):
         if part.startswith(DATABASEID_KEY):
-            target_database = part.replace(DATABASEID_KEY, '')
+            databases.append(part[len(DATABASEID_KEY):])
         if part.startswith(TABLEID_KEY):
-            target_table = (part.replace(TABLEID_KEY, '')).upper()
-    return target_database, target_table
+            tables.append(part[len(TABLEID_KEY):])
+    # One directory each, or the destination is ambiguous. Taking the first or the
+    # last would let a crafted path put a second selector where this function is
+    # not looking, and have it read instead of the one written by the job.
+    for values, kind in ((databases, 'database'), (tables, 'table')):
+        if len(values) > 1:
+            raise ValidationError(
+                'Blob path names more than one target {}.'.format(kind))
+    # Validate the legacy company partition, but deliberately discard its value:
+    # the deployment-fixed database is the only value allowed to reach ADX.
+    validate_target(databases[0] if databases else None, 'database', ALLOWED_DATABASES)
+    # The table directory is named from a telemetry field, whose casing is not
+    # guaranteed, so it is matched without regard to case and resolved to the name
+    # the provisioning tool actually created.
+    # Revalidate the deployment-selected database at the route boundary so the
+    # privileged sink does not depend solely on initialization order.
+    return (validate_target(TARGET_DATABASE, 'database', ALLOWED_DATABASES),
+            validate_target(tables[0] if tables else None, 'table', ALLOWED_TABLE_NAMES,
+                            fold_case=True))
 
 def initialize_kusto_client():
     """initialize kusto client
@@ -305,7 +419,7 @@ def check_file_process_log(log_table_name, file_url, target_database):
     #use md5 for hash
     hash_result = hashlib.md5(file_url.encode('utf-8'))
     table_key = hash_result.hexdigest()
-    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{file_url} , table_key:{table_key}")
+    logging.info(f"{LOG_MESSAGE_HEADER} file_url:{redact_url(file_url)} , table_key:{table_key}")
     query_filter = f"(PartitionKey eq '{target_database}') and (RowKey eq '{table_key}')"
     logging.info(f"{LOG_MESSAGE_HEADER} LOG_TABLE_NAME:{log_table_name}")
     results = None

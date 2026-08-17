@@ -1,11 +1,24 @@
 # Big data analytics using Azure Data Explorer and Azure Databricks 
 
-### _A production-proven architecture for ingesting hundreds of terabytes of data every day for real time analytics_ 
+### _A production-derived architecture for ingesting hundreds of terabytes of data every day for real time analytics_
 
 
-_This Lab covers an architecture designed to ingest and analyze security logs data using Azure Databricks as an ETL tool and Azure Data Explorer as a big data analytics store; both products well-known for efficiently processing and analyzing massive amounts of data. You will learn about how to implement the architecture using provided scripts and sample codes. The solution also includes features for production environments like Status monitoring, Exactly-once ingestion checks, Custom error-retry, and  Performance metrics alerts. After finishing this Lab, users will be able to build systems that can handle up to hundreds of terabytes of data with a slight configuration change. This Lab is based on a real-world example of live production systems customers are using today._ 
+_This Lab covers an architecture designed to ingest and analyze security logs data using Azure Databricks as an ETL tool and Azure Data Explorer as a big data analytics store; both products well-known for efficiently processing and analyzing massive amounts of data. You will learn about how to implement the architecture using provided scripts and sample codes. The solution also includes features for production environments like Status monitoring, Exactly-once ingestion checks, Custom error-retry, and  Performance metrics alerts. After finishing this Lab, users will be able to build systems that can handle up to hundreds of terabytes of data with a slight configuration change. This Lab is based on a real-world example of live production systems customers are using today. It omits the identity, tenant authorization, networking and operational controls a production deployment needs._
 
+## Security and tenant isolation scope
 
+This lab runs on synthetic telemetry that a single trusted operator generates and uploads
+with a storage account key. The `companyId` field is retained in the Databricks output
+path for partition compatibility, but it does not select the ADX database.
+
+The functions confine themselves to the storage account, containers, directories,
+and tables this deployment provisions. ADX ingestion is pinned to
+`ADX.TargetDatabase`, so queue or blob input cannot route data to another database.
+
+This security boundary intentionally removes the lab's dynamic per-company database
+routing: all accepted telemetry is ingested into the fixed database. A production
+implementation that needs separate customer databases must authenticate producers at
+ingress and derive the tenant from that identity or from a per-tenant channel.
 
 ## Lab Scenario 
 

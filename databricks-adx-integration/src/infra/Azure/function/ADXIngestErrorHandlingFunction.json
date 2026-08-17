@@ -25,6 +25,20 @@
         "FinalFailedContainer": {
             "type": "string"
         },
+        "SourceContainerName": {
+            "type": "string",
+            "minLength": 3,
+            "metadata": {
+                "description": "Container holding the blobs this handler may retry, i.e. Storage.FileSystemName."
+            }
+        },
+        "SourcePathRoot": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Directory within the container that the Databricks job writes to, i.e. Storage.AzureStorageTargetFolder."
+            }
+        },
         "Runtime": {
             "type": "string"
         }
@@ -128,6 +142,16 @@
                         {
                             "name": "RETRY_END_IN_FAIL_CONTAINER_NAME",
                             "value": "[parameters('FinalFailedContainer')]",
+                            "slotSetting": false
+                        },
+                        {
+                            "name": "ALLOWED_SOURCE_CONTAINERS",
+                            "value": "[parameters('SourceContainerName')]",
+                            "slotSetting": false
+                        },
+                        {
+                            "name": "SOURCE_PATH_ROOT",
+                            "value": "[parameters('SourcePathRoot')]",
                             "slotSetting": false
                         },
                         {

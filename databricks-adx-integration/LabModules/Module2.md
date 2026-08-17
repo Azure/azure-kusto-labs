@@ -48,10 +48,23 @@ We need to setup the following additional parameters in the _provision-config.js
         "AvaliabilityZones":["1"],
         "ADXTemplatePath": "../Azure/ADX/ADX.json",
         "TableRetentionDays": "100",
-        "DatabaseNum":100
+        "DatabaseNum":100,
+        "DatabaseNameFormat": "company-id-{INDEX}",
+        "TargetDatabase": "company-id-0",
+        "TableList": "CO2,TEMP"
     },
 }
 ```
+
+`DatabaseNameFormat` and `TableList` describe the destinations this script creates.
+`{INDEX}` is replaced with `0` through `DatabaseNum - 1`, so the settings above create
+`company-id-0` to `company-id-99`, each holding a `CO2` and a `TEMP` table.
+
+`TargetDatabase` must name one of those provisioned databases. The ingestion function
+in [Module 3](./Module3.md) writes every accepted blob to that fixed database; the
+`companyIdkey` directory remains part of the Databricks output layout but cannot select
+an ADX database. Table names are used as written here, and Kusto identifiers are case
+sensitive.
 
 Then run _create-adx-and-db-tables.ps1_ script to create Azure Data Explorer and database/tables.
 
@@ -115,5 +128,4 @@ In the next step, we will practice how to query data in ADX.
     ```
 
 ![table record](../LabModules/assets/module2/query_table.png)
-
 

@@ -47,6 +47,8 @@ $metadatahandle_func_appsetting_parameters_str = @{
     IngestionEventQueueName = $config.EventGrid.IngestionEventQueueName
     IngestionConnectingStringName = $config.Functions.IngestionFunction.IngestionConnectingStringName
     IngestionSasTokenName = $config.Functions.dbsMetadataHandlerFunction.IngestionSasTokenName
+    MetadataContainerName = $config.Storage.FileSystemName
+    MetadataPathRoot = $config.Storage.AzureStorageTargetFolder
 }
 
 $metadatahandle_func_appsetting_parameters = ConvertTo-ARM-Parameters-JSON $metadatahandle_func_appsetting_parameters_str

@@ -3,6 +3,7 @@
   provision code to pre-generate database and tables in adx
 """
 import os
+import re
 import sys
 import argparse
 import json
@@ -34,6 +35,7 @@ HOTCACHEPERIOD = "3650"
 DATABASE_NAME_FORMAT = "company-id-{INDEX}"
 TABLE_LIST_STR = "CO2,TEMP"
 TABLE_LIST = ["CO2", "TEMP"]
+MAX_DATABASE_COUNT = 100000
 BATCH_INGESTION_POLICY = """
 {{
     "MaximumBatchingTimeSpan":"{MAX_BATCHTIME}",
@@ -49,7 +51,7 @@ def init_config():
     global REGION, CLUSTER, CLIENT_ID, CLIENT_SECRET, TENANT_ID, SUBSCRIPTION_ID
     global MAX_BATCHTIME, MAX_ITEMS, MAX_RAWSIZE
     global SOFTDELETEPERIOD, HOTCACHEPERIOD
-    global TABLE_LIST_STR, TABLE_LIST
+    global DATABASE_NAME_FORMAT, TABLE_LIST_STR, TABLE_LIST
     RETENTION_DAYS = os.getenv('RETENTION_DAYS', RETENTION_DAYS)
     RESOURCE_GROUP = os.getenv('RESOURCE_GROUP')
     REGION = os.getenv('REGION')
@@ -64,8 +66,22 @@ def init_config():
     SOFTDELETEPERIOD = int(os.getenv('SOFTDELETEPERIOD', SOFTDELETEPERIOD))
     HOTCACHEPERIOD = int(os.getenv('HOTCACHEPERIOD', HOTCACHEPERIOD))
     CLUSTER = f"https://{CLUSTER_NAME}.{REGION}.kusto.windows.net"
+    # The ingestion function is given these same two values and will only write to
+    # the destinations they describe, so both sides read them from one place.
+    DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
-    TABLE_LIST = TABLE_LIST_STR.split(',')
+    # These names are interpolated into ADX management commands unquoted, and the
+    # ingestion function applies these same rules when it decides which tables it
+    # will serve, so a list one side would refuse is refused here too.
+    TABLE_LIST = [name.strip() for name in TABLE_LIST_STR.split(',') if name.strip()]
+    if not TABLE_LIST:
+        raise ValueError('TABLE_LIST_STR must name at least one table.')
+    for name in TABLE_LIST:
+        if not re.match(r'^[A-Za-z][A-Za-z0-9_]{0,1023}$', name):
+            raise ValueError('Table name {!r} is not a Kusto table name.'.format(name))
+    if len({name.upper() for name in TABLE_LIST}) != len(TABLE_LIST):
+        raise ValueError(
+            'TABLE_LIST_STR contains duplicate tables or names that differ only by case.')
     print(TABLE_LIST)
 
 def initialize_kusto_client():
@@ -214,9 +230,21 @@ def create_database(number_of_companies):
     :param number_of_companies: number_of_companies
     :type number_of_companies: int
     """
+    if (isinstance(number_of_companies, bool) or
+            not isinstance(number_of_companies, int) or
+            not 0 < number_of_companies <= MAX_DATABASE_COUNT):
+        raise ValueError(
+            'Database count must be between 1 and {}.'.format(MAX_DATABASE_COUNT))
     soft_deleteperiod = timedelta(days=SOFTDELETEPERIOD)
     hot_cacheperiod = timedelta(days=HOTCACHEPERIOD)
     database_operations = KUSTO_MGMT_CLIENT.databases
+    # Every index is expanded before the first database is created. A template that
+    # renders the same name for two of them would update one database repeatedly
+    # while reporting that it created number_of_companies, and the ingestion
+    # function applies this same rule and would then refuse to serve the result.
+    names = {DATABASE_NAME_FORMAT.format(INDEX=index) for index in range(number_of_companies)}
+    if len(names) != number_of_companies:
+        raise ValueError('DATABASE_NAME_FORMAT must name a different database for each index.')
     for index in range(0, number_of_companies):
         try:
             database_name = DATABASE_NAME_FORMAT.format(INDEX=index)

@@ -101,7 +101,10 @@
         "AvaliabilityZones":["1"],
         "ADXTemplatePath": "../Azure/ADX/ADX.json",
         "TableRetentionDays": "100",
-        "DatabaseNum":100
+        "DatabaseNum":100,
+        "DatabaseNameFormat": "company-id-{INDEX}",
+        "TargetDatabase": "company-id-0",
+        "TableList": "CO2,TEMP"
     },
     "Databricks": {
         "WorkspaceName": "dbsws",
