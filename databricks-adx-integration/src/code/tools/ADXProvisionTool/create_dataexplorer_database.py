@@ -13,7 +13,7 @@ from azure.mgmt.kusto.models import ReadWriteDatabase
 from azure.mgmt.kusto import KustoManagementClient
 from azure.common.credentials import ServicePrincipalCredentials
 
-from provisioning_policy import validate_provisioning_policy
+from destination_policy import normalise_table_list, validate_destination_policy
 
 RETENTION_DAYS = None
 KUSTO_MGMT_CLIENT = None
@@ -70,7 +70,7 @@ def init_config():
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
     # Stripped, so a list written as "CO2, TEMP" creates TEMP rather than a table
     # whose name begins with a space, which the ingestion function could never name.
-    TABLE_LIST = [name.strip() for name in TABLE_LIST_STR.split(',') if name.strip()]
+    TABLE_LIST = normalise_table_list(TABLE_LIST_STR)
     # The ingestion function rebuilds its allow-list from this same format and the
     # database count, so both sides describe one set of databases.
     DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
@@ -337,7 +337,6 @@ def create_tables_command(schema_file):
 
 if __name__ == "__main__": # pragma: no cover
     init_config()
-    initialize_kusto_client()
 
     # Get related arguments
     parser = argparse.ArgumentParser()
@@ -364,9 +363,11 @@ if __name__ == "__main__": # pragma: no cover
 
     # run functions
     s = []
-    # Checked once, against the count these operations are about to use, so a
-    # configuration the ingestion function would refuse never reaches Kusto.
-    validate_provisioning_policy(DATABASE_NAME_FORMAT, int(databaseCount), TABLE_LIST)
+    # Checked against the count these operations are about to use, and before any
+    # credential or client is built, so a configuration the ingestion function
+    # would refuse fails here rather than after authenticating to Azure.
+    validate_destination_policy(DATABASE_NAME_FORMAT, int(databaseCount), TABLE_LIST)
+    initialize_kusto_client()
     if act == "createDatabase":
         create_database(databaseCount)
     elif act == "createTableofDatabase":
