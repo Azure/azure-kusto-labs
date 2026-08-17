@@ -80,7 +80,8 @@ def init_config():
         if not re.match(r'^[A-Za-z][A-Za-z0-9_]{0,1023}$', name):
             raise ValueError('Table name {!r} is not a Kusto table name.'.format(name))
     if len({name.upper() for name in TABLE_LIST}) != len(TABLE_LIST):
-        raise ValueError('TABLE_LIST_STR names two tables that differ only by case.')
+        raise ValueError(
+            'TABLE_LIST_STR contains duplicate tables or names that differ only by case.')
     print(TABLE_LIST)
 
 def initialize_kusto_client():

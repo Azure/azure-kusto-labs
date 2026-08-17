@@ -354,17 +354,18 @@ def build_table_allow_list(raw: Optional[str]) -> Set[str]:
     :return: the set of table names
     :raises ValidationError: when the list is unusable
     """
-    names = {name.strip() for name in (raw or '').split(',') if name.strip()}
-    if not names:
+    parsed_names = [name.strip() for name in (raw or '').split(',') if name.strip()]
+    if not parsed_names:
         raise ValidationError('ALLOWED_TABLES is not configured for this function app.')
-    for name in sorted(names):
+    for name in sorted(parsed_names):
         if not _TABLE_NAME_REGEX.match(name):
             raise ValidationError('Table name {!r} is not a Kusto table name.'.format(name))
-    if len({name.upper() for name in names}) != len(names):
+    if len({name.upper() for name in parsed_names}) != len(parsed_names):
         # The table directory is matched without regard to case, so two names that
         # fold together could not be told apart from a blob path.
-        raise ValidationError('ALLOWED_TABLES names two tables that differ only by case.')
-    return names
+        raise ValidationError(
+            'ALLOWED_TABLES contains duplicate tables or names that differ only by case.')
+    return set(parsed_names)
 
 
 def validate_selector_keys(database_key: Optional[str], table_key: Optional[str]) -> None:

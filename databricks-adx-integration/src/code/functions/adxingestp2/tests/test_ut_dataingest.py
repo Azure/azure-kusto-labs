@@ -176,12 +176,13 @@ class TestUtAdxIngest():
             path = PATH_ROOT + '/q/companyIdkey=company-id-1/typekey={}/p.c000.json'.format(requested)
             assert dataingest.get_target_info(path) == (TARGET_DATABASE, 'Temp')
 
-    def test_tables_that_differ_only_by_case_are_refused(self, monkeypatch):
+    @pytest.mark.parametrize('tables', ['Temp,TEMP', 'Temp,Temp'])
+    def test_duplicate_or_case_colliding_tables_are_refused(self, monkeypatch, tables):
         # Two provisioned names that fold together cannot be told apart from a
         # path, so there is no safe answer to give. The provisioning tool refuses
         # to create them, and configuration here fails for the same reason rather
         # than deploying a function that cannot serve its own table list.
-        monkeypatch.setenv('ALLOWED_TABLES', 'Temp,TEMP')
+        monkeypatch.setenv('ALLOWED_TABLES', tables)
         with pytest.raises(validation.ValidationError):
             dataingest.get_config_values()
 
