@@ -440,6 +440,35 @@ class TestUtAdxIngestErrorHandler():
             errorhandler.get_blob_info_from_url(BLOB_URL + '#access_token=SECRET')
         assert 'SECRET' not in validation.redact_url(BLOB_URL + '#access_token=SECRET')
 
+    @pytest.mark.parametrize('path', [
+        # The sdk splits the raw path on '/' and decodes each part afterwards, so it
+        # reads this container as "data/evil" and rejects it, while decoding first
+        # reads the allowed container "data" and a longer blob name.
+        SOURCE_CONTAINER + '%2fevil/' + BLOB_PATH,
+        SOURCE_CONTAINER + '%5Cevil/' + BLOB_PATH,
+    ])
+    def test_a_url_encoding_a_path_separator_is_refused(self, path):
+        # Refusing these leaves one reading of the path, so the container and blob
+        # name authorised here are the ones the sdk resolves. The reason is asserted
+        # because the container rules would otherwise reject these for their own.
+        with pytest.raises(errorhandler.ValidationError, match='percent-encode a path separator'):
+            errorhandler.get_blob_info_from_url('https://test.blob.core.windows.net/' + path)
+
+    def test_a_url_whose_encoding_is_not_valid_utf8_is_refused(self):
+        # Decoding %ff with the default handling yields a replacement character, so
+        # the name checked here would not be the name the sdk re-encodes and sends.
+        with pytest.raises(errorhandler.ValidationError, match='percent-encoded UTF-8'):
+            errorhandler.get_blob_info_from_url(BLOB_URL.replace('part-uuid', 'part-%ff'))
+
+    def test_a_partition_value_escaped_by_spark_is_still_accepted(self):
+        # Spark escapes a reserved character in a partition value, so the value
+        # "company/id" is written as the literal directory name "company%2Fid" and
+        # encoded once more in the url. A name that merely contains those characters
+        # is not an encoded separator and must still be accepted.
+        _, blob_path = errorhandler.get_blob_info_from_url(
+            BLOB_URL.replace('company-id-0', 'company%252Fid'))
+        assert blob_path.split('/')[1] == 'companyIdkey=company%2Fid'
+
     @pytest.mark.parametrize('url,expected', [
         # A rejected url reaches the log before anything has vouched for its shape.
         ('https://acct.blob.core.windows.net/data/p\nWARNING:root:forged',

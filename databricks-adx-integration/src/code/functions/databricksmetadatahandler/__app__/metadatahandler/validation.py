@@ -34,6 +34,12 @@ _FORBIDDEN_CHARS_REGEX = re.compile(r'[\x00-\x20\x7f-\x9f]')
 # stricter url rule above is not applied to the name the sdk resolves.
 _CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
 
+# Percent-encoded '/' and '\'. The storage sdk splits the raw url path into its
+# container and blob name first and decodes each part afterwards, so an encoded
+# separator stays inside one segment for the sdk while any reading that decodes
+# first sees an extra segment boundary there.
+_ENCODED_SEPARATOR_REGEX = re.compile(r'%(?:2f|5c)', re.IGNORECASE)
+
 # Spark's structured streaming file sink names each checkpoint log entry after its
 # batch number, and periodically rolls them up into "<batch>.compact".
 _SPARK_METADATA_FILE_REGEX = re.compile(r'^[0-9]{1,19}(\.compact)?$')
@@ -160,6 +166,20 @@ def validate_blob_url_host(url: str, allowed_hosts: Set[str]) -> None:
         # part of the blob; it is carrying something else along for the ride.
         raise ValidationError('Blob url must not contain a fragment.')
 
+    # Only the path is examined: the signature in a SAS query string legitimately
+    # contains percent-encoded separators. Rejecting them in the path keeps the
+    # segments counted here identical to the ones the sdk resolves, so the two
+    # readings of the path cannot disagree about where the blob name begins.
+    if _ENCODED_SEPARATOR_REGEX.search(parts.path):
+        raise ValidationError('Blob url must not percent-encode a path separator.')
+    try:
+        unquote(parts.path, errors='strict')
+    except UnicodeDecodeError as error:
+        # Decoding with the default handling substitutes a replacement character
+        # for the invalid bytes, so the name validated here would not be the name
+        # the sdk re-encodes and requests.
+        raise ValidationError('Blob url path is not valid percent-encoded UTF-8.') from error
+
     hostname = (parts.hostname or '').lower()
     # Exact match only. A suffix match would accept lookalikes such as
     # "myacct.blob.core.windows.net.attacker.example".
@@ -284,6 +304,10 @@ def split_blob_url(url: str) -> Tuple[str, str]:
     Used for references derived from checkpoint file content, which name a blob
     but are never handed to the storage sdk here, so they have no client object to
     read the container and path from.
+
+    This decodes before splitting, while the sdk splits before decoding. The two
+    orders agree only because :func:`validate_blob_url_host` has already rejected
+    percent-encoded separators, so the url must pass that check first.
 
     :param url: an https blob url that has already passed host validation
     :return: (container, blob path); either may be empty when the url has no path

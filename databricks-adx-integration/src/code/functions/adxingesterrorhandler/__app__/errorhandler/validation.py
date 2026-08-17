@@ -10,7 +10,7 @@
 """
 import re
 from typing import Optional, Set
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 # Azure Storage naming limits. See
 # https://learn.microsoft.com/rest/api/storageservices/naming-and-referencing-containers--blobs--and-metadata
@@ -35,6 +35,12 @@ _FORBIDDEN_CHARS_REGEX = re.compile(r'[\x00-\x20\x7f-\x9f]')
 # Control characters only. A blob name may legitimately contain a space, so the
 # stricter URL rule above is not applied to the name the SDK resolves.
 _CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
+
+# Percent-encoded '/' and '\'. The storage SDK splits the raw URL path into its
+# container and blob name first and decodes each part afterwards, so an encoded
+# separator stays inside one segment for the SDK while any reading that decodes
+# first sees an extra segment boundary there.
+_ENCODED_SEPARATOR_REGEX = re.compile(r'%(?:2f|5c)', re.IGNORECASE)
 
 # A retry generation is written by this function as a whole path segment, for
 # example "databricks-out/.../retry1/part-0.c000.json".
@@ -189,6 +195,20 @@ def validate_blob_url_host(url: str, allowed_hosts: Set[str]) -> None:
         # A blob request never carries a fragment, so one here is not addressing
         # part of the blob; it is carrying something else along for the ride.
         raise ValidationError('Blob URL must not contain a fragment.')
+
+    # Only the path is examined: the signature in a SAS query string legitimately
+    # contains percent-encoded separators. Rejecting them in the path keeps the
+    # segments counted here identical to the ones the SDK resolves, so the two
+    # readings of the path cannot disagree about where the blob name begins.
+    if _ENCODED_SEPARATOR_REGEX.search(parts.path):
+        raise ValidationError('Blob URL must not percent-encode a path separator.')
+    try:
+        unquote(parts.path, errors='strict')
+    except UnicodeDecodeError as error:
+        # Decoding with the default handling substitutes a replacement character
+        # for the invalid bytes, so the name validated here would not be the name
+        # the SDK re-encodes and requests.
+        raise ValidationError('Blob URL path is not valid percent-encoded UTF-8.') from error
 
     hostname = (parts.hostname or '').lower()
     # Exact match only. A suffix match would accept lookalikes such as

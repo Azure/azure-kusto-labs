@@ -317,6 +317,37 @@ class TestUtDatabricksMetadataHandler():
         assert 'SECRET' not in validation.redact_url(
             'https://account.blob.core.windows.net/data/p#access_token=SECRET')
 
+    @pytest.mark.parametrize('path', ['data%2fevil/o/f', 'data%5Cevil/o/f'])
+    def test_a_url_encoding_a_path_separator_is_refused(self, path):
+        # split_blob_url decodes before splitting while the sdk splits before
+        # decoding, so "data%2fevil" reads as the allowed container "data" here and
+        # as "data/evil" downstream. Refusing it leaves a single reading, so what is
+        # authorised is what the url names.
+        with pytest.raises(validation.ValidationError, match='percent-encode a path separator'):
+            validation.validate_blob_url_host(
+                'https://account.blob.core.windows.net/' + path,
+                {'account.blob.core.windows.net'})
+
+    def test_a_url_whose_encoding_is_not_valid_utf8_is_refused(self):
+        # Decoding %ff with the default handling yields a replacement character, so
+        # the name checked here would not be the name the sdk re-encodes and sends.
+        with pytest.raises(validation.ValidationError, match='percent-encoded UTF-8'):
+            validation.validate_blob_url_host(
+                'https://account.blob.core.windows.net/data/o/part-%ff.json',
+                {'account.blob.core.windows.net'})
+
+    def test_a_partition_value_escaped_by_spark_is_still_accepted(self):
+        # Spark escapes a reserved character in a partition value, so the value
+        # "company/id" is written as the literal directory name "company%2Fid" and
+        # encoded once more in the url. A name that merely contains those characters
+        # is not an encoded separator and must still be accepted.
+        url = ('https://account.blob.core.windows.net/data/'
+               + PATH_ROOT + '/companyIdkey=company%252Fid/part-0.json')
+        validation.validate_blob_url_host(url, {'account.blob.core.windows.net'})
+        container, blob_path = validation.split_blob_url(url)
+        assert container == 'data'
+        assert blob_path.split('/')[1] == 'companyIdkey=company%2Fid'
+
     def test_a_custom_endpoint_does_not_admit_lookalike_hosts(self):
         # Only a real Azure Storage endpoint has a service label to swap. A custom
         # domain shaped like one says nothing about who owns its sibling.
