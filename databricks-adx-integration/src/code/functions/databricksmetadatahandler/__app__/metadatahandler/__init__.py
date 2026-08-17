@@ -194,9 +194,10 @@ def convert_abfss_path_to_https(abfss_path: str) -> str:
     regex = re.compile(pattern)
     match = regex.match(abfss_path)
     if not match:
-        # !r escapes control characters, so a newline in this untrusted value
-        # cannot forge extra records wherever this message is logged.
-        raise ValueError('Invalid abfss path {!r}'.format(abfss_path))
+        # Redacted because this untrusted value reaches the log, and a rejected one
+        # has had nothing vouch for its shape: it can still carry a token in a query
+        # string and control characters anywhere.
+        raise ValueError('Invalid abfss path {!r}'.format(redact_url(abfss_path)))
     container = match.group(1)
     storage_account = match.group(2)
     filepath = match.group(3)

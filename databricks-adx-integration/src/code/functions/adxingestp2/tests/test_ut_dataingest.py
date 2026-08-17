@@ -155,10 +155,15 @@ class TestUtAdxIngest():
         'company-id-{{INDEX}}',
         # Contains the marker but leaves another brace unresolved.
         'company-{INDEX}-{OTHER',
+        # Truncates the rendered index, so 10 and 11 both collapse to 1.
+        'company-{INDEX!s:.1}',
+        # Substitutions the index cannot answer.
+        'company-{INDEX.foo}',
+        'company-{INDEX[foo]}',
     ])
     def test_a_name_format_that_does_not_vary_per_database_is_refused(self, name_format):
         with pytest.raises(validation.ValidationError):
-            validation.build_database_allow_list(name_format, 3)
+            validation.build_database_allow_list(name_format, 20)
 
     def test_a_usable_name_format_produces_one_name_per_database(self):
         assert validation.build_database_allow_list('company-id-{INDEX}', 3) == {

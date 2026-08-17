@@ -67,10 +67,6 @@ def init_config():
     # The ingestion function is given these same two values and will only write to
     # the destinations they describe, so both sides read them from one place.
     DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
-    if DATABASE_NAME_FORMAT.format(INDEX=0) == DATABASE_NAME_FORMAT.format(INDEX=1):
-        # A template that renders the same name for every index would update one
-        # database repeatedly while reporting that it created DatabaseNum of them.
-        raise ValueError('DATABASE_NAME_FORMAT must name a different database for each index.')
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
     TABLE_LIST = TABLE_LIST_STR.split(',')
     print(TABLE_LIST)
@@ -224,6 +220,13 @@ def create_database(number_of_companies):
     soft_deleteperiod = timedelta(days=SOFTDELETEPERIOD)
     hot_cacheperiod = timedelta(days=HOTCACHEPERIOD)
     database_operations = KUSTO_MGMT_CLIENT.databases
+    # Every index is expanded before the first database is created. A template that
+    # renders the same name for two of them would update one database repeatedly
+    # while reporting that it created number_of_companies, and the ingestion
+    # function applies this same rule and would then refuse to serve the result.
+    names = {DATABASE_NAME_FORMAT.format(INDEX=index) for index in range(number_of_companies)}
+    if len(names) != number_of_companies:
+        raise ValueError('DATABASE_NAME_FORMAT must name a different database for each index.')
     for index in range(0, number_of_companies):
         try:
             database_name = DATABASE_NAME_FORMAT.format(INDEX=index)

@@ -319,7 +319,7 @@ def build_database_allow_list(name_format: Optional[str], count: Optional[int]) 
         raise ValidationError('ALLOWED_DATABASE_NAME_FORMAT is not configured for this function app.')
     try:
         names = frozenset(name_format.format(INDEX=index) for index in range(count))
-    except (IndexError, KeyError, ValueError) as exc:
+    except (AttributeError, IndexError, KeyError, TypeError, ValueError) as exc:
         # Substituted the same way the provisioning tool does, so a template it
         # could not use is refused here rather than producing a set of names that
         # do not exist.
