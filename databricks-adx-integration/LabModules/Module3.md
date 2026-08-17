@@ -61,6 +61,27 @@ We need to setup the following additional parameters in the _provision-config.js
 
 Then run _create-ingestion-function.ps1_ script to create and setup Azure Function.
 
+***Note!** _The `companyIdkey=` and `typekey=` directories in a blob path select the
+ADX database and table this function writes to, and those directories are named from
+the telemetry itself. The script therefore also tells the function which destinations
+the deployment actually created: the databases `ADX.DatabaseNameFormat` and
+`ADX.DatabaseNum` produced in Module 2, and the tables in `ADX.TableList`. A blob path
+asking for anything else is rejected before ingestion. The function is likewise pinned
+to the blobs it ingests: the account holding `Storage.IngestionDatalakeName`, the
+container in `Storage.FileSystemName`, and the directory in
+`Storage.AzureStorageTargetFolder`. If you change any of those values, or the number of
+databases, re-run this script so the function is updated to match._
+
+***Note on tenant separation!** _The database is chosen from a directory whose name
+came from the `companyId` field in the telemetry, so the producer states which company
+the data belongs to. That is sound here because the producer is the Databricks job in
+this same deployment. If you adapt this lab so that less trusted parties can write to
+the landing area, a company would be able to name a directory belonging to another
+company, and the checks above would not stop it, because the requested destination
+would still be one this deployment provisioned. Separating tenants under that threat
+model needs per-tenant pipelines, described in the
+[Deployment Stamps pattern](https://learn.microsoft.com/azure/architecture/patterns/deployment-stamp)._
+
 After the creation is done, you can verify the creation result in Azure Portal.
 
 ![databaselist](../LabModules/assets/module3/steps/config.PNG)

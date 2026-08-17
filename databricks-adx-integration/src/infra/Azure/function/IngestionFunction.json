@@ -53,6 +53,30 @@
         "TableIDKey": {
             "type": "string"
         },
+        "AllowedDatabaseNameFormat": {
+            "minLength": 1,
+            "type": "string"
+        },
+        "AllowedDatabaseCount": {
+            "minValue": 1,
+            "type": "int"
+        },
+        "AllowedTables": {
+            "minLength": 1,
+            "type": "string"
+        },
+        "SourceStorageAccountUrl": {
+            "minLength": 1,
+            "type": "string"
+        },
+        "SourceContainerName": {
+            "minLength": 3,
+            "type": "string"
+        },
+        "SourcePathRoot": {
+            "minLength": 1,
+            "type": "string"
+        },
         "IsDuplicateCheck": {
             "defaultValue": "False",
             "type": "string"
@@ -251,6 +275,36 @@
                         {
                             "name":"TABLEID_KEY",
                             "value":"[parameters('TableIdkey')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"ALLOWED_DATABASE_NAME_FORMAT",
+                            "value":"[parameters('AllowedDatabaseNameFormat')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"ALLOWED_DATABASE_COUNT",
+                            "value":"[string(parameters('AllowedDatabaseCount'))]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"ALLOWED_TABLES",
+                            "value":"[parameters('AllowedTables')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"SOURCE_STORAGE_ACCOUNT_URL",
+                            "value":"[parameters('SourceStorageAccountUrl')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"ALLOWED_SOURCE_CONTAINERS",
+                            "value":"[parameters('SourceContainerName')]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"SOURCE_PATH_ROOT",
+                            "value":"[parameters('SourcePathRoot')]",
                             "slotSetting":false
                         }, 
                         {

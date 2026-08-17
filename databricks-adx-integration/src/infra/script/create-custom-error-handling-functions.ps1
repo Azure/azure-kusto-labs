@@ -69,7 +69,8 @@ $adxerrorhandle_func_parameters_str = @{
     FunctionLocation = $config.Location
     Runtime = $config.Functions.adxErrorHandlerFunction.Runtime
     FinalFailedContainer = $config.Storage.IngestionRetryEndInFailContainerName
-    IngestionFunctionName = (Get-Resource-Prefix $config.ResourceGroupName)+$config.Functions.IngestionFunction.FunctionName
+    SourceContainerName = $config.Storage.FileSystemName
+    SourcePathRoot = $config.Storage.AzureStorageTargetFolder
 }
 
 $adxerrorhandle_func_parameters_num = @{

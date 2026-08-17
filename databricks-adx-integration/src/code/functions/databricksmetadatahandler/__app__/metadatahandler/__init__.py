@@ -26,6 +26,19 @@ from applicationinsights import TelemetryClient
 from azure.storage.queue.aio import QueueClient
 from azure.storage.blob import BlobServiceClient, BlobClient
 
+from .validation import (
+    ValidationError,
+    is_compact_checkpoint,
+    parse_allow_list,
+    redact_url,
+    split_blob_url,
+    storage_hosts_from_account_url,
+    validate_blob_url_host,
+    validate_checkpoint_path,
+    validate_container_name,
+    validate_output_path,
+)
+
 # Required func app configuration
 APPINSIGHTS_INSTRUMENTATIONKEY = None
 DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL = None
@@ -36,23 +49,22 @@ METADATA_HANDLE_EVENT_NAME = 'METADATA_HANDLE'
 CONCURRENT_ENQUEUE_TASKS = '20'
 MAX_COMPACT_FILE_RECORDS = 0  # The max file records number in compact file
 
+# The blobs this function is entitled to read and rewrite. A queue message names
+# the checkpoint file to process, so the account, container, Databricks output
+# directory and file name grammar are all pinned to what this deployment writes.
+ALLOWED_STORAGE_HOSTS = set()
+ALLOWED_METADATA_CONTAINERS = set()
+METADATA_PATH_ROOT = ''
+# Spark's structured streaming file sink always writes its checkpoint log to a
+# directory of this name, so it is a safe default rather than a lab specific one.
+METADATA_REQUIRED_SEGMENT = '_spark_metadata'
+
 # CONFIG FOR LOG MESSAGE
 HEADER = "[Databricks Meatadata Handler]"
 PROCESS_PROGRAM_NAME = "KUSTO_LAB_METADATA_HANDLER_SAMPLE"
 
 BLOB_SERVICE_CLIENT = None
 
-INGEST_QUEUE_MSG_TEMPLATE = """
-{{
-    "data": {{
-        "api": "PutBlockList",
-        "contentLength": {blob_size},
-        "url": "{blob_url}"
-    }},
-    "eventTime": "{event_time}",
-    "modificationTime": "{modification_time}"
-}}
-"""
 
 def is_json(json_str: str) -> bool:
     """ Check whether the input string is a valid JSON """
@@ -73,6 +85,8 @@ def init_config_values():
     global ADX_INGEST_QUEUE_URL_LIST, ADX_INGEST_QUEUE_SAS_TOKEN
     global CONCURRENT_ENQUEUE_TASKS
     global MAX_COMPACT_FILE_RECORDS
+    global ALLOWED_STORAGE_HOSTS, ALLOWED_METADATA_CONTAINERS, METADATA_REQUIRED_SEGMENT
+    global METADATA_PATH_ROOT
     APPINSIGHTS_INSTRUMENTATIONKEY = os.getenv("APPINSIGHTS_INSTRUMENTATIONKEY",
                                                APPINSIGHTS_INSTRUMENTATIONKEY)
     DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL = os.getenv("DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL",
@@ -83,13 +97,26 @@ def init_config_values():
     ADX_INGEST_QUEUE_SAS_TOKEN = os.getenv("ADX_INGEST_QUEUE_SAS_TOKEN", ADX_INGEST_QUEUE_SAS_TOKEN)
     CONCURRENT_ENQUEUE_TASKS = int(os.getenv("CONCURRENT_ENQUEUE_TASKS", CONCURRENT_ENQUEUE_TASKS))
     ADX_INGEST_QUEUE_URL_LIST = ADX_INGEST_QUEUE_URL_LIST.replace(' ', '').split(',')
-    logging.info(f"ADX_INGEST_QUEUE_URL_LIST: {ADX_INGEST_QUEUE_URL_LIST}")
+    logging.info("ADX_INGEST_QUEUE_URL_LIST: %s",
+                 [redact_url(url) for url in ADX_INGEST_QUEUE_URL_LIST])
 
 
     HEADER = os.getenv("LOG_MESSAGE_HEADER", HEADER)
     PROCESS_PROGRAM_NAME = os.getenv("PROCESS_PROGRAM_NAME", PROCESS_PROGRAM_NAME)
     METADATA_HANDLE_EVENT_NAME = os.getenv("METADATA_HANDLE_EVENT_NAME", METADATA_HANDLE_EVENT_NAME)
     MAX_COMPACT_FILE_RECORDS = int(os.getenv("MAX_COMPACT_FILE_RECORDS", str(MAX_COMPACT_FILE_RECORDS)))
+
+    # Bind this function to the storage account it is already configured against.
+    # ALLOWED_STORAGE_HOSTS is an escape hatch for a custom domain in front of that
+    # same account; the rest of this lab targets global Azure endpoints throughout.
+    ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL)
+    ALLOWED_STORAGE_HOSTS |= {host.lower() for host in parse_allow_list(os.getenv("ALLOWED_STORAGE_HOSTS"))}
+    # The container and directory the Databricks job writes its output to. Naming
+    # the account alone is not enough: without these, a queue message could still
+    # select any other blob in the same account.
+    ALLOWED_METADATA_CONTAINERS = parse_allow_list(os.getenv("ALLOWED_METADATA_CONTAINERS"))
+    METADATA_PATH_ROOT = os.getenv("METADATA_PATH_ROOT", METADATA_PATH_ROOT)
+    METADATA_REQUIRED_SEGMENT = os.getenv("METADATA_REQUIRED_SEGMENT", METADATA_REQUIRED_SEGMENT)
 
 def get_blob_content(container_name: str, blob_path: str) -> str:
     """ download blob file content as string
@@ -156,16 +183,20 @@ def get_queue_client(url: str) -> QueueClient:
     if not queue_client_dict.get(url):
         client = QueueClient.from_queue_url(url, credential=ADX_INGEST_QUEUE_SAS_TOKEN)
         queue_client_dict[url] = client
-        logging.info(f"{HEADER} Initialize Queue Client for {url}")
+        logging.info(f"{HEADER} Initialize Queue Client for {redact_url(url)}")
     return queue_client_dict[url]
 
 def convert_abfss_path_to_https(abfss_path: str) -> str:
     """ Convert the abfss path to https path style """
-    pattern = r'abfss:\/\/([^@]+)@([^.]+)[^\/]+\/(.+)'
+    # Anchored at both ends, so a crafted value cannot carry an accepted abfss
+    # reference in the middle of some longer string.
+    pattern = r'^abfss://([^@/]+)@([^./]+)\.dfs\.core\.windows\.net/(.+)$'
     regex = re.compile(pattern)
-    match = regex.search(abfss_path)
+    match = regex.match(abfss_path)
     if not match:
-        raise ValueError(f"Invalid abfss path {abfss_path}")
+        # !r escapes control characters, so a newline in this untrusted value
+        # cannot forge extra records wherever this message is logged.
+        raise ValueError('Invalid abfss path {!r}'.format(abfss_path))
     container = match.group(1)
     storage_account = match.group(2)
     filepath = match.group(3)
@@ -173,53 +204,108 @@ def convert_abfss_path_to_https(abfss_path: str) -> str:
     return https_path
 
 
+# Spark names each output file part-<number>-<uuid>. The digit run is bounded so a
+# crafted name cannot hand int() an arbitrarily long number, and the number must end
+# at a non-digit so a longer run is treated as unnumbered rather than truncated.
+_PART_FILE_REGEX = re.compile(r'^part-([0-9]{1,10})(?![0-9])')
+
+# The largest value a file length can take, matching the signed 64 bit length
+# Spark and the storage service report.
+MAX_BLOB_SIZE_BYTES = 2 ** 63 - 1
+
 def get_part_number(content) ->int:
     """Find part number"""
-    pindex = content.find('part-')
-    pnum = -1
-    if pindex > 0:
-        pnum = int(content[pindex+5:pindex+10])
-    return pnum
+    # Only the file name decides batch order. The directories above it are partition
+    # values written from the telemetry itself, so a company id of the right shape
+    # would otherwise be read as this file's part number.
+    file_name = content.rsplit('/', 1)[-1]
+    match = _PART_FILE_REGEX.match(file_name)
+    if not match:
+        # The writer did not number this name, so it says nothing about batch order.
+        # The caller decides what to do about it.
+        return -1
+    return int(match.group(1))
 
 
 def generate_metadata_queue_messages(event_time: str, metadata_file_content: str) -> List[str]:
     """ Generate queue messages from Databricks ouutput metadata file content """
     ingest_queue_msg_list = []
-    current_part_num = 100000 #Max part number
+    # No ceiling until the newest numbered file of this batch is seen. A fixed
+    # starting value would drop a whole batch whose part numbers run past it.
+    current_part_num = None
     global MAX_COMPACT_FILE_RECORDS
 
-    for line in reversed(metadata_file_content.splitlines()):
-        logging.info(f"{HEADER} Processing metadata line content: {line}")
+    lines = list(reversed(metadata_file_content.splitlines()))
+    # How far into the file this batch reached. A line can be scanned without
+    # producing a message, so counting messages here would let a skipped line take
+    # the place of an accepted one when the compact file is later trimmed.
+    batch_line_count = len(lines)
+    for line_number, line in enumerate(lines):
+        # The checkpoint file is produced upstream and is not trusted here, so its
+        # content is identified by position rather than copied into the logs.
+        logging.debug(f"{HEADER} Processing metadata line {line_number}")
         if not is_json(line):
-            logging.info(f"{HEADER} Skip non JSON line content: {line}")
+            logging.debug(f"{HEADER} Skip non JSON metadata line {line_number}")
             continue
-
-        pnum = get_part_number(line)
-
-        if pnum > current_part_num:
-            break   # Reached files in previous batch, stop parsing
-
-        current_part_num = pnum
-
-        split_output_file_json = json.loads(line)
-        output_abfss_path = split_output_file_json["path"]
-        output_file_size = split_output_file_json["size"]
-        output_file_modification_time = split_output_file_json["modificationTime"]
 
         try:
+            split_output_file_json = json.loads(line)
+            output_abfss_path = split_output_file_json["path"]
+            output_file_size = split_output_file_json["size"]
+            output_file_modification_time = split_output_file_json["modificationTime"]
+
+            # The size is emitted as a json number and read downstream as the raw
+            # data size of the blob. Anything outside the range a file length can
+            # take does not describe a file this pipeline produced.
+            if (isinstance(output_file_size, bool) or not isinstance(output_file_size, int)
+                    or not 0 <= output_file_size <= MAX_BLOB_SIZE_BYTES):
+                raise ValueError(
+                    'Checkpoint entry size {!r} is not a file length.'.format(output_file_size))
+
             https_url = convert_abfss_path_to_https(output_abfss_path)
-        except Exception: # pylint: disable=bare-except
-            logging.warning(f"{HEADER} Skip invalid abfss path {output_abfss_path}", exc_info=True)
+            # The metadata file content also selects a destination, for the ingest
+            # function downstream. Confine those urls to the same account, container
+            # and output directory rather than forwarding whatever the file contains.
+            validate_blob_url_host(https_url, ALLOWED_STORAGE_HOSTS)
+            referenced_container, referenced_path = split_blob_url(https_url)
+            validate_container_name(referenced_container, ALLOWED_METADATA_CONTAINERS)
+            validate_output_path(referenced_path, METADATA_PATH_ROOT)
+        except Exception as exc: # pylint: disable=broad-except
+            # The rejection messages quote the offending value with !r, so control
+            # characters in this untrusted path arrive escaped rather than as real
+            # line breaks. Keeping the reason makes a skipped file diagnosable.
+            logging.warning("%s Skip metadata line %d: %s", HEADER, line_number, exc)
             continue
 
-        queue_msg = INGEST_QUEUE_MSG_TEMPLATE.format(blob_size=output_file_size,
-                                                     blob_url=https_url,
-                                                     event_time=event_time,
-                                                     modification_time=output_file_modification_time)
-        minify_msg = json.dumps(json.loads(queue_msg))
-        ingest_queue_msg_list.append(minify_msg)
+        # Batch order comes from the validated path, and only after the entry has
+        # been accepted. An entry this function skips therefore cannot move the
+        # ceiling below the batch and cut the scan short.
+        pnum = get_part_number(referenced_path)
 
-    MAX_COMPACT_FILE_RECORDS = max(len(ingest_queue_msg_list), MAX_COMPACT_FILE_RECORDS)
+        if current_part_num is not None and pnum > current_part_num:
+            batch_line_count = line_number
+            break   # Reached files in previous batch, stop parsing
+
+        if pnum >= 0:
+            # A name that carries no part number says nothing about batch order, so
+            # it is forwarded on its own merit and leaves the ceiling where it is.
+            current_part_num = pnum
+
+        # Built as a structure and serialised once. Formatting these values into a
+        # json string would let a checkpoint entry close the quoting and append its
+        # own "data" object, which json decoding then prefers over the validated one.
+        queue_msg = json.dumps({
+            'data': {
+                'api': 'PutBlockList',
+                'contentLength': output_file_size,
+                'url': https_url,
+            },
+            'eventTime': event_time,
+            'modificationTime': str(output_file_modification_time),
+        })
+        ingest_queue_msg_list.append(queue_msg)
+
+    MAX_COMPACT_FILE_RECORDS = max(batch_line_count, MAX_COMPACT_FILE_RECORDS)
     return ingest_queue_msg_list
 
 
@@ -229,7 +315,10 @@ async def send_queue_messages(queue_client, base64_message, queue_msg):
     try:
         await queue_client.send_message(base64_message)
     except Exception: # pylint: disable=bare-except
-        logging.exception(f"{HEADER} Failed to send message {queue_msg} to queue")
+        # The message body embeds a blob url, which can carry a SAS token, so the
+        # blob is identified by path only.
+        failed_url = json.loads(queue_msg).get('data', {}).get('url')
+        logging.exception(f"{HEADER} Failed to send message for {redact_url(failed_url)} to queue")
         # Raise exception to let azure function retry whole batch again
         raise
 
@@ -244,7 +333,8 @@ def gen_metadata_msg_enqueue_tasks(queue_msg_list: List[str],
 
         queue_index = idx % len(queue_client_list)
         logging.debug(
-            f"{HEADER} Try to send message to ingest queue {queue_index}, queue_msg: {queue_msg}")
+            f"{HEADER} Try to send message to ingest queue {queue_index}, "
+            f"blob: {redact_url(output_obj['data']['url'])}")
 
         base64_message = base64.b64encode(queue_msg.encode('ascii')).decode('ascii')
 
@@ -252,7 +342,7 @@ def gen_metadata_msg_enqueue_tasks(queue_msg_list: List[str],
         size = int(output_obj['data']['contentLength'])
 
         tc.track_event(METADATA_HANDLE_EVENT_NAME,
-                       {'FILE_URL': file_url},
+                       {'FILE_URL': redact_url(file_url)},
                        {METADATA_HANDLE_EVENT_NAME + '_SIZE': size,
                         METADATA_HANDLE_EVENT_NAME + '_COUNT': 1})
 
@@ -290,8 +380,9 @@ def main(msg: func.QueueMessage) -> None:
     :return: None
     """
     code_start_time = time.time()
-    logging.info('Python queue trigger function processed a queue item: %s',
-                 msg.get_body().decode('utf-8'))
+    # The queue body carries the blob url, which can include a SAS token, so the
+    # message is identified rather than echoed into the logs.
+    logging.info('Python queue trigger function processed a queue item: %s', msg.id)
     # modify the log level of azure sdk requests
     logging.getLogger('azure').setLevel(logging.WARNING)
     init_config_values()
@@ -304,27 +395,39 @@ def main(msg: func.QueueMessage) -> None:
     # 1. Get trigger file content (rename event)
     content_json = json.loads(msg.get_body().decode('utf-8'))
 
-    logging.info("meta-data event content: {}".format(msg.get_body().decode('utf-8')))
     file_url = content_json['data']['destinationUrl']
-    logging.info(f"file_url: {file_url}")
+    logging.info(f"file_url: {redact_url(file_url)}")
     event_time = content_json['eventTime']
 
     # 2. Download metadata blob content
-    logging.info(f"{HEADER} Download blob file from {file_url}")
-    temp_blob_client = BlobClient.from_blob_url(blob_url=file_url, logging_enable=False)
-    blob_path = temp_blob_client.blob_name
-    container_name = temp_blob_client.container_name
+    logging.info(f"{HEADER} Download blob file from {redact_url(file_url)}")
+    try:
+        # Authorise the raw url before the sdk parses it, then validate what the
+        # sdk resolved, since those resolved values are what reach the privileged
+        # blob client built from DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL.
+        validate_blob_url_host(file_url, ALLOWED_STORAGE_HOSTS)
+        temp_blob_client = BlobClient.from_blob_url(blob_url=file_url, logging_enable=False)
+        blob_path = validate_checkpoint_path(temp_blob_client.blob_name, METADATA_PATH_ROOT,
+                                             METADATA_REQUIRED_SEGMENT)
+        container_name = validate_container_name(temp_blob_client.container_name,
+                                                 ALLOWED_METADATA_CONTAINERS)
+    except ValidationError:
+        # Surface the rejection explicitly. A message that fails validation is
+        # worth its own log entry rather than being lost in a generic trace.
+        logging.error("%s Rejected untrusted metadata blob url from queue message: %s",
+                      HEADER, redact_url(file_url))
+        raise
 
     try:
         metadata_file_content = get_blob_content(container_name, blob_path)
     except Exception:
-        logging.exception(f"Failed to download blob from url {file_url}")
+        logging.exception(f"Failed to download blob from url {redact_url(file_url)}")
         raise
 
     # 3. Parse split output file from the metadata
     queue_msg_list = generate_metadata_queue_messages(event_time, metadata_file_content)
     logging.info(
-        f"{HEADER} Generate metadata queue_messages from {file_url}, {len(queue_msg_list)} messages")
+        f"{HEADER} Generate metadata queue_messages from {redact_url(file_url)}, {len(queue_msg_list)} messages")
 
     # 4. Loop to enqueue msg to ADX ingest queue
     queue_client_list = []
@@ -341,15 +444,15 @@ def main(msg: func.QueueMessage) -> None:
 
     logging.info(f"{HEADER} Done queuing up messages to Ingestion queue")
 
-    if file_url.endswith(".compact"): # reduce compact file size
+    if is_compact_checkpoint(blob_path): # reduce compact file size
         update_blob_content(container_name,
                             blob_path,
                             get_shrinked_checkpoint_content(
                                 metadata_file_content, MAX_COMPACT_FILE_RECORDS))
-        logging.info(f"{HEADER} Reduced checkpoint files {file_url}, max lines is {MAX_COMPACT_FILE_RECORDS}")
+        logging.info(f"{HEADER} Reduced checkpoint files {redact_url(file_url)}, max lines is {MAX_COMPACT_FILE_RECORDS}")
 
     code_duration = time.time() - code_start_time
     tc.track_event(METADATA_HANDLE_EVENT_NAME,
-                   {'FILE_URL': file_url},
+                   {'FILE_URL': redact_url(file_url)},
                    {METADATA_HANDLE_EVENT_NAME + '_DURATION_SEC': code_duration})
     tc.flush()

@@ -48,10 +48,21 @@ We need to setup the following additional parameters in the _provision-config.js
         "AvaliabilityZones":["1"],
         "ADXTemplatePath": "../Azure/ADX/ADX.json",
         "TableRetentionDays": "100",
-        "DatabaseNum":100
+        "DatabaseNum":100,
+        "DatabaseNameFormat": "company-id-{INDEX}",
+        "TableList": "CO2,TEMP"
     },
 }
 ```
+
+`DatabaseNameFormat` and `TableList` describe the destinations this script creates.
+`{INDEX}` is replaced with `0` through `DatabaseNum - 1`, so the settings above create
+`company-id-0` to `company-id-99`, each holding a `CO2` and a `TEMP` table.
+
+The ingestion function in [Module 3](./Module3.md) is given these same three values and
+will only write to the destinations they describe, so keep them in step. A blob path
+selecting a database or table outside this set is rejected rather than created on
+demand. Table names are used as written here, and Kusto identifiers are case sensitive.
 
 Then run _create-adx-and-db-tables.ps1_ script to create Azure Data Explorer and database/tables.
 

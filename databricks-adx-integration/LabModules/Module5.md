@@ -94,6 +94,15 @@ Modify the following configuration of the two functions in the **_provision-conf
 Connection string is protected using Azure Key Vault created in Module 0.  
 ![function_setting](assets/Module5/function_setting.png)  
 
+***Note!** _A poison-queue message tells this function which blob to copy and then
+delete, so the script pins it to the blobs this deployment actually ingests: the
+storage account named in its own `AZURE_STORAGE_CONNECTION_STRING`, the container in
+`Storage.FileSystemName`, the directory in `Storage.AzureStorageTargetFolder`, and the
+`.c000.json` files the Databricks job writes. A message naming any other blob in the
+account is rejected before the copy or delete is attempted. If you change the
+container or output folder in `provision-config.json`, re-run this script so the
+function is updated to match._
+
 
 
 #### Step 3: Deploy Code to Error-Retry Azure Functions
