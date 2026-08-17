@@ -434,6 +434,34 @@ class TestUtAdxIngestErrorHandler():
         errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
         source.delete_blob.assert_called_once()
 
+    def test_a_destination_the_source_does_not_derive_is_refused(self, mocker):
+        # This call deletes the source, so it derives the destination itself rather
+        # than acting on the one it was handed.
+        service = mocker.Mock()
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry9/b.json')
+        service.get_blob_client.assert_not_called()
+
+    def test_a_copy_that_failed_is_started_again(self, mocker):
+        # A copy that ended without the data is not worth adopting; observing it
+        # forever would strand the message on a dead attempt.
+        source, target = mocker.Mock(), mocker.Mock()
+        source.url = 'https://test.blob.core.windows.net/data/a/b.json'
+        service = mocker.Mock()
+        service.get_blob_client.side_effect = [source, target]
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+        target.get_blob_properties.return_value.copy.status = 'failed'
+        target.get_blob_properties.return_value.copy.source = source.url
+        target.start_copy_from_url.return_value = {'copy_status': 'success'}
+
+        errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+
+        target.start_copy_from_url.assert_called_once()
+        source.delete_blob.assert_called_once()
+
     def test_a_url_carrying_a_fragment_is_refused_and_not_logged(self):
         # A blob request drops the fragment, so it reaches nothing but the logs.
         with pytest.raises(errorhandler.ValidationError):

@@ -122,11 +122,23 @@ def move_blob_file(connect_str: str, source_container: str, target_container: st
     """ Move blob from source to destination container """
     logging.info('Move blob from %s/%s to %s/%s',
                  source_container, source_path, target_container, target_path)
+    # This is the call that deletes the source, so the destination is derived here
+    # from the source rather than taken on trust. Both outcomes the caller may ask
+    # for are accepted; anything else is not a move this function performs.
+    if (target_container, target_path) not in (
+            get_new_blob_move_file_path(source_container, source_path),
+            get_new_blob_move_file_path(source_container, source_path, no_retry=True)):
+        raise ValidationError(
+            'Destination {}/{} is not the path derived from {}/{}.'.format(
+                target_container, target_path, source_container, source_path))
     blob_service_client = BlobServiceClient.from_connection_string(connect_str)
     blob_source_client = blob_service_client.get_blob_client(container=source_container, blob=source_path)
     blob_target_client = blob_service_client.get_blob_client(container=target_container, blob=target_path)
     copy_status = adopted_copy_status(blob_target_client, blob_source_client.url)
-    if copy_status is None:
+    if copy_status in (None, 'failed', 'aborted'):
+        # A copy that ended without the data is not worth waiting for. Starting a
+        # new one is what lets a retry make progress instead of reporting the same
+        # dead attempt until the message is exhausted.
         copy_status = (blob_target_client.start_copy_from_url(blob_source_client.url) or {}).get('copy_status')
     # Only delete once the destination holds the data. A copy that is still pending
     # or has failed would otherwise leave nothing to retry from, and the source is
