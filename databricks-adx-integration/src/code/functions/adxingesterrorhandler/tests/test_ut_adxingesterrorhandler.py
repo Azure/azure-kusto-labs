@@ -379,6 +379,41 @@ class TestUtAdxIngestErrorHandler():
         target.start_copy_from_url.assert_called_once()
         source.delete_blob.assert_called_once()
 
+    def test_a_redelivery_after_the_move_completed_is_not_an_error(self, mocker):
+        # Storage queues deliver at least once, so the same message can arrive after
+        # the move already finished. The destination holds this source's data and
+        # the source is gone, which is the completed state. Raising would send a
+        # message whose work succeeded to the poison queue.
+        source, target = mocker.Mock(), mocker.Mock()
+        source.url = 'https://test.blob.core.windows.net/data/a/b.json'
+        service = mocker.Mock()
+        service.get_blob_client.side_effect = [source, target]
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+        target.get_blob_properties.return_value = mocker.Mock(
+            copy=mocker.Mock(source=source.url, status='success'))
+        source.delete_blob.side_effect = ResourceNotFoundError('already moved')
+
+        errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+
+        target.start_copy_from_url.assert_not_called()
+
+    def test_a_missing_source_is_still_an_error_when_no_copy_completed(self, mocker):
+        # Without a completed destination copy there is no evidence the move ever
+        # happened, so a missing source is a real failure.
+        source, target = mocker.Mock(), mocker.Mock()
+        source.url = 'https://test.blob.core.windows.net/data/a/b.json'
+        service = mocker.Mock()
+        service.get_blob_client.side_effect = [source, target]
+        mocker.patch.object(errorhandler.BlobServiceClient, 'from_connection_string',
+                            return_value=service)
+        target.get_blob_properties.side_effect = ResourceNotFoundError('missing')
+        target.start_copy_from_url.return_value = {'copy_status': 'pending'}
+
+        with pytest.raises(RuntimeError):
+            errorhandler.move_blob_file('cs', 'data', 'data', 'a/b.json', 'a/retry1/b.json')
+        source.delete_blob.assert_not_called()
+
     def test_the_source_is_kept_when_the_copy_has_not_completed(self, mocker):
         # The source is the only copy of the payload. Deleting it while the copy is
         # still pending would leave nothing to retry from.

@@ -135,7 +135,15 @@ def move_blob_file(connect_str: str, source_container: str, target_container: st
         raise RuntimeError(
             'Copy of {}/{} reported {!r}, leaving the source in place.'.format(
                 source_container, source_path, copy_status))
-    blob_source_client.delete_blob()
+    try:
+        blob_source_client.delete_blob()
+    except ResourceNotFoundError:
+        # The queue delivers at least once. A redelivery that arrives after the move
+        # finished finds the destination already holding this source's data and the
+        # source already gone. That is the completed state, not a failure, and
+        # raising here would send a message whose work succeeded to the poison queue.
+        logging.info('Source %s/%s was already moved to %s/%s.',
+                     source_container, source_path, target_container, target_path)
 
 def retry_blob_ingest_to_adx(container_name: str, blob_file_path: str,
                              new_container_name: str, new_blob_file_path: str) -> None:
