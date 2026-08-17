@@ -35,6 +35,7 @@ HOTCACHEPERIOD = "3650"
 DATABASE_NAME_FORMAT = "company-id-{INDEX}"
 TABLE_LIST_STR = "CO2,TEMP"
 TABLE_LIST = ["CO2", "TEMP"]
+MAX_DATABASE_COUNT = 100000
 BATCH_INGESTION_POLICY = """
 {{
     "MaximumBatchingTimeSpan":"{MAX_BATCHTIME}",
@@ -228,6 +229,11 @@ def create_database(number_of_companies):
     :param number_of_companies: number_of_companies
     :type number_of_companies: int
     """
+    if (isinstance(number_of_companies, bool) or
+            not isinstance(number_of_companies, int) or
+            not 0 < number_of_companies <= MAX_DATABASE_COUNT):
+        raise ValueError(
+            'Database count must be between 1 and {}.'.format(MAX_DATABASE_COUNT))
     soft_deleteperiod = timedelta(days=SOFTDELETEPERIOD)
     hot_cacheperiod = timedelta(days=HOTCACHEPERIOD)
     database_operations = KUSTO_MGMT_CLIENT.databases

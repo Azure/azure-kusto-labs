@@ -109,20 +109,22 @@ Write-Log "INFO" "Before Deploy clustername: $clusterName"
 #Start Resource Deployement
 Publish-Azure-Deployment $clusterName $config.ResourceGroupName $config.ADX.ADXTemplatePath $adx_parameters "ADXDeployment"
 
-#Start Creating Multi-Tenant DBs
-#Set up Environment Variables
-Set-Environment-Variables $config "create"
-
 $dbProvisionToolPath = "../../code/tools/ADXProvisionTool/"
-
-Write-Log "INFO" "Install requirements for adx database creation" 
-#Install Required Packages
-pip install -r (Join-Path -Path $dbProvisionToolPath -ChildPath "requirements.txt") --user
 
 #database num
 Write-Log "INFO" "Start to create ADX database " 
 Write-Log "INFO" "Start to create $($config.ADX.DatabaseNum) ADX databases"
+$environmentSetupAttempted = $false
 try {
+    # Protect both credential export and dependency installation so every failure
+    # path clears any deployment secrets written to this process environment.
+    $environmentSetupAttempted = $true
+    Set-Environment-Variables $config "create"
+
+    Write-Log "INFO" "Install requirements for adx database creation"
+    pip install -r (Join-Path -Path $dbProvisionToolPath -ChildPath "requirements.txt") --user
+    if ($LASTEXITCODE -ne 0) { throw "Installing ADX provisioning requirements failed with exit code $LASTEXITCODE." }
+
     # Each step is checked before the next one runs. A refused configuration or a
     # failed creation would otherwise leave partial resources behind and still be
     # reported as a successful deployment.
@@ -135,8 +137,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Creating ADX tables failed with exit code $LASTEXITCODE." }
 }
 finally {
-    #Remove Environment Variables
-    Set-Environment-Variables $config "delete"
+    if ($environmentSetupAttempted) {
+        #Remove Environment Variables
+        Set-Environment-Variables $config "delete"
+    }
 }
 
 Write-Log "INFO" "Create $($config.ADX.DatabaseNum) ADX databases successfully! "
