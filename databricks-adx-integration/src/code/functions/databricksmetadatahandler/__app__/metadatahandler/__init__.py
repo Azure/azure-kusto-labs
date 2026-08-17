@@ -205,9 +205,11 @@ def convert_abfss_path_to_https(abfss_path: str) -> str:
 
 
 # Spark names each output file part-<number>-<uuid>. The digit run is bounded so a
-# crafted name cannot hand int() an arbitrarily long number, and the number must end
-# at a non-digit so a longer run is treated as unnumbered rather than truncated.
-_PART_FILE_REGEX = re.compile(r'^part-([0-9]{1,10})(?![0-9])')
+# crafted name cannot hand int() an arbitrarily long number, and it must end at one of
+# the separators Spark uses. A name that runs on into anything else is left unnumbered
+# rather than given the number it starts with, which would place it in a batch it does
+# not belong to and cut the scan short there.
+_PART_FILE_REGEX = re.compile(r'^part-([0-9]{1,10})(?=[.-])')
 
 # The largest value a file length can take, matching the signed 64 bit length
 # Spark and the storage service report.

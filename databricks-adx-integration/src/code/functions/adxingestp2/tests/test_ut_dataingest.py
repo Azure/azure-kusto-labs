@@ -163,6 +163,12 @@ class TestUtAdxIngest():
         assert validation.build_database_allow_list('company-id-{INDEX}', 3) == {
             'company-id-0', 'company-id-1', 'company-id-2'}
 
+    def test_a_padded_index_names_the_databases_provisioning_creates(self):
+        # The provisioning tool substitutes the index the same way, so any template
+        # it can use has to be one this allow-list can reproduce.
+        assert validation.build_database_allow_list('company-{INDEX:03d}', 3) == {
+            'company-000', 'company-001', 'company-002'}
+
     @pytest.mark.parametrize('database_key,table_key', [
         # One directory would answer both questions.
         ('key=', 'key='),

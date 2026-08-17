@@ -315,8 +315,8 @@ def build_database_allow_list(name_format: Optional[str], count: Optional[int]) 
         raise ValidationError(
             'ALLOWED_DATABASE_COUNT {!r} is not a count between 1 and {}.'.format(
                 count, MAX_DATABASE_COUNT))
-    if not name_format or '{INDEX}' not in name_format:
-        raise ValidationError('ALLOWED_DATABASE_NAME_FORMAT must contain {INDEX}.')
+    if not name_format:
+        raise ValidationError('ALLOWED_DATABASE_NAME_FORMAT is not configured for this function app.')
     try:
         names = frozenset(name_format.format(INDEX=index) for index in range(count))
     except (IndexError, KeyError, ValueError) as exc:

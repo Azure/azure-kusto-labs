@@ -546,6 +546,24 @@ class TestUtDatabricksMetadataHandler():
         assert len(actual_messages) == 3, 'the unordered entry is forwarded, not dropped'
         assert actual_retention >= expected_retention
 
+    def test_a_name_running_on_past_its_digits_carries_no_part_number(self):
+        # The number has to end at a separator Spark uses. Reading one out of a name
+        # that runs on into other text would place the entry in a batch it does not
+        # belong to, and the legitimate entries above it would be cut off there.
+        assert metadatahandler.get_part_number('part-00000evil.c000.json') == -1
+        assert metadatahandler.get_part_number('part-00001-u.c000.json') == 1
+        assert metadatahandler.get_part_number('part-00007.c000.json') == 7
+
+        valid = ['v1',
+                 self._checkpoint_line('splitdata/output_0/part-00007.c000.json')]
+        crafted = self._checkpoint_line('splitdata/output_0/part-00000evil.c000.json')
+
+        expected_messages, _ = self._messages_and_retention(valid)
+        actual_messages, _ = self._messages_and_retention(valid + [crafted])
+
+        assert all(message in actual_messages for message in expected_messages), \
+            'a crafted low part number must not cut the batch short'
+
     def test_skipped_checkpoint_paths_cannot_forge_log_records(self, caplog):
         # A checkpoint entry is untrusted content. A newline in a rejected path
         # must arrive escaped so it cannot fabricate an extra log record.
