@@ -74,12 +74,14 @@ databases, re-run this script so the function is updated to match._
 
 ***Note on tenant separation!** _The database is chosen from a directory whose name
 came from the `companyId` field in the telemetry, so the producer states which company
-the data belongs to. That is sound here because the producer is the Databricks job in
-this same deployment. If you adapt this lab so that less trusted parties can write to
-the landing area, a company would be able to name a directory belonging to another
-company, and the checks above would not stop it, because the requested destination
-would still be one this deployment provisioned. Separating tenants under that threat
-model needs per-tenant pipelines, described in the
+the data belongs to. The Databricks job copies that field through without checking it,
+so the destination is only as trustworthy as whatever wrote the telemetry into the
+landing area. This lab assumes that is a trusted collector which assigns `companyId`
+after authenticating the producer. If you adapt this lab so that less trusted parties
+can write to the landing area, a company would be able to name a directory belonging to
+another company, and the checks above would not stop it, because the requested
+destination would still be one this deployment provisioned. Separating tenants under
+that threat model needs per-tenant pipelines, described in the
 [Deployment Stamps pattern](https://learn.microsoft.com/azure/architecture/patterns/deployment-stamp)._
 
 After the creation is done, you can verify the creation result in Azure Portal.

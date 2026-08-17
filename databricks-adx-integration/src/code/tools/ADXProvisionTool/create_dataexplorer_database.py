@@ -49,7 +49,7 @@ def init_config():
     global REGION, CLUSTER, CLIENT_ID, CLIENT_SECRET, TENANT_ID, SUBSCRIPTION_ID
     global MAX_BATCHTIME, MAX_ITEMS, MAX_RAWSIZE
     global SOFTDELETEPERIOD, HOTCACHEPERIOD
-    global TABLE_LIST_STR, TABLE_LIST
+    global DATABASE_NAME_FORMAT, TABLE_LIST_STR, TABLE_LIST
     RETENTION_DAYS = os.getenv('RETENTION_DAYS', RETENTION_DAYS)
     RESOURCE_GROUP = os.getenv('RESOURCE_GROUP')
     REGION = os.getenv('REGION')
@@ -64,6 +64,9 @@ def init_config():
     SOFTDELETEPERIOD = int(os.getenv('SOFTDELETEPERIOD', SOFTDELETEPERIOD))
     HOTCACHEPERIOD = int(os.getenv('HOTCACHEPERIOD', HOTCACHEPERIOD))
     CLUSTER = f"https://{CLUSTER_NAME}.{REGION}.kusto.windows.net"
+    # The ingestion function is given these same two values and will only write to
+    # the destinations they describe, so both sides read them from one place.
+    DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
     TABLE_LIST = TABLE_LIST_STR.split(',')
     print(TABLE_LIST)

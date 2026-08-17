@@ -8,7 +8,7 @@
 """
 
 from datetime import date
-from typing import Optional, Tuple
+from typing import Tuple
 import json
 import logging
 import os
@@ -17,7 +17,6 @@ import time
 import requests
 
 from applicationinsights import TelemetryClient
-from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient, BlobServiceClient
 from tenacity import wait_exponential, stop_after_attempt, wait_random, Retrying
 import azure.functions as func

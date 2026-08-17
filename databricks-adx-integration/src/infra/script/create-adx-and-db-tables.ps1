@@ -32,6 +32,8 @@ Function Set-Environment-Variables {
         [Environment]::SetEnvironmentVariable('CLUSTER_NAME',$clusterName)
         [Environment]::SetEnvironmentVariable('SUBSCRIPTION_ID',$configObj.AzureSubscriptionId)
         [Environment]::SetEnvironmentVariable('RESOURCE_GROUP',$configObj.ResourceGroupName)
+        [Environment]::SetEnvironmentVariable('DATABASE_NAME_FORMAT',$configObj.ADX.DatabaseNameFormat)
+        [Environment]::SetEnvironmentVariable('TABLE_LIST_STR',$configObj.ADX.TableList)
     }
     elseif ($action.ToLower().Equals("delete")){
         [Environment]::SetEnvironmentVariable('RETENTION_DAYS',$null)
@@ -42,6 +44,8 @@ Function Set-Environment-Variables {
         [Environment]::SetEnvironmentVariable('CLUSTER_NAME',$null)
         [Environment]::SetEnvironmentVariable('SUBSCRIPTION_ID',$null)
         [Environment]::SetEnvironmentVariable('RESOURCE_GROUP',$null)
+        [Environment]::SetEnvironmentVariable('DATABASE_NAME_FORMAT',$null)
+        [Environment]::SetEnvironmentVariable('TABLE_LIST_STR',$null)
     }
 }
 

@@ -31,6 +31,13 @@ def create_log():
     complex_data_count = int(os.environ.get("COMPLEX_DATA_COUNT") or 23)
     number_of_devices = int(os.environ.get('NUMBER_OF_DEVICES') or 1000)
     number_of_companies = int(os.environ.get('NUMBER_OF_COMPANIES') or 100)
+    # These two fields become the directory names the ingestion function reads the
+    # destination database and table from, so they are drawn from the same settings
+    # the databases and tables were created with.
+    database_name_format = os.environ.get('DATABASE_NAME_FORMAT') or 'company-id-{INDEX}'
+    table_list = [name.strip()
+                  for name in (os.environ.get('TABLE_LIST_STR') or 'CO2,TEMP').split(',')
+                  if name.strip()]
     content = {}
     content["eventId"] = str(uuid.uuid4())
     content["complexData"] = {}
@@ -38,9 +45,10 @@ def create_log():
         content["complexData"]["moreData{}".format(i)] = random.random()*90+10
     content["value"] = random.random()*90+10
     content["deviceId"] = f"contoso://device-id-{random.randint(0, number_of_devices-1)}"
-    content["companyId"] = f"company-id-{random.randint(0, number_of_companies-1)}"
+    content["companyId"] = database_name_format.format(
+        INDEX=random.randint(0, number_of_companies-1))
     content["deviceSequenceNumber"] = random.randint(0, number_of_devices)
-    content["type"] = random.choice(["CO2", "TEMP"])
+    content["type"] = random.choice(table_list)
     content["createdAt"] = str(datetime.now())
     return content
 

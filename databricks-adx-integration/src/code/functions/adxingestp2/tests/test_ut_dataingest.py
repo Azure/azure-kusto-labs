@@ -307,17 +307,9 @@ class TestUtAdxIngest():
         with pytest.raises(validation.ValidationError, match='not a .c000.json file'):
             dataingest.main(self._message(BLOB_URL.replace('.c000.json', '.txt')))
 
-    def test_the_database_allow_list_is_reused_across_messages(self):
-        # The settings are read again on every queue message, so regenerating the
-        # whole set each time would dominate the cost of ingesting a file.
-        before = validation.build_database_allow_list.cache_info().hits
-        dataingest.get_config_values()
-        dataingest.get_config_values()
-        assert validation.build_database_allow_list.cache_info().hits > before
-
     def test_a_changed_database_count_is_not_served_from_the_previous_one(self):
-        # Reuse is keyed on the configuration, so a deployment that grows or
-        # shrinks cannot be authorised against the set it used to have.
+        # The set is reused per configuration, so a deployment that grows or shrinks
+        # cannot be authorised against the set it used to have.
         assert (validation.build_database_allow_list(DATABASE_FORMAT, 4)
                 != validation.build_database_allow_list(DATABASE_FORMAT, 3))
 

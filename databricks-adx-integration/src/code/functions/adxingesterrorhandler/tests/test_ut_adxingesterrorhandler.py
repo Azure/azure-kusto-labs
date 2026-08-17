@@ -3,7 +3,6 @@ import logging
 import pytest
 
 import azure.functions as func
-from azure.core.exceptions import ResourceNotFoundError
 import __app__.errorhandler as errorhandler
 import __app__.errorhandler.validation as validation
 
