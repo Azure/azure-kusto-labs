@@ -71,15 +71,24 @@ def build_database_names(name_format, count):
 
 
 def normalise_table_list(raw):
-    """Split and trim a configured table list.
+    """Split, trim and de-duplicate a configured table list.
+
+    Exact repeats are dropped in order, so provisioning issues one command per
+    table and the list it creates matches the set the ingestion function builds
+    from the same configuration.
 
     :param raw: comma separated table names, or an already split sequence
-    :return: the trimmed names, in the order given
+    :return: the trimmed names, in the order first given
     """
     if raw is None:
         return []
     entries = raw.split(',') if isinstance(raw, str) else list(raw)
-    return [str(entry).strip() for entry in entries if str(entry).strip()]
+    names = []
+    for entry in entries:
+        name = str(entry).strip()
+        if name and name not in names:
+            names.append(name)
+    return names
 
 
 def validate_table_list(tables):
