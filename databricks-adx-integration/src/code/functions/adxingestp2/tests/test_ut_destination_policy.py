@@ -27,6 +27,9 @@ POLICY_MATRIX = [
     ('company-id-{INDEX}', 3, 'CO2,TEMP'),
     ('company-id-{INDEX}', 1, 'CO2'),
     ('company-id-{INDEX}', 100, 'CO2, TEMP'),
+    # An exact repeat is not ambiguous, and is collapsed rather than refused.
+    ('company-id-{INDEX}', 3, 'CO2,CO2'),
+    ('company-id-{INDEX}', 3, 'CO2, CO2 ,TEMP'),
     ('company id {INDEX}', 3, 'CO2'),
     ('company.id.{INDEX}', 3, 'Temp'),
     # Formats that cannot produce one name per database.
@@ -103,3 +106,9 @@ class TestSharedDestinationPolicy():
         assert len(databases) == 100
         assert 'company-id-99' in databases
         assert tables == ['CO2', 'TEMP']
+
+    def test_a_repeated_table_is_named_once(self):
+        # Provisioning would otherwise issue the same command twice, and the two
+        # sides would describe the same configuration differently.
+        assert policy.normalise_table_list('CO2, CO2 ,TEMP') == ['CO2', 'TEMP']
+        assert validation.build_table_allow_list('CO2,CO2') == {'CO2'}
