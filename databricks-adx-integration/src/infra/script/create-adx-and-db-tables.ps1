@@ -46,6 +46,8 @@ Function Set-Environment-Variables {
         [Environment]::SetEnvironmentVariable('CLUSTER_NAME',$null)
         [Environment]::SetEnvironmentVariable('SUBSCRIPTION_ID',$null)
         [Environment]::SetEnvironmentVariable('RESOURCE_GROUP',$null)
+        [Environment]::SetEnvironmentVariable('DATABASE_NAME_FORMAT',$null)
+        [Environment]::SetEnvironmentVariable('TABLE_LIST_STR',$null)
     }
 }
 
