@@ -46,6 +46,7 @@ from tenacity import (
 from .validation import (
     ValidationError,
     build_database_allow_list,
+    build_table_allow_list,
     parse_allow_list,
     redact_url,
     storage_hosts_from_account_url,
@@ -261,7 +262,7 @@ def get_config_values():
     # Rebuilt from the same two values the provisioning tool used, so the
     # allow-list cannot drift from the databases that actually exist.
     ALLOWED_DATABASES = build_database_allow_list(ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT)
-    ALLOWED_TABLE_NAMES = parse_allow_list(ALLOWED_TABLES)
+    ALLOWED_TABLE_NAMES = build_table_allow_list(ALLOWED_TABLES)
 
     SOURCE_STORAGE_ACCOUNT_URL = os.getenv("SOURCE_STORAGE_ACCOUNT_URL", SOURCE_STORAGE_ACCOUNT_URL)
     ALLOWED_SOURCE_CONTAINERS = parse_allow_list(

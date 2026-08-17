@@ -115,12 +115,12 @@ class TestUtAdxIngest():
 
     def test_tables_that_differ_only_by_case_are_refused(self, monkeypatch):
         # Two provisioned names that fold together cannot be told apart from a
-        # path, so there is no safe answer to give.
+        # path, so there is no safe answer to give. The provisioning tool refuses
+        # to create them, and configuration here fails for the same reason rather
+        # than deploying a function that cannot serve its own table list.
         monkeypatch.setenv('ALLOWED_TABLES', 'Temp,TEMP')
-        dataingest.get_config_values()
         with pytest.raises(validation.ValidationError):
-            dataingest.get_target_info(
-                PATH_ROOT + '/q/companyIdkey=company-id-1/typekey=Temp/p.c000.json')
+            dataingest.get_config_values()
 
     @pytest.mark.parametrize('size', [-1, 10 ** 30, True, 1.5, '1024', None])
     def test_an_invalid_content_length_never_reaches_ingestion(self, size, mocker):

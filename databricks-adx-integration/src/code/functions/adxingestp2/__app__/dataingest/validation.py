@@ -12,6 +12,14 @@ import re
 from typing import Optional, Set
 from urllib.parse import unquote, urlsplit
 
+from .destination_policy import (
+    MAX_DATABASE_COUNT,
+    PolicyError,
+    build_database_names,
+    normalise_table_list,
+    validate_table_list,
+)
+
 # A blob url and an identifier are both bounded in practice. Rejecting anything
 # longer keeps a crafted value from reaching the sdk or the ingestion properties.
 MAX_URL_LENGTH = 2048
@@ -22,9 +30,7 @@ MAX_IDENTIFIER_LENGTH = 1024
 AZURE_STORAGE_SUFFIX = 'core.windows.net'
 
 # Databases are generated as company-id-0 .. company-id-(N-1) by the provisioning
-# tool. Rebuilding that list here would be pointless if the count could be any
-# size, so it is bounded well above the documented lab value of 100.
-MAX_DATABASE_COUNT = 100000
+# tool. The bound on that count is part of the shared destination policy.
 
 # Azure container naming rules, applied to the container resolved from the url.
 _CONTAINER_NAME_REGEX = re.compile(r'^[a-z0-9](?:[a-z0-9]|-(?!-)){1,61}[a-z0-9]$')
@@ -253,43 +259,35 @@ def build_database_allow_list(name_format: Optional[str], count: Optional[int]) 
     """Build the set of ADX databases this deployment provisioned.
 
     The provisioning tool creates databases by substituting 0..count-1 into
-    ``name_format``. Rebuilding the list from those same two values means the
-    allow-list cannot drift from what was actually created, and no separate list
-    has to be maintained alongside it.
+    ``name_format``. Both sides call the same policy, so the set authorised here
+    is the set that was created, and a configuration one side would refuse cannot
+    be accepted by the other.
 
     :param name_format: the name template, e.g. ``company-id-{INDEX}``
     :param count: how many databases the deployment created
     :return: the set of database names
     :raises ValidationError: when the format or count is unusable
     """
-    if not name_format or '{INDEX}' not in name_format:
-        raise ValidationError(
-            'ALLOWED_DATABASE_NAME_FORMAT must contain {{INDEX}}; got {!r}.'.format(name_format))
-    if not isinstance(count, int) or isinstance(count, bool) or not 0 < count <= MAX_DATABASE_COUNT:
-        raise ValidationError(
-            'ALLOWED_DATABASE_COUNT must be between 1 and {}; got {!r}.'.format(
-                MAX_DATABASE_COUNT, count))
     try:
-        names = {name_format.format(INDEX=index) for index in range(count)}
-    except Exception as exc:  # pylint: disable=broad-except
-        # Any way the template fails to render is a configuration error, not a
-        # different kind of problem, so they are all reported the same way.
-        raise ValidationError(
-            'ALLOWED_DATABASE_NAME_FORMAT {!r} is not a usable name template: {}.'.format(
-                name_format, exc))
-    # A format such as "{{INDEX}}" contains the marker but escapes it, so every
-    # index produces the same name. Provisioning would then create one database
-    # while the operator believes there are many, and this allow-list would agree
-    # with neither. Check the result rather than the template.
-    if len(names) != count:
-        raise ValidationError(
-            'ALLOWED_DATABASE_NAME_FORMAT {!r} produced {} names for {} databases.'.format(
-                name_format, len(names), count))
-    if any('{' in name or '}' in name for name in names):
-        raise ValidationError(
-            'ALLOWED_DATABASE_NAME_FORMAT {!r} leaves unresolved braces in the name.'.format(
-                name_format))
-    return names
+        return build_database_names(name_format, count)
+    except PolicyError as exc:
+        raise ValidationError(str(exc))
+
+
+def build_table_allow_list(raw: Optional[str]) -> Set[str]:
+    """Build the set of ADX tables this deployment provisioned.
+
+    Applies the same rule the provisioning tool used when it created them, so a
+    table list one side would refuse is not silently authorised by the other.
+
+    :param raw: comma separated table names
+    :return: the set of table names
+    :raises ValidationError: when the list is unusable
+    """
+    try:
+        return set(validate_table_list(normalise_table_list(raw)))
+    except PolicyError as exc:
+        raise ValidationError(str(exc))
 
 
 def validate_selector_keys(database_key: Optional[str], table_key: Optional[str]) -> None:
