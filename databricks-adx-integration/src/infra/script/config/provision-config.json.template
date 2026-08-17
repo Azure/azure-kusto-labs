@@ -101,6 +101,7 @@
         "TableRetentionDays": "ADX Table Retention Days",
         "DatabaseNum":"ADX Database number",
         "DatabaseNameFormat": "ADX Database name template, must contain {INDEX}",
+        "TargetDatabase": "One provisioned ADX database used by the ingestion function",
         "TableList": "Comma separated ADX table names"
     },
     "Databricks": {
@@ -167,4 +168,3 @@
 
     }
 }
-

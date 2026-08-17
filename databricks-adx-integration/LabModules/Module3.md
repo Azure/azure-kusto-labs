@@ -61,30 +61,20 @@ We need to setup the following additional parameters in the _provision-config.js
 
 Then run _create-ingestion-function.ps1_ script to create and setup Azure Function.
 
-***Note!** _The `companyIdkey=` and `typekey=` directories in a blob path select the
-ADX database and table this function writes to, and those directories are named from
-the telemetry itself. The script therefore also tells the function which destinations
-the deployment actually created: the databases `ADX.DatabaseNameFormat` and
-`ADX.DatabaseNum` produced in Module 2, and the tables in `ADX.TableList`. A blob path
-asking for anything else is rejected before ingestion. The function is likewise pinned
-to the blobs it ingests: the account holding `Storage.IngestionDatalakeName`, the
+***Note!** _The `companyIdkey=` directory remains in the Databricks output path for
+compatibility, but it does not select the ADX database. The script configures one
+mandatory `ADX.TargetDatabase`, verifies that Module 2 provisioned it, and every
+accepted blob is ingested there. `typekey=` may select only a table in `ADX.TableList`.
+The function is also pinned to the account holding `Storage.IngestionDatalakeName`, the
 container in `Storage.FileSystemName`, and the directory in
-`Storage.AzureStorageTargetFolder`. If you change any of those values, or the number of
-databases, re-run this script so the function is updated to match._
+`Storage.AzureStorageTargetFolder`. If you change any of those values, the table list,
+or the fixed database, re-run this script so the function is updated to match._
 
-***Note on tenant separation!** _The database is chosen from a directory whose name
-came from the `companyId` field in the telemetry, so the producer states which company
-the data belongs to. The Databricks job copies that field through without checking it,
-so the destination is only as trustworthy as whatever wrote the telemetry into the
-landing area. In this lab that is the sample generator in
-[Module 4](./Module4.md), run by the operator who holds the storage key, so every
-company id is synthetic. A production deployment has to authenticate producers where
-telemetry enters the system and set `companyId` from that identity rather than trusting
-the payload. If less trusted parties can write to the landing area, a company would be
-able to name a directory belonging to another company, and the checks above would not
-stop it, because the requested destination would still be one this deployment
-provisioned. Separating tenants under that threat model needs per-tenant pipelines,
-described in the
+***Note on tenant separation!** _Fixing the database removes caller-controlled
+cross-database routing, but it also removes this sample's dynamic per-company database
+separation: all telemetry is stored in `ADX.TargetDatabase`. A production deployment
+that requires separate customer databases must authenticate producers at ingress and
+derive the tenant from that identity or use per-tenant pipelines, such as the
 [Deployment Stamps pattern](https://learn.microsoft.com/azure/architecture/patterns/deployment-stamp)._
 
 After the creation is done, you can verify the creation result in Azure Portal.

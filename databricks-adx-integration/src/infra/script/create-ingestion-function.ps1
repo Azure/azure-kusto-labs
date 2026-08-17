@@ -47,9 +47,10 @@ $ingestion_func_strParamValues = @{
     TableIDKey=$config.Functions.IngestionFunction.TableIDKey
     IsFlushImmediately=$config.Functions.IngestionFunction.IsFlushImmediately
     IsDuplicateCheck=$config.Functions.IngestionFunction.IsDuplicateCheck
-    # The blob path chooses the ADX destination, so the function is told which
-    # destinations were actually provisioned and which blobs it may ingest.
+    # The database is fixed by deployment configuration. The provisioned set is
+    # also supplied so the function can fail if the fixed target does not exist.
     AllowedDatabaseNameFormat=$config.ADX.DatabaseNameFormat
+    TargetDatabase=$config.ADX.TargetDatabase
     AllowedTables=$config.ADX.TableList
     SourceStorageAccountUrl="https://$((Get-Resource-Prefix $config.ResourceGroupName)+$config.Storage.IngestionDatalakeName).blob.core.windows.net"
     SourceContainerName=$config.Storage.FileSystemName

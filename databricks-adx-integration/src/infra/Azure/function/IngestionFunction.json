@@ -61,6 +61,10 @@
             "minValue": 1,
             "type": "int"
         },
+        "TargetDatabase": {
+            "minLength": 1,
+            "type": "string"
+        },
         "AllowedTables": {
             "minLength": 1,
             "type": "string"
@@ -285,6 +289,11 @@
                         {
                             "name":"ALLOWED_DATABASE_COUNT",
                             "value":"[string(parameters('AllowedDatabaseCount'))]",
+                            "slotSetting":false
+                        },
+                        {
+                            "name":"TARGET_DATABASE",
+                            "value":"[parameters('TargetDatabase')]",
                             "slotSetting":false
                         },
                         {

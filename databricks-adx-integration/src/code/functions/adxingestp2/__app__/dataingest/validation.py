@@ -3,10 +3,11 @@
 
   Input validation for the ADX ingestion function.
 
-  The queue message names a blob, and the directories in that blob path also
-  choose the ADX database and table the data is written to. Both the blob and the
-  destination are therefore attacker reachable, so this module confines each of
-  them to what the deployment actually provisioned.
+  The queue message names a blob whose path retains database and table partition
+  markers written from telemetry. The database is fixed by trusted deployment
+  configuration; the path cannot select it. This module validates the blob, verifies
+  that fixed database was provisioned, and confines table selection to provisioned
+  tables.
 """
 import re
 from functools import lru_cache
@@ -415,18 +416,18 @@ def validate_content_length(size) -> int:
 
 def validate_target(value: Optional[str], kind: str, allowed_values: Set[str],
                     fold_case: bool = False) -> str:
-    """Assert that a destination the blob path selected is one this app provisioned.
+    """Assert that a destination is one this app provisioned.
 
-    The directories that carry these values are named from the telemetry itself,
-    so the value is only ever a request. Checking it against the destinations the
-    deployment actually created is what turns that request into an authorisation.
+    The database value comes from trusted deployment configuration, while the
+    table value is selected by the blob path. Both must resolve to destinations
+    that the same deployment actually created.
 
     With ``fold_case`` the provisioned spelling is returned rather than the one
     from the path. Kusto identifiers are case sensitive, so the name that reaches
     the ingestion properties has to be the one that was created, not the casing a
     telemetry field happened to use.
 
-    :param value: the database or table name taken from the blob path
+    :param value: the configured database or requested table name
     :param kind: which of the two, for the error message
     :param allowed_values: the destinations this deployment provisioned
     :param fold_case: match without regard to case and return the provisioned name
@@ -434,8 +435,7 @@ def validate_target(value: Optional[str], kind: str, allowed_values: Set[str],
     :raises ValidationError: when the value is missing, malformed or not allowed
     """
     if not allowed_values:
-        # Fail closed. An empty allow-list means configuration is missing, and
-        # continuing would let a blob path name any database in the cluster.
+        # Fail closed when the deployment boundary cannot be established.
         raise ValidationError('No allowed target {}s are configured for this function app.'.format(kind))
     if not value or not isinstance(value, str):
         raise ValidationError('Target {} is missing from the blob path.'.format(kind))
@@ -454,9 +454,8 @@ def validate_target(value: Optional[str], kind: str, allowed_values: Set[str],
                 'Target {} {!r} is not one this deployment provisioned.'.format(kind, value))
         return provisioned[value.upper()]
 
-    # Whole-value match against the provisioned set. Nothing is normalised here
-    # beyond what the caller already did, so a lookalike cannot pass as a
-    # neighbour's destination.
+    # Whole-value match against the provisioned set. Nothing is normalised here,
+    # so a lookalike cannot pass as a provisioned destination.
     if value not in allowed_values:
         raise ValidationError(
             'Target {} {!r} is not one this deployment provisioned.'.format(kind, value))

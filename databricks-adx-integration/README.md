@@ -8,19 +8,17 @@ _This Lab covers an architecture designed to ingest and analyze security logs da
 ## Security and tenant isolation scope
 
 This lab runs on synthetic telemetry that a single trusted operator generates and uploads
-with a storage account key. The `companyId` field it carries is what selects the ADX
-database, and it demonstrates dynamic partitioning; it is not derived from an
-authenticated customer identity.
+with a storage account key. The `companyId` field is retained in the Databricks output
+path for partition compatibility, but it does not select the ADX database.
 
 The functions confine themselves to the storage account, containers, directories,
-databases and tables this deployment provisions, so a blob path cannot reach a database
-the deployment never created. They do not establish ownership between those databases:
-anything able to influence `companyId` can name another provisioned company.
+and tables this deployment provisions. ADX ingestion is pinned to
+`ADX.TargetDatabase`, so queue or blob input cannot route data to another database.
 
-A production implementation must authenticate producers where telemetry enters the
-system and derive the tenant from that identity or from a per-tenant channel, rather
-than from a field in the payload. Do not give customers write access to the landing
-storage account or the ingestion queues.
+This security boundary intentionally removes the lab's dynamic per-company database
+routing: all accepted telemetry is ingested into the fixed database. A production
+implementation that needs separate customer databases must authenticate producers at
+ingress and derive the tenant from that identity or from a per-tenant channel.
 
 ## Lab Scenario 
 

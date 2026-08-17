@@ -80,14 +80,15 @@ KUSTO_INGESTION_CLIENT = None
 DATABASEID_KEY = "companyIdkey="
 TABLEID_KEY = "typekey="
 
-# The blob path chooses the ADX database and table, and those directories are
-# named from the telemetry itself. These describe what the deployment actually
-# provisioned, so a name the blob path asks for can be checked against it.
+# The database is fixed by deployment configuration. The legacy companyIdkey
+# directory is still validated for path compatibility, but cannot choose the ADX
+# database. The table remains constrained to the tables provisioning created.
 ALLOWED_DATABASE_NAME_FORMAT = 'company-id-{INDEX}'
 ALLOWED_DATABASE_COUNT = 0
 ALLOWED_TABLES = ''
 ALLOWED_DATABASES = set()
 ALLOWED_TABLE_NAMES = set()
+TARGET_DATABASE = ''
 
 # The blob this function hands to ADX, together with its own sas token. These
 # confine it to the storage this deployment ingests from.
@@ -113,7 +114,7 @@ LOG_TABLE_PREFIX = 'logtable'
 TABLE_SERVICE = None
 
 MANDATORY_ENV_VARS = ["APP_AAD_TENANT_ID", "APP_CLIENT_ID", "APP_CLIENT_SECRETS", \
-    "INGESTION_SERVER_URI", "INGESTION_MAPPING"]
+    "INGESTION_SERVER_URI", "INGESTION_MAPPING", "TARGET_DATABASE"]
 
 def main(msg: func.QueueMessage) -> None:
     """
@@ -182,8 +183,8 @@ def main(msg: func.QueueMessage) -> None:
                         increment=RETRY_WAIT_INCREMENT_VALUE, \
                         max=RETRY_MAX_WAIT_TIME), \
                         before_sleep=before_sleep_log(logging, logging.WARNING), reraise=True)
-            ingest_source_id = retryer(ingest_to_adx, file_url, file_size, target_database, \
-                target_table, msg_time, modification_time)
+            ingest_source_id = retryer(ingest_to_adx, file_url, file_size, target_table, \
+                msg_time, modification_time)
             logging.info(f"ingest_source_id:{ingest_source_id}")
 
             if IS_DUPLICATE_CHECK:
@@ -215,6 +216,7 @@ def get_config_values():
     global IS_DUPLICATE_CHECK, STORAGE_TABLE_ACCOUNT, STORAGE_TABLE_TOKEN, DUPLICATE_EVENT_NAME, LOG_TABLE_PREFIX
     global ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT, ALLOWED_TABLES
     global ALLOWED_DATABASES, ALLOWED_TABLE_NAMES
+    global TARGET_DATABASE
     global SOURCE_STORAGE_ACCOUNT_URL, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT
     global SOURCE_FILE_SUFFIX
     global ALLOWED_STORAGE_HOSTS
@@ -266,6 +268,8 @@ def get_config_values():
     # allow-list cannot drift from the databases that actually exist.
     ALLOWED_DATABASES = build_database_allow_list(ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT)
     ALLOWED_TABLE_NAMES = build_table_allow_list(ALLOWED_TABLES)
+    TARGET_DATABASE = validate_target(
+        os.getenv("TARGET_DATABASE"), 'database', ALLOWED_DATABASES)
 
     SOURCE_STORAGE_ACCOUNT_URL = os.getenv("SOURCE_STORAGE_ACCOUNT_URL", SOURCE_STORAGE_ACCOUNT_URL)
     ALLOWED_SOURCE_CONTAINERS = parse_allow_list(
@@ -275,32 +279,32 @@ def get_config_values():
     # Bind this function to the storage account it is already configured against.
     ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(SOURCE_STORAGE_ACCOUNT_URL)
 
-    logging.info("%s Serving %s databases and tables %s from %s/%s",
-                 LOG_MESSAGE_HEADER, len(ALLOWED_DATABASES),
+    logging.info("%s Serving fixed database %s and tables %s from %s/%s",
+                 LOG_MESSAGE_HEADER, TARGET_DATABASE,
                  sorted(ALLOWED_TABLE_NAMES), sorted(ALLOWED_SOURCE_CONTAINERS), SOURCE_PATH_ROOT)
 
-def ingest_to_adx(file_path, file_size, target_database, target_table, \
+def ingest_to_adx(file_path, file_size, target_table, \
     msg_time, modification_time):
     """
     Trigger ADX to ingest the specified file in Azure Data Lake
     Prepare ADX ingestion meta-data
     :param file_path: The full path of blob file
     :param file_size: The full size of blob file
-    :param target_database: The target database
     :param target_table: The target table
     :param msg_time: The msg_time from eventgrid
     :param azure_telemetry_client: The telemetry client used for sending telemetry of the ingest function
     :return: None
     """
-    # Re-authorise at the privileged sink. This keeps a future internal caller
-    # from passing a validated blob with a different database or table.
+    # Re-authorise at the privileged sink. The database is obtained only from
+    # deployment configuration, never from the blob path or a caller argument.
     validate_blob_url(file_path, ALLOWED_STORAGE_HOSTS)
     validated_blob_path = validate_source_location(
         file_path, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
     authorized_database, authorized_table = get_target_info(validated_blob_path)
-    if (target_database, target_table) != (authorized_database, authorized_table):
+    if target_table != authorized_table:
         raise ValidationError(
-            'ADX ingestion destination does not match the authorised blob route.')
+            'ADX ingestion table does not match the authorised blob route.')
+    target_database = authorized_database
     file_size = validate_content_length(file_size)
 
     logging.info(f'{LOG_MESSAGE_HEADER} start to ingest to adx')
@@ -337,13 +341,13 @@ def ingest_to_adx(file_path, file_size, target_database, target_table, \
     return ingest_source_id
 
 def get_target_info(blob_path):
-    """get target database and table from the validated blob path
+    """get the fixed database and authorised table for a validated blob path
 
-    The two directory names are written from the telemetry itself, so they say
-    which destination the data is asking for, not which one it is entitled to.
-    Each is matched as a whole path segment and then checked against the
-    destinations this deployment provisioned, so a name the deployment never
-    created cannot reach the ingestion properties.
+    The company directory is written from telemetry and is retained only as a
+    validated partition in the documented blob grammar. It cannot select the ADX
+    database. Every accepted blob is routed to TARGET_DATABASE, which is supplied
+    by deployment configuration and verified against the provisioned databases.
+    The table directory is still matched against the provisioned table allow-list.
 
     :param blob_path: validated blob path within the container
     :type blob_path: string
@@ -351,7 +355,7 @@ def get_target_info(blob_path):
     :rtype: string
     :return: target_table
     :rtype: string
-    :raises ValidationError: when either destination is absent or not provisioned
+    :raises ValidationError: when a selector is absent, ambiguous or not provisioned
     """
     global DATABASEID_KEY
     global TABLEID_KEY
@@ -369,10 +373,15 @@ def get_target_info(blob_path):
         if len(values) > 1:
             raise ValidationError(
                 'Blob path names more than one target {}.'.format(kind))
+    # Validate the legacy company partition, but deliberately discard its value:
+    # the deployment-fixed database is the only value allowed to reach ADX.
+    validate_target(databases[0] if databases else None, 'database', ALLOWED_DATABASES)
     # The table directory is named from a telemetry field, whose casing is not
     # guaranteed, so it is matched without regard to case and resolved to the name
     # the provisioning tool actually created.
-    return (validate_target(databases[0] if databases else None, 'database', ALLOWED_DATABASES),
+    # Revalidate the deployment-selected database at the route boundary so the
+    # privileged sink does not depend solely on initialization order.
+    return (validate_target(TARGET_DATABASE, 'database', ALLOWED_DATABASES),
             validate_target(tables[0] if tables else None, 'table', ALLOWED_TABLE_NAMES,
                             fold_case=True))
 

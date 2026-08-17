@@ -12,6 +12,7 @@ import __app__.dataingest.validation as validation
 DATABASE_FORMAT = 'company-id-{INDEX}'
 DATABASE_COUNT = '3'
 TABLES = 'CO2,TEMP'
+TARGET_DATABASE = 'company-id-0'
 
 # The storage the Databricks job writes telemetry to.
 ACCOUNT_URL = 'https://account.blob.core.windows.net'
@@ -32,6 +33,7 @@ class TestUtAdxIngest():
         dataingest.ALLOWED_DATABASE_NAME_FORMAT = DATABASE_FORMAT
         dataingest.ALLOWED_DATABASE_COUNT = 0
         dataingest.ALLOWED_TABLES = ''
+        dataingest.TARGET_DATABASE = ''
         dataingest.SOURCE_STORAGE_ACCOUNT_URL = ''
         dataingest.ALLOWED_SOURCE_CONTAINERS = set()
         dataingest.SOURCE_PATH_ROOT = ''
@@ -46,6 +48,7 @@ class TestUtAdxIngest():
                 ('ALLOWED_DATABASE_NAME_FORMAT', DATABASE_FORMAT),
                 ('ALLOWED_DATABASE_COUNT', DATABASE_COUNT),
                 ('ALLOWED_TABLES', TABLES),
+                ('TARGET_DATABASE', TARGET_DATABASE),
                 ('SOURCE_STORAGE_ACCOUNT_URL', ACCOUNT_URL),
                 ('ALLOWED_SOURCE_CONTAINERS', SOURCE_CONTAINER),
                 ('SOURCE_PATH_ROOT', PATH_ROOT)):
@@ -67,16 +70,54 @@ class TestUtAdxIngest():
         assert dataingest.ALLOWED_DATABASES == {
             'company-id-0', 'company-id-1', 'company-id-2'}
         assert dataingest.ALLOWED_TABLE_NAMES == {'CO2', 'TEMP'}
+        assert dataingest.TARGET_DATABASE == TARGET_DATABASE
 
-    def test_a_provisioned_destination_is_accepted(self):
-        assert dataingest.get_target_info(BLOB_PATH) == ('company-id-1', 'TEMP')
+    def test_a_provisioned_partition_routes_to_the_fixed_database(self):
+        assert dataingest.get_target_info(BLOB_PATH) == (TARGET_DATABASE, 'TEMP')
+
+    def test_the_sink_uses_the_fixed_database_for_every_company_partition(self, mocker):
+        ingest_client = mocker.patch.object(dataingest, 'KUSTO_INGESTION_CLIENT')
+        ingestion_properties = mocker.patch.object(dataingest, 'IngestionProperties')
+        msg_time = mocker.Mock()
+        modification_time = mocker.Mock()
+        company_two_url = BLOB_URL.replace('company-id-1', 'company-id-2')
+
+        dataingest.ingest_to_adx(
+            company_two_url, 1024, 'TEMP', msg_time, modification_time)
+
+        assert ingestion_properties.call_args.kwargs['database'] == TARGET_DATABASE
+        assert ingestion_properties.call_args.kwargs['table'] == 'TEMP'
+        ingest_client.ingest_from_blob.assert_called_once()
+
+    def test_the_fixed_database_is_mandatory(self, monkeypatch):
+        monkeypatch.delenv('TARGET_DATABASE')
+        dataingest.TARGET_DATABASE = ''
+
+        with pytest.raises(EnvironmentError):
+            dataingest.get_config_values()
+
+    def test_the_fixed_database_must_be_provisioned(self, monkeypatch):
+        monkeypatch.setenv('TARGET_DATABASE', 'company-id-99')
+
+        with pytest.raises(validation.ValidationError):
+            dataingest.get_config_values()
+
+    def test_the_ingestion_sink_revalidates_the_fixed_database(self, mocker):
+        ingest_client = mocker.patch.object(dataingest, 'KUSTO_INGESTION_CLIENT')
+        dataingest.TARGET_DATABASE = 'company-id-99'
+
+        with pytest.raises(validation.ValidationError):
+            dataingest.ingest_to_adx(
+                BLOB_URL, 1024, 'TEMP', None, None)
+
+        ingest_client.ingest_from_blob.assert_not_called()
 
     def test_the_ingestion_sink_revalidates_the_authorised_route(self, mocker):
         ingest_client = mocker.patch.object(dataingest, 'KUSTO_INGESTION_CLIENT')
 
         with pytest.raises(validation.ValidationError):
             dataingest.ingest_to_adx(
-                BLOB_URL, 1024, 'company-id-2', 'TEMP', None, None)
+                BLOB_URL, 1024, 'CO2', None, None)
 
         ingest_client.ingest_from_blob.assert_not_called()
 
@@ -87,7 +128,7 @@ class TestUtAdxIngest():
 
         with pytest.raises(validation.ValidationError):
             dataingest.ingest_to_adx(
-                attacker_url, 1024, 'company-id-1', 'TEMP', None, None)
+                attacker_url, 1024, 'TEMP', None, None)
 
         ingest_client.ingest_from_blob.assert_not_called()
 
@@ -133,7 +174,7 @@ class TestUtAdxIngest():
 
         for requested in ('Temp', 'temp', 'TEMP'):
             path = PATH_ROOT + '/q/companyIdkey=company-id-1/typekey={}/p.c000.json'.format(requested)
-            assert dataingest.get_target_info(path) == ('company-id-1', 'Temp')
+            assert dataingest.get_target_info(path) == (TARGET_DATABASE, 'Temp')
 
     def test_tables_that_differ_only_by_case_are_refused(self, monkeypatch):
         # Two provisioned names that fold together cannot be told apart from a
@@ -157,16 +198,13 @@ class TestUtAdxIngest():
             validation.MAX_BLOB_SIZE_BYTES
         assert validation.validate_content_length(0) == 0
 
-    def test_policy_allows_any_provisioned_database_without_producer_binding(self):
-        # Recorded deliberately: every company's telemetry arrives through one
-        # container and one credential, and companyId is a field inside each
-        # record, so this function has no producer identity to bind a database to.
-        # The allow-list confines the choice to provisioned databases; it cannot
-        # decide which of them the data belongs to. This is a residual limitation,
-        # not closure, and it needs the ingress to carry a trusted tenant identity.
+    def test_company_partition_cannot_change_the_fixed_database(self):
+        # companyId remains in the path for compatibility with Databricks output,
+        # but it is no longer an authority selector. Every provisioned company
+        # partition resolves to the deployment-fixed database.
         for company in ('company-id-0', 'company-id-2'):
             path = PATH_ROOT + '/q/companyIdkey={}/typekey=TEMP/p.c000.json'.format(company)
-            assert dataingest.get_target_info(path) == (company, 'TEMP')
+            assert dataingest.get_target_info(path) == (TARGET_DATABASE, 'TEMP')
 
     @pytest.mark.parametrize('name_format', [
         # Escapes the marker, so every index yields the same name. Provisioning
@@ -313,8 +351,8 @@ class TestUtAdxIngest():
         assert ingest.call_count == 1
         args = ingest.call_args[0]
         assert args[0] == BLOB_URL
-        assert args[2] == 'company-id-1'
-        assert args[3] == 'TEMP'
+        assert args[2] == 'TEMP'
+        assert dataingest.TARGET_DATABASE == TARGET_DATABASE
 
     @pytest.mark.parametrize('path', ['data%2fevil/o/f.c000.json', 'data%5Cevil/o/f.c000.json'])
     def test_a_url_encoding_a_path_separator_is_refused(self, path):
