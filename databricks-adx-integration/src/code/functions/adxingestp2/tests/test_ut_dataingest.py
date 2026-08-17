@@ -35,6 +35,7 @@ class TestUtAdxIngest():
         dataingest.SOURCE_STORAGE_ACCOUNT_URL = ''
         dataingest.ALLOWED_SOURCE_CONTAINERS = set()
         dataingest.SOURCE_PATH_ROOT = ''
+        dataingest.SOURCE_FILE_SUFFIX = '.c000.json'
 
         for name, value in (
                 ('APP_AAD_TENANT_ID', 'tenant'),
@@ -282,6 +283,36 @@ class TestUtAdxIngest():
         assert args[0] == BLOB_URL
         assert args[2] == 'company-id-1'
         assert args[3] == 'TEMP'
+
+    @pytest.mark.parametrize('path', ['data%2fevil/o/f.c000.json', 'data%5Cevil/o/f.c000.json'])
+    def test_a_url_encoding_a_path_separator_is_refused(self, path):
+        # The path is decoded before it is split here, while the storage service
+        # splits before decoding, so an encoded separator would let the two
+        # disagree about where the container ends.
+        with pytest.raises(validation.ValidationError, match='percent-encode a path separator'):
+            validation.validate_blob_url('https://account.blob.core.windows.net/' + path,
+                                         {'account.blob.core.windows.net'})
+
+    def test_a_url_whose_encoding_is_not_valid_utf8_is_refused(self):
+        # Decoding %ff with the default handling yields a replacement character, so
+        # the name checked here would not be the name that is fetched.
+        with pytest.raises(validation.ValidationError, match='percent-encoded UTF-8'):
+            validation.validate_blob_url(
+                'https://account.blob.core.windows.net/data/o/part-%ff.c000.json',
+                {'account.blob.core.windows.net'})
+
+    def test_a_blob_without_the_ingestion_suffix_is_refused(self):
+        # The directory alone does not make a blob one this pipeline produced, and
+        # the destination directories in its path would still select a database.
+        with pytest.raises(validation.ValidationError, match='not a .c000.json file'):
+            dataingest.main(self._message(BLOB_URL.replace('.c000.json', '.txt')))
+
+    def test_the_ingestion_call_refuses_a_destination_the_path_does_not_select(self):
+        # The route is derived again where the credential is used, so a destination
+        # that the blob path never selected cannot reach the ingestion properties.
+        with pytest.raises(validation.ValidationError,
+                           match='does not match the one the blob path selects'):
+            dataingest.ingest_to_adx(BLOB_URL, 1024, 'company-id-2', 'TEMP', None, None)
 
     def test_only_real_azure_storage_hosts_gain_a_sibling(self):
         assert validation.storage_hosts_from_account_url(

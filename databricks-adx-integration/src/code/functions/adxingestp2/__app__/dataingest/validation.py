@@ -41,6 +41,12 @@ _FORBIDDEN_CHARS_REGEX = re.compile(r'[\x00-\x20\x7f-\x9f]')
 # Control characters in a blob path, which may legitimately contain spaces.
 _CONTROL_CHARS_REGEX = re.compile(r'[\x00-\x1f\x7f-\x9f]')
 
+# Percent-encoded '/' and '\'. The storage service splits a url path into its
+# container and blob name first and decodes each part afterwards, so an encoded
+# separator stays inside one segment there while any reading that decodes first
+# sees an extra segment boundary.
+_ENCODED_SEPARATOR_REGEX = re.compile(r'%(?:2f|5c)', re.IGNORECASE)
+
 
 # The largest value a file length can take, matching the signed 64 bit length
 # the storage service reports.
@@ -180,6 +186,19 @@ def validate_blob_url(url: str, allowed_hosts: Set[str]) -> str:
         # message would either be someone else's or an attempt to override ours.
         raise ValidationError('Blob url must not carry a query string or fragment.')
 
+    # Rejecting these keeps the segments counted here identical to the ones the
+    # storage service resolves, so the two readings of the path cannot disagree
+    # about where the container ends and the blob name begins.
+    if _ENCODED_SEPARATOR_REGEX.search(parts.path):
+        raise ValidationError('Blob url must not percent-encode a path separator.')
+    try:
+        unquote(parts.path, errors='strict')
+    except UnicodeDecodeError as error:
+        # Decoding with the default handling substitutes a replacement character
+        # for the invalid bytes, so the name validated here would not be the name
+        # that is re-encoded and requested.
+        raise ValidationError('Blob url path is not valid percent-encoded UTF-8.') from error
+
     hostname = (parts.hostname or '').lower()
     # Exact match only. A suffix match would accept lookalikes such as
     # "myacct.blob.core.windows.net.attacker.example".
@@ -194,6 +213,10 @@ def blob_path_segments(url: str) -> list:
     The path is percent decoded first, because that is what the storage sdk
     resolves the blob name to. Checking the encoded form instead would accept
     ``%2e%2e`` as an ordinary segment while the request addressed ``..``.
+
+    Decoding before splitting only agrees with the storage service, which splits
+    before decoding, because :func:`validate_blob_url` has already rejected
+    percent-encoded separators, so the url must pass that check first.
 
     :param url: a blob url that has already passed host validation
     :return: the decoded path segments, container first
@@ -213,17 +236,18 @@ def blob_path_segments(url: str) -> list:
 
 
 def validate_source_location(url: str, allowed_containers: Set[str],
-                             required_root: str) -> str:
+                             required_root: str, required_suffix: str) -> str:
     """Assert that a blob url names a file inside the directory this app ingests.
 
-    ``allowed_containers`` and ``required_root`` are policy, not conveniences, so
-    they have no defaults and a blank value is an error. If they were optional, a
-    deployment that failed to supply them would silently widen this function to
-    every blob in the account instead of failing.
+    ``allowed_containers``, ``required_root`` and ``required_suffix`` are policy,
+    not conveniences, so they have no defaults and a blank value is an error. If
+    they were optional, a deployment that failed to supply them would silently
+    widen this function to every blob in the account instead of failing.
 
     :param url: a blob url that has already passed host validation
     :param allowed_containers: containers this function is permitted to read
     :param required_root: directory the blob must live under
+    :param required_suffix: file name suffix the blob must carry
     :return: the blob path within the container
     :raises ValidationError: when policy is missing, or the blob is outside it
     """
@@ -231,6 +255,8 @@ def validate_source_location(url: str, allowed_containers: Set[str],
         raise ValidationError('No allowed source containers are configured for this function app.')
     if not required_root:
         raise ValidationError('SOURCE_PATH_ROOT is not configured for this function app.')
+    if not required_suffix:
+        raise ValidationError('SOURCE_FILE_SUFFIX is not configured for this function app.')
     root_segments = required_root.strip('/').split('/')
     if any(segment in ('', '.', '..') for segment in root_segments):
         raise ValidationError(
@@ -252,6 +278,12 @@ def validate_source_location(url: str, allowed_containers: Set[str],
                 '/'.join(path_segments), required_root))
     if len(path_segments) <= len(root_segments):
         raise ValidationError('Blob url does not name a file.')
+    # The data files this pipeline ingests are written by the Databricks job with
+    # a known suffix. Requiring it here means an unrelated blob that happens to
+    # sit under the same directory cannot be handed to ADX.
+    if not path_segments[-1].endswith(required_suffix):
+        raise ValidationError(
+            'Blob path {!r} is not a {} file.'.format('/'.join(path_segments), required_suffix))
     return '/'.join(path_segments)
 
 

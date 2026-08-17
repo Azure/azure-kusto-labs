@@ -94,6 +94,7 @@ ALLOWED_TABLE_NAMES = set()
 SOURCE_STORAGE_ACCOUNT_URL = ''
 ALLOWED_SOURCE_CONTAINERS = set()
 SOURCE_PATH_ROOT = ''
+SOURCE_FILE_SUFFIX = '.c000.json'
 ALLOWED_STORAGE_HOSTS = set()
 
 # MAX Retry Times
@@ -136,7 +137,8 @@ def main(msg: func.QueueMessage) -> None:
         # The url is given this function's storage sas token below, so authorise
         # it before the token is attached and before ADX is asked to fetch it.
         validate_blob_url(file_url, ALLOWED_STORAGE_HOSTS)
-        blob_path = validate_source_location(file_url, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT)
+        blob_path = validate_source_location(file_url, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT,
+                                             SOURCE_FILE_SUFFIX)
         target_database, target_table = get_target_info(blob_path)
         #get file size from storage queue directly
         file_size = validate_content_length(content_json['data']['contentLength'])
@@ -214,6 +216,7 @@ def get_config_values():
     global ALLOWED_DATABASE_NAME_FORMAT, ALLOWED_DATABASE_COUNT, ALLOWED_TABLES
     global ALLOWED_DATABASES, ALLOWED_TABLE_NAMES
     global SOURCE_STORAGE_ACCOUNT_URL, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT
+    global SOURCE_FILE_SUFFIX
     global ALLOWED_STORAGE_HOSTS
     for var in MANDATORY_ENV_VARS:
         if var not in os.environ:
@@ -268,6 +271,7 @@ def get_config_values():
     ALLOWED_SOURCE_CONTAINERS = parse_allow_list(
         os.getenv("ALLOWED_SOURCE_CONTAINERS", ','.join(sorted(ALLOWED_SOURCE_CONTAINERS))))
     SOURCE_PATH_ROOT = os.getenv("SOURCE_PATH_ROOT", SOURCE_PATH_ROOT)
+    SOURCE_FILE_SUFFIX = os.getenv("SOURCE_FILE_SUFFIX", SOURCE_FILE_SUFFIX)
     # Bind this function to the storage account it is already configured against.
     ALLOWED_STORAGE_HOSTS = storage_hosts_from_account_url(SOURCE_STORAGE_ACCOUNT_URL)
 
@@ -290,6 +294,15 @@ def ingest_to_adx(file_path, file_size, target_database, target_table, \
     """
     logging.info(f'{LOG_MESSAGE_HEADER} start to ingest to adx')
     ingest_source_id = str(uuid.uuid4())
+    # This is the call that reaches ADX with the function's own credential, so the
+    # route is derived again from the url rather than trusted from the caller. The
+    # database and table must be the ones this url resolves to.
+    validate_blob_url(file_path, ALLOWED_STORAGE_HOSTS)
+    resolved_path = validate_source_location(file_path, ALLOWED_SOURCE_CONTAINERS,
+                                             SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
+    if (target_database, target_table) != get_target_info(resolved_path):
+        raise ValidationError(
+            'Ingestion destination does not match the one the blob path selects.')
     if SOURCE_TELEMETRY_FILE_TOKEN.startswith('?'):
         blob_path = file_path +  SOURCE_TELEMETRY_FILE_TOKEN
     else:
