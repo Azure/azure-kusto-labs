@@ -36,8 +36,16 @@ Write-Log "INFO" $landingAccountName
 $key=$(az storage account keys list -g $config.ResourceGroupName -n $landingAccountName --query [0].value -o tsv)
 
 #Generate telemetry data and upload to landing Azure data lake
+# The generated telemetry names the destinations Module 2 provisioned, so the
+# company ids and types it emits stay within the set the ingestion function serves.
+[Environment]::SetEnvironmentVariable('NUMBER_OF_COMPANIES',$config.ADX.DatabaseNum)
+[Environment]::SetEnvironmentVariable('DATABASE_NAME_FORMAT',$config.ADX.DatabaseNameFormat)
+[Environment]::SetEnvironmentVariable('TABLE_LIST_STR',$config.ADX.TableList)
 Write-Log "INFO" "Run fake_data_generator with parameters : -fc 1 -c 10 -i 3 -m 30 -ta $($landingAccountName) -tk $($key) -tc $($config.Storage.FileSystemName) -tf $($config.Storage.FileSystemNameRootFolder)"
 python (Join-Path -Path $TELEMTRY_DATA_GENERATOR_TOOL -ChildPath "fake_data_generator.py") -fc 1 -c 10 -i 3 -m 30 -ta $landingAccountName -tk $key -tc $config.Storage.FileSystemName -tf $config.Storage.FileSystemNameRootFolder
+[Environment]::SetEnvironmentVariable('NUMBER_OF_COMPANIES',$null)
+[Environment]::SetEnvironmentVariable('DATABASE_NAME_FORMAT',$null)
+[Environment]::SetEnvironmentVariable('TABLE_LIST_STR',$null)
 
 # Logout from Azure when "AutoAzLogout" is set to true
 if($config.AutoAzLogout -eq $true){
