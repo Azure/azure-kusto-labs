@@ -204,6 +204,16 @@ def validate_blob_url(url: str, allowed_hosts: Set[str]) -> str:
         # that is re-encoded and requested.
         raise ValidationError('Blob url path is not valid percent-encoded UTF-8.') from error
 
+    try:
+        port = parts.port
+    except ValueError as error:
+        raise ValidationError('Blob url port is not a number.') from error
+    if port not in (None, 443):
+        # The token is attached to this url and the whole url is handed to ADX, so
+        # the origin has to be authorised, not just the host. A different port on
+        # an allowed host is a different service.
+        raise ValidationError('Blob url must use the default https port.')
+
     hostname = (parts.hostname or '').lower()
     # Exact match only. A suffix match would accept lookalikes such as
     # "myacct.blob.core.windows.net.attacker.example".

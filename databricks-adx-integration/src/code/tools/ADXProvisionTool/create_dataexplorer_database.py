@@ -3,6 +3,7 @@
   provision code to pre-generate database and tables in adx
 """
 import os
+import re
 import sys
 import argparse
 import json
@@ -68,7 +69,17 @@ def init_config():
     # the destinations they describe, so both sides read them from one place.
     DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
-    TABLE_LIST = TABLE_LIST_STR.split(',')
+    # These names are interpolated into ADX management commands unquoted, and the
+    # ingestion function applies these same rules when it decides which tables it
+    # will serve, so a list one side would refuse is refused here too.
+    TABLE_LIST = [name.strip() for name in TABLE_LIST_STR.split(',') if name.strip()]
+    if not TABLE_LIST:
+        raise ValueError('TABLE_LIST_STR must name at least one table.')
+    for name in TABLE_LIST:
+        if not re.match(r'^[A-Za-z][A-Za-z0-9_]{0,1023}$', name):
+            raise ValueError('Table name {!r} is not a Kusto table name.'.format(name))
+    if len({name.upper() for name in TABLE_LIST}) != len(TABLE_LIST):
+        raise ValueError('TABLE_LIST_STR names two tables that differ only by case.')
     print(TABLE_LIST)
 
 def initialize_kusto_client():

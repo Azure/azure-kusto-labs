@@ -333,6 +333,16 @@ class TestUtAdxIngest():
         with pytest.raises(validation.ValidationError, match='query string or fragment'):
             validation.validate_blob_url(BLOB_URL + suffix, {'account.blob.core.windows.net'})
 
+    @pytest.mark.parametrize('port', [':8443', ':80', ':0'])
+    def test_a_url_naming_a_non_default_port_is_refused(self, port):
+        # The token is attached to this url and the whole url is handed to ADX, so
+        # a different port on an allowed host would deliver that credential to a
+        # different service.
+        url = BLOB_URL.replace('account.blob.core.windows.net',
+                               'account.blob.core.windows.net' + port)
+        with pytest.raises(validation.ValidationError):
+            validation.validate_blob_url(url, {'account.blob.core.windows.net'})
+
     def test_only_real_azure_storage_hosts_gain_a_sibling(self):
         assert validation.storage_hosts_from_account_url(
             'https://account.blob.core.windows.net') == {

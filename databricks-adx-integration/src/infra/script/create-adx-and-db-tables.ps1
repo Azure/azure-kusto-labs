@@ -122,14 +122,22 @@ pip install -r (Join-Path -Path $dbProvisionToolPath -ChildPath "requirements.tx
 #database num
 Write-Log "INFO" "Start to create ADX database " 
 Write-Log "INFO" "Start to create $($config.ADX.DatabaseNum) ADX databases"
-#Create ADX DB
-python (Join-Path -Path $dbProvisionToolPath -ChildPath "create_dataexplorer_database.py") createDatabase -s (Join-Path -Path $dbProvisionToolPath -ChildPath "FieldList") -c $config.ADX.DatabaseNum
-#Create ADX Tables
-Write-Log "INFO" "Start to create $($config.ADX.DatabaseNum) tables"
-python (Join-Path -Path $dbProvisionToolPath -ChildPath "create_dataexplorer_database.py") createTableofDatabase -s (Join-Path -Path $dbProvisionToolPath -ChildPath "FieldList") -c $config.ADX.DatabaseNum
-
-#Remove Environment Variables
-Set-Environment-Variables $config "delete"
+try {
+    # Each step is checked before the next one runs. A refused configuration or a
+    # failed creation would otherwise leave partial resources behind and still be
+    # reported as a successful deployment.
+    #Create ADX DB
+    python (Join-Path -Path $dbProvisionToolPath -ChildPath "create_dataexplorer_database.py") createDatabase -s (Join-Path -Path $dbProvisionToolPath -ChildPath "FieldList") -c $config.ADX.DatabaseNum
+    if ($LASTEXITCODE -ne 0) { throw "Creating ADX databases failed with exit code $LASTEXITCODE." }
+    #Create ADX Tables
+    Write-Log "INFO" "Start to create $($config.ADX.DatabaseNum) tables"
+    python (Join-Path -Path $dbProvisionToolPath -ChildPath "create_dataexplorer_database.py") createTableofDatabase -s (Join-Path -Path $dbProvisionToolPath -ChildPath "FieldList") -c $config.ADX.DatabaseNum
+    if ($LASTEXITCODE -ne 0) { throw "Creating ADX tables failed with exit code $LASTEXITCODE." }
+}
+finally {
+    #Remove Environment Variables
+    Set-Environment-Variables $config "delete"
+}
 
 Write-Log "INFO" "Create $($config.ADX.DatabaseNum) ADX databases successfully! "
 
