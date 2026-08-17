@@ -38,6 +38,7 @@ class TestUtDatabricksMetadataHandler():
         # would leak into the next one. Reset the globals this suite varies.
         metadatahandler.METADATA_PATH_ROOT = ''
         metadatahandler.METADATA_REQUIRED_SEGMENT = '_spark_metadata'
+        metadatahandler.BLOB_SERVICE_CLIENT = None
         monkeypatch.setenv('DATABRICKS_OUTPUT_STORAGE_ACCOUNT_URL', FAKE_ACCOUNT_URL)
         monkeypatch.setenv('ADX_INGEST_QUEUE_URL_LIST', FAKE_QUEUE_URLS)
         monkeypatch.setenv('ADX_INGEST_QUEUE_SAS_TOKEN', 'fake_token')
@@ -51,6 +52,30 @@ class TestUtDatabricksMetadataHandler():
     def test_get_blob_info_from_url(self):
         assert metadatahandler.is_json('bad_json_string') == False
         assert metadatahandler.is_json('{"key": "value"}') == True
+
+    def test_blob_sinks_revalidate_the_checkpoint_location(self, mocker):
+        create_service_client = mocker.patch.object(
+            metadatahandler, 'BlobServiceClient')
+        outside_checkpoint = PATH_ROOT + '/production/customer-data.compact'
+
+        with pytest.raises(validation.ValidationError):
+            metadatahandler.get_blob_content(
+                METADATA_CONTAINER, outside_checkpoint)
+        with pytest.raises(validation.ValidationError):
+            metadatahandler.update_blob_content(
+                METADATA_CONTAINER, outside_checkpoint, 'content')
+
+        create_service_client.assert_not_called()
+
+    def test_only_compact_checkpoints_can_be_overwritten(self, mocker):
+        create_service_client = mocker.patch.object(
+            metadatahandler, 'BlobServiceClient')
+
+        with pytest.raises(validation.ValidationError):
+            metadatahandler.update_blob_content(
+                METADATA_CONTAINER, CHECKPOINT_BLOB, 'content')
+
+        create_service_client.assert_not_called()
 
     def test_convert_abfss_path_to_https(self):
         fake_abfss_path = 'abfss://container@account.dfs.core.windows.net/folder/fake.json'

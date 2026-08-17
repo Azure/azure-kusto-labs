@@ -147,6 +147,18 @@ class TestUtAdxIngestErrorHandler():
                 SOURCE_CONTAINER, BLOB_PATH, SOURCE_CONTAINER, RETRY_PATH)
         assert spy_move_blob_file.call_count == errorhandler.BLOB_REQ_MAX_ATTEMPT
 
+    def test_move_blob_file_revalidates_the_derived_destination(self, mocker):
+        create_service_client = mocker.patch.object(
+            errorhandler.BlobServiceClient, 'from_connection_string')
+        wrong_retry_path = RETRY_PATH.replace('/retry1/', '/retry2/')
+
+        with pytest.raises(errorhandler.ValidationError):
+            errorhandler.move_blob_file(
+                FAKE_CONNECTION_STRING, SOURCE_CONTAINER, SOURCE_CONTAINER,
+                BLOB_PATH, wrong_retry_path)
+
+        create_service_client.assert_not_called()
+
     # --- Validation of the queue supplied blob url ---
 
     @pytest.mark.parametrize('bad_host', [

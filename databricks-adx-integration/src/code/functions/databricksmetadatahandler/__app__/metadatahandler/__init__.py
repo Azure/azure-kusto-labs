@@ -122,6 +122,9 @@ def get_blob_content(container_name: str, blob_path: str) -> str:
     """ download blob file content as string
     """
     global BLOB_SERVICE_CLIENT
+    validate_container_name(container_name, ALLOWED_METADATA_CONTAINERS)
+    validate_checkpoint_path(
+        blob_path, METADATA_PATH_ROOT, METADATA_REQUIRED_SEGMENT)
     # TODO: Should add retry policy here
     if not BLOB_SERVICE_CLIENT:
         logging.info(
@@ -154,6 +157,11 @@ def update_blob_content(container_name: str, blob_path: str, content: str):
     """ update blob file by replace existing file     """
 
     global BLOB_SERVICE_CLIENT
+    validate_container_name(container_name, ALLOWED_METADATA_CONTAINERS)
+    validate_checkpoint_path(
+        blob_path, METADATA_PATH_ROOT, METADATA_REQUIRED_SEGMENT)
+    if not is_compact_checkpoint(blob_path):
+        raise ValidationError('Only compact Spark checkpoint files may be overwritten.')
 
     if not BLOB_SERVICE_CLIENT:
         logging.info(

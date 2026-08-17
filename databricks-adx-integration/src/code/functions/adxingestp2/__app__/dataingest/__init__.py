@@ -292,6 +292,17 @@ def ingest_to_adx(file_path, file_size, target_database, target_table, \
     :param azure_telemetry_client: The telemetry client used for sending telemetry of the ingest function
     :return: None
     """
+    # Re-authorise at the privileged sink. This keeps a future internal caller
+    # from passing a validated blob with a different database or table.
+    validate_blob_url(file_path, ALLOWED_STORAGE_HOSTS)
+    validated_blob_path = validate_source_location(
+        file_path, ALLOWED_SOURCE_CONTAINERS, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
+    authorized_database, authorized_table = get_target_info(validated_blob_path)
+    if (target_database, target_table) != (authorized_database, authorized_table):
+        raise ValidationError(
+            'ADX ingestion destination does not match the authorised blob route.')
+    file_size = validate_content_length(file_size)
+
     logging.info(f'{LOG_MESSAGE_HEADER} start to ingest to adx')
     ingest_source_id = str(uuid.uuid4())
     if SOURCE_TELEMETRY_FILE_TOKEN.startswith('?'):

@@ -104,6 +104,18 @@ def get_blob_retry_times(blob_path: str) -> int:
 def move_blob_file(connect_str: str, source_container: str, target_container: str,
                    source_path: str, target_path: str) -> None:
     """ Move blob from source to destination container """
+    # This function owns the copy and delete, so it validates both locations even
+    # when called independently of the queue handler.
+    validate_container_name(source_container, ALLOWED_SOURCE_CONTAINERS)
+    validate_blob_path(source_path, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
+    validate_container_name(
+        target_container, ALLOWED_SOURCE_CONTAINERS | {RETRY_END_IN_FAIL_CONTAINER_NAME})
+    validate_blob_path(target_path, SOURCE_PATH_ROOT, SOURCE_FILE_SUFFIX)
+    if (target_container, target_path) != get_new_blob_move_file_path(
+            source_container, source_path):
+        raise ValidationError(
+            'Blob move destination does not match the authorised retry path.')
+
     logging.info('Move blob from %s/%s to %s/%s',
                  source_container, source_path, target_container, target_path)
     blob_service_client = BlobServiceClient.from_connection_string(connect_str)

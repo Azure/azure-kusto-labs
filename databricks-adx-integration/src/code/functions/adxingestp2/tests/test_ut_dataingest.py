@@ -71,6 +71,26 @@ class TestUtAdxIngest():
     def test_a_provisioned_destination_is_accepted(self):
         assert dataingest.get_target_info(BLOB_PATH) == ('company-id-1', 'TEMP')
 
+    def test_the_ingestion_sink_revalidates_the_authorised_route(self, mocker):
+        ingest_client = mocker.patch.object(dataingest, 'KUSTO_INGESTION_CLIENT')
+
+        with pytest.raises(validation.ValidationError):
+            dataingest.ingest_to_adx(
+                BLOB_URL, 1024, 'company-id-2', 'TEMP', None, None)
+
+        ingest_client.ingest_from_blob.assert_not_called()
+
+    def test_the_ingestion_sink_revalidates_the_blob_location(self, mocker):
+        ingest_client = mocker.patch.object(dataingest, 'KUSTO_INGESTION_CLIENT')
+        attacker_url = BLOB_URL.replace(
+            'account.blob.core.windows.net', 'attacker.example')
+
+        with pytest.raises(validation.ValidationError):
+            dataingest.ingest_to_adx(
+                attacker_url, 1024, 'company-id-1', 'TEMP', None, None)
+
+        ingest_client.ingest_from_blob.assert_not_called()
+
     @pytest.mark.parametrize('path', [
         # A company the deployment never created.
         PATH_ROOT + '/q/companyIdkey=company-id-99/typekey=TEMP/part-0.c000.json',
