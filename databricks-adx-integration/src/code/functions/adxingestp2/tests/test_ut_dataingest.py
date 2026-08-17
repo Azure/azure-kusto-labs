@@ -60,9 +60,10 @@ class TestUtAdxIngest():
         }
         return func.QueueMessage(body=json.dumps(body).encode('utf-8'))
 
-    def test_the_allow_list_matches_what_provisioning_created(self):
-        # The provisioning tool writes company-id-0 .. company-id-(N-1). Rebuilding
-        # from the same format and count is what keeps the two in step.
+    def test_the_allow_list_is_built_from_the_configured_format_and_count(self):
+        # The provisioning tool substitutes 0 .. count-1 into the same format, so
+        # rebuilding from those settings is what keeps the two in step. This checks
+        # the rebuild against the settings, not against a provisioned cluster.
         assert dataingest.ALLOWED_DATABASES == {
             'company-id-0', 'company-id-1', 'company-id-2'}
         assert dataingest.ALLOWED_TABLE_NAMES == {'CO2', 'TEMP'}

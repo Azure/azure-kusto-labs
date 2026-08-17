@@ -76,12 +76,15 @@ databases, re-run this script so the function is updated to match._
 came from the `companyId` field in the telemetry, so the producer states which company
 the data belongs to. The Databricks job copies that field through without checking it,
 so the destination is only as trustworthy as whatever wrote the telemetry into the
-landing area. This lab assumes that is a trusted collector which assigns `companyId`
-after authenticating the producer. If you adapt this lab so that less trusted parties
-can write to the landing area, a company would be able to name a directory belonging to
-another company, and the checks above would not stop it, because the requested
-destination would still be one this deployment provisioned. Separating tenants under
-that threat model needs per-tenant pipelines, described in the
+landing area. In this lab that is the sample generator in
+[Module 4](./Module4.md), run by the operator who holds the storage key, so every
+company id is synthetic. A production deployment has to authenticate producers where
+telemetry enters the system and set `companyId` from that identity rather than trusting
+the payload. If less trusted parties can write to the landing area, a company would be
+able to name a directory belonging to another company, and the checks above would not
+stop it, because the requested destination would still be one this deployment
+provisioned. Separating tenants under that threat model needs per-tenant pipelines,
+described in the
 [Deployment Stamps pattern](https://learn.microsoft.com/azure/architecture/patterns/deployment-stamp)._
 
 After the creation is done, you can verify the creation result in Azure Portal.
