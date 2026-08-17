@@ -313,6 +313,14 @@ class TestUtAdxIngest():
         assert (validation.build_database_allow_list(DATABASE_FORMAT, 4)
                 != validation.build_database_allow_list(DATABASE_FORMAT, 3))
 
+    @pytest.mark.parametrize('suffix', ['?', '#', '?sig=x'])
+    def test_a_url_carrying_a_delimiter_is_refused(self, suffix):
+        # The sas token is appended to this url, so one already ending in a
+        # delimiter would produce a request carrying two. Both characters are
+        # percent-encoded in a blob name, so neither belongs in the raw url.
+        with pytest.raises(validation.ValidationError, match='query string or fragment'):
+            validation.validate_blob_url(BLOB_URL + suffix, {'account.blob.core.windows.net'})
+
     def test_only_real_azure_storage_hosts_gain_a_sibling(self):
         assert validation.storage_hosts_from_account_url(
             'https://account.blob.core.windows.net') == {

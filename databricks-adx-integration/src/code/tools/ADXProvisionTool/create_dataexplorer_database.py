@@ -67,6 +67,10 @@ def init_config():
     # The ingestion function is given these same two values and will only write to
     # the destinations they describe, so both sides read them from one place.
     DATABASE_NAME_FORMAT = os.getenv('DATABASE_NAME_FORMAT', DATABASE_NAME_FORMAT)
+    if DATABASE_NAME_FORMAT.format(INDEX=0) == DATABASE_NAME_FORMAT.format(INDEX=1):
+        # A template that renders the same name for every index would update one
+        # database repeatedly while reporting that it created DatabaseNum of them.
+        raise ValueError('DATABASE_NAME_FORMAT must name a different database for each index.')
     TABLE_LIST_STR =  os.getenv('TABLE_LIST_STR', TABLE_LIST_STR)
     TABLE_LIST = TABLE_LIST_STR.split(',')
     print(TABLE_LIST)

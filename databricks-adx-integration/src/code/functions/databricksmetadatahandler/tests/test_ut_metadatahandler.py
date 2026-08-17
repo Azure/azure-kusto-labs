@@ -244,6 +244,17 @@ class TestUtDatabricksMetadataHandler():
         entry.update(overrides)
         return json.dumps(entry)
 
+    @pytest.mark.parametrize('suffix', ['?', '#', '?sig=x'])
+    def test_a_reference_carrying_a_delimiter_is_skipped(self, suffix):
+        # The ingest function adds its own token and refuses a url that already
+        # carries either delimiter, so forwarding one would enqueue a message that
+        # can never be handled.
+        path = ('abfss://{}@account.dfs.core.windows.net/{}/'
+                'splitdata/output_0/part-00001-u.c000.json'.format(
+                    METADATA_CONTAINER, PATH_ROOT)) + suffix
+        messages, _ = self._messages_and_retention(['v1', self._entry(path=path)])
+        assert messages == []
+
     @pytest.mark.parametrize('modification_time', [
         # Close the quoting and append a second "data" object. json decoding keeps
         # the last one, so this would replace the validated url after validation.

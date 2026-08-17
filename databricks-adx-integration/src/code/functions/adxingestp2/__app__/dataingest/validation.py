@@ -182,9 +182,13 @@ def validate_blob_url(url: str, allowed_hosts: Set[str]) -> str:
         raise ValidationError('Blob url scheme must be https, got {!r}.'.format(parts.scheme))
     if parts.username or parts.password:
         raise ValidationError('Blob url must not embed credentials.')
-    if parts.query or parts.fragment:
+    if '?' in url or '#' in url:
         # The sas token is added here, from configuration. One arriving on the
         # message would either be someone else's or an attempt to override ours.
+        # The delimiter is looked for in the raw url rather than in the parsed
+        # parts, because a url ending in one parses as an empty query or fragment
+        # and appending the token to it would produce a url carrying two. A blob
+        # name percent-encodes both characters, so neither belongs here.
         raise ValidationError('Blob url must not carry a query string or fragment.')
 
     # Rejecting these keeps the segments counted here identical to the ones the

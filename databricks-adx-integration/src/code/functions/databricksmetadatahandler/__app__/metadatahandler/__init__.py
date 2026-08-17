@@ -266,6 +266,12 @@ def generate_metadata_queue_messages(event_time: str, metadata_file_content: str
             # The metadata file content also selects a destination, for the ingest
             # function downstream. Confine those urls to the same account, container
             # and output directory rather than forwarding whatever the file contains.
+            if '?' in https_url or '#' in https_url:
+                # The ingest function adds its own token and refuses a url that
+                # already carries either delimiter, so an entry with one is skipped
+                # here rather than enqueued as a message that can never be handled.
+                raise ValueError(
+                    'Checkpoint entry url carries a query string or fragment.')
             validate_blob_url_host(https_url, ALLOWED_STORAGE_HOSTS)
             referenced_container, referenced_path = split_blob_url(https_url)
             validate_container_name(referenced_container, ALLOWED_METADATA_CONTAINERS)
