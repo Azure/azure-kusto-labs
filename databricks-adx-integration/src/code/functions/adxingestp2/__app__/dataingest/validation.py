@@ -9,7 +9,8 @@
   them to what the deployment actually provisioned.
 """
 import re
-from typing import Optional, Set
+from functools import lru_cache
+from typing import FrozenSet, Optional, Set
 from urllib.parse import unquote, urlsplit
 
 from .destination_policy import (
@@ -287,7 +288,8 @@ def validate_source_location(url: str, allowed_containers: Set[str],
     return '/'.join(path_segments)
 
 
-def build_database_allow_list(name_format: Optional[str], count: Optional[int]) -> Set[str]:
+@lru_cache(maxsize=4)
+def build_database_allow_list(name_format: Optional[str], count: Optional[int]) -> FrozenSet[str]:
     """Build the set of ADX databases this deployment provisioned.
 
     The provisioning tool creates databases by substituting 0..count-1 into
@@ -295,13 +297,18 @@ def build_database_allow_list(name_format: Optional[str], count: Optional[int]) 
     is the set that was created, and a configuration one side would refuse cannot
     be accepted by the other.
 
+    The result is kept per configuration because the settings are read again on
+    every queue message, and generating and checking up to ``MAX_DATABASE_COUNT``
+    names for each one would dominate the cost of ingesting a file. A change to
+    either value produces a different key, so the set cannot go stale.
+
     :param name_format: the name template, e.g. ``company-id-{INDEX}``
     :param count: how many databases the deployment created
     :return: the set of database names
     :raises ValidationError: when the format or count is unusable
     """
     try:
-        return build_database_names(name_format, count)
+        return frozenset(build_database_names(name_format, count))
     except PolicyError as exc:
         raise ValidationError(str(exc))
 

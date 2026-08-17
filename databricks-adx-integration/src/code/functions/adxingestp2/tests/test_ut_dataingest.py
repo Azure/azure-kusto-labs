@@ -314,6 +314,20 @@ class TestUtAdxIngest():
                            match='does not match the one the blob path selects'):
             dataingest.ingest_to_adx(BLOB_URL, 1024, 'company-id-2', 'TEMP', None, None)
 
+    def test_the_database_allow_list_is_reused_across_messages(self):
+        # The settings are read again on every queue message, so regenerating the
+        # whole set each time would dominate the cost of ingesting a file.
+        before = validation.build_database_allow_list.cache_info().hits
+        dataingest.get_config_values()
+        dataingest.get_config_values()
+        assert validation.build_database_allow_list.cache_info().hits > before
+
+    def test_a_changed_database_count_is_not_served_from_the_previous_one(self):
+        # Reuse is keyed on the configuration, so a deployment that grows or
+        # shrinks cannot be authorised against the set it used to have.
+        assert (validation.build_database_allow_list(DATABASE_FORMAT, 4)
+                != validation.build_database_allow_list(DATABASE_FORMAT, 3))
+
     def test_only_real_azure_storage_hosts_gain_a_sibling(self):
         assert validation.storage_hosts_from_account_url(
             'https://account.blob.core.windows.net') == {
